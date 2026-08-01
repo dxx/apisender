@@ -2,9 +2,8 @@
     <a href="https://github.com/dxx/apisender">
         <img src="./public/logo.png" alt="apisender" width="128" height="128"/>
     </a>
-    <br/>
-    <b>apisender</b>
 </p>
+<p align="center"><font size="6"><b>apisender</b></font></p>
 
 <p align="center">
 HTTP / WebSocket / SSE / gRPC 请求客户端，类似 IntelliJ HTTP Client / VSCode REST Client 的桌面应用，基于 Tauri 2 构建。
