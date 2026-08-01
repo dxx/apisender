@@ -1,6 +1,18 @@
-# apisender
+<p align="center">
+    <a href="https://github.com/dxx/apisender">
+        <img src="./public/logo.png" alt="apisender" width="128" height="128"/>
+    </a>
+    <br/>
+    <b>apisender</b>
+</p>
 
+<p align="center">
 HTTP / WebSocket / SSE / gRPC 请求客户端，类似 IntelliJ HTTP Client / VSCode REST Client 的桌面应用，基于 Tauri 2 构建。
+</p>
+
+![HTTP Get](./docs/images/http-get.png)
+
+点击[查看](./docs/screenshots.md)更多截图。
 
 ## 功能
 
@@ -10,12 +22,6 @@ HTTP / WebSocket / SSE / gRPC 请求客户端，类似 IntelliJ HTTP Client / VS
 - gRPC（Unary + Server Streaming），支持 server reflection / proto 文件加载
 - 工作区文件树管理、环境变量、历史记录、cURL 互转
 - 跨平台：Windows / macOS / Linux
-
-## 截图
-
-![HTTP Get](./docs/images/http-get.png)
-
-点击[查看](./docs/screenshots.md)更多截图内容。
 
 ## 环境依赖
 
