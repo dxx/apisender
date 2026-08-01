@@ -1,0 +1,61 @@
+[package]
+name = "apisender"
+version = "0.1.6"
+description = "A tool for API"
+authors = ["dxx"]
+edition = "2024"
+
+[lib]
+name = "apisender_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-log = "2"
+tauri-plugin-clipboard-manager = "2.3.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "http2", "gzip", "brotli", "deflate", "stream", "json", "multipart"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "logging", "tls12"] }
+http = "1"
+rusqlite = { version = "0.32", features = ["bundled"] }
+tokio = { version = "1", features = ["full"] }
+tokio-stream = "0.1"
+thiserror = "2"
+uuid = { version = "1", features = ["v4"] }
+url = "2"
+cookie = "0.18"
+notify = "8.2"
+async-trait = "0.1"
+base64 = "0.22"
+log = "0.4"
+futures-util = "0.3"
+tokio-util = "0.7"
+tokio-tungstenite = { version = "0.24", default-features = false, features = ["connect", "rustls-tls-webpki-roots"] }
+prost = "0.14"
+prost-types = "0.14"
+prost-reflect = { version = "0.16", features = ["serde"] }
+protox = "0.9"
+bytes = "1"
+tonic = { version = "0.14", default-features = false, features = [
+    "transport",
+    "codegen",
+    "tls-ring",
+    "tls-webpki-roots",
+    "gzip",
+    "router",
+] }
+tonic-prost = "0.14"
+tonic-reflection = "0.14"
+
+[target."cfg(target_os = \"windows\")".dependencies]
+windows = { version = "0.58", features = ["Win32_Foundation", "Win32_System_DataExchange", "Win32_System_Memory", "Win32_System_Ole"] }
+
+[target."cfg(target_os = \"macos\")".dependencies]
+objc2 = "0.6"
+objc2-app-kit = "0.3"
+objc2-foundation = "0.3"
