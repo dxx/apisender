@@ -153,7 +153,21 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (x86_64-pc-windows-msvc)
-        run: pnpm tauri build
+        run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles msi
+
+      - name: Rename msi (drop _en-US suffix)
+        shell: pwsh
+        run: |
+          $ref = $env:GITHUB_REF_NAME -replace '^v',''
+          if ($ref -match '^\d+\.\d+\.\d+') {
+            $VERSION = $ref
+          } else {
+            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
+          }
+          $src = Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
+          $dst = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-x64.msi"
+          Rename-Item $src.FullName $dst
+          Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
         shell: pwsh
@@ -161,9 +175,9 @@ jobs:
           $VERSION = $env:GITHUB_REF_NAME -replace '^v',''
           $stageDir = "portable-$VERSION"
           New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
-          Copy-Item "src-tauri/target/release/apisender.exe" $stageDir
-          if (Test-Path "src-tauri/target/release/resources") {
-            Copy-Item -Recurse "src-tauri/target/release/resources" $stageDir
+          Copy-Item "src-tauri/target/x86_64-pc-windows-msvc/release/apisender.exe" $stageDir
+          if (Test-Path "src-tauri/target/x86_64-pc-windows-msvc/release/resources") {
+            Copy-Item -Recurse "src-tauri/target/x86_64-pc-windows-msvc/release/resources" $stageDir
           }
           @"
           Portable apisender $VERSION (Windows x64)
@@ -180,7 +194,7 @@ jobs:
         with:
           name: windows-x64
           path: |
-            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
             apisender-${{ github.ref_name }}-windows-x64-portable.zip
 
   build-windows-arm64:
@@ -220,7 +234,21 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (aarch64-pc-windows-msvc)
-        run: pnpm tauri build --target aarch64-pc-windows-msvc
+        run: pnpm tauri build --target aarch64-pc-windows-msvc --bundles msi
+
+      - name: Rename msi (drop _en-US suffix)
+        shell: pwsh
+        run: |
+          $ref = $env:GITHUB_REF_NAME -replace '^v',''
+          if ($ref -match '^\d+\.\d+\.\d+') {
+            $VERSION = $ref
+          } else {
+            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
+          }
+          $src = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
+          $dst = "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-arm64.msi"
+          Rename-Item $src.FullName $dst
+          Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
         shell: pwsh
@@ -228,9 +256,9 @@ jobs:
           $VERSION = $env:GITHUB_REF_NAME -replace '^v',''
           $stageDir = "portable-$VERSION"
           New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
-          Copy-Item "src-tauri/target/release/apisender.exe" $stageDir
-          if (Test-Path "src-tauri/target/release/resources") {
-            Copy-Item -Recurse "src-tauri/target/release/resources" $stageDir
+          Copy-Item "src-tauri/target/aarch64-pc-windows-msvc/release/apisender.exe" $stageDir
+          if (Test-Path "src-tauri/target/aarch64-pc-windows-msvc/release/resources") {
+            Copy-Item -Recurse "src-tauri/target/aarch64-pc-windows-msvc/release/resources" $stageDir
           }
           @"
           Portable apisender $VERSION (Windows ARM64)
@@ -294,7 +322,7 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (x86_64-unknown-linux-gnu)
-        run: pnpm tauri build --target x86_64-unknown-linux-gnu
+        run: pnpm tauri build --target x86_64-unknown-linux-gnu --bundles deb,appimage
 
       - uses: actions/upload-artifact@v4
         with:
@@ -349,7 +377,7 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (aarch64-unknown-linux-gnu)
-        run: pnpm tauri build --target aarch64-unknown-linux-gnu
+        run: pnpm tauri build --target aarch64-unknown-linux-gnu --bundles deb,appimage
 
       - uses: actions/upload-artifact@v4
         with:
