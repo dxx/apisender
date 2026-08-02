@@ -1,5 +1,5 @@
 
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use crate::clipboard::copy_dir;
 use crate::error::{AppError, AppResult};
@@ -11,7 +11,8 @@ pub fn copy(path: &str) -> AppResult<()> {
     let mut cb = arboard::Clipboard::new()
         .map_err(|e| AppError::Clipboard(format!("剪贴板初始化失败: {}", e)))?;
 
-    cb.set_file_list(&[abs])
+    cb.set()
+        .file_list(&[abs])
         .map_err(|e| AppError::Clipboard(format!("写入剪贴板失败: {}", e)))?;
 
     Ok(())
