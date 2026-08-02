@@ -7,6 +7,7 @@ import { useEnvironmentStore } from "@/stores/environment";
 import { useHistoryStore } from "@/stores/history";
 import { useTabsStore } from "@/stores/tabs";
 import { useThemeStore } from "@/stores/theme";
+import { useSystemThemeListener } from "@/hooks/useSystemTheme";
 import type { WorkspaceChangedEvent } from "@/lib/types";
 
 import { WelcomeScreen } from "@/components/WelcomeScreen";
@@ -31,6 +32,8 @@ function App() {
   const reloadTab = useTabsStore((s) => s.reloadFromDisk);
   const initTheme = useThemeStore((s) => s.init);
   const [settingsOpen, setSettingsOpen] = useState(false);
+
+  useSystemThemeListener();
 
   useEffect(() => {
     initTheme();

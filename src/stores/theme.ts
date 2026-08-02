@@ -20,11 +20,11 @@ function computeResolved(theme: Theme): "light" | "dark" {
   return theme;
 }
 
-function applyResolved(resolved: "light" | "dark") {
+export function applyResolved(resolved: "light" | "dark") {
   document.documentElement.classList.toggle("dark", resolved === "dark");
 }
 
-export const useThemeStore = create<ThemeState>((set, get) => ({
+export const useThemeStore = create<ThemeState>((set) => ({
   theme: "system",
   resolved: computeResolved("system"),
 
@@ -41,16 +41,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
     } catch (e) {
       console.error("[theme] init failed:", e);
     }
-
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
-    const onSystemChange = () => {
-      if (get().theme === "system") {
-        const resolved = computeResolved("system");
-        set({ resolved });
-        applyResolved(resolved);
-      }
-    };
-    mq.addEventListener("change", onSystemChange);
   },
 
   setTheme: async (t) => {
