@@ -10,7 +10,10 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
-#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+#[cfg(target_os = "linux")]
+mod linux;
+
+#[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
 mod stub;
 
 pub fn copy_file(path: &str) -> AppResult<()> {
@@ -18,7 +21,9 @@ pub fn copy_file(path: &str) -> AppResult<()> {
     return macos::copy(path);
     #[cfg(target_os = "windows")]
     return windows::copy(path);
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    #[cfg(target_os = "linux")]
+    return linux::copy(path);
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     return stub::copy(path);
 }
 
@@ -27,7 +32,9 @@ pub fn paste_files(dest_dir: &str) -> AppResult<Vec<String>> {
     return macos::paste(dest_dir);
     #[cfg(target_os = "windows")]
     return windows::paste(dest_dir);
-    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    #[cfg(target_os = "linux")]
+    return linux::paste(dest_dir);
+    #[cfg(not(any(target_os = "macos", target_os = "windows", target_os = "linux")))]
     return stub::paste(dest_dir);
 }
 
