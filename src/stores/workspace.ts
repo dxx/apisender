@@ -9,6 +9,7 @@ interface WorkspaceState {
   tree: FileTreeNode[];
   recentWorkspaces: RecentWorkspace[];
   loading: boolean;
+  isInitialized: boolean;
   error: string | null;
 
   init: () => Promise<void>;
@@ -25,6 +26,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   tree: [],
   recentWorkspaces: [],
   loading: false,
+  isInitialized: false,
   error: null,
 
   init: async () => {
@@ -43,12 +45,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         }
       }
       const recent = await api.listRecentWorkspaces();
-      set({ root, recentWorkspaces: recent, loading: false });
+      set({ root, recentWorkspaces: recent, loading: false, isInitialized: true });
       if (root) {
         await get().refreshTree();
       }
     } catch (e) {
-      set({ loading: false, error: String(e) });
+      set({ loading: false, error: String(e), isInitialized: true });
     }
   },
 

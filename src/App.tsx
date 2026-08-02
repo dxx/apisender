@@ -20,6 +20,7 @@ import { TITLE_BAR_HEIGHT } from "@/lib/platform";
 
 function App() {
   const root = useWorkspaceStore((s) => s.root);
+  const isInitialized = useWorkspaceStore((s) => s.isInitialized);
   const initWorkspace = useWorkspaceStore((s) => s.init);
   const refreshTree = useWorkspaceStore((s) => s.refreshTree);
   const openWorkspaceDialog = useWorkspaceStore((s) => s.openDialog);
@@ -83,6 +84,18 @@ function App() {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [openWorkspaceDialog]);
+
+  if (!isInitialized) {
+    return (
+      <>
+        <div
+          className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
+          style={{ paddingTop: TITLE_BAR_HEIGHT }}
+        />
+        <TitleBar />
+      </>
+    );
+  }
 
   if (!root) {
     return (

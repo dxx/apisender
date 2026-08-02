@@ -17,6 +17,18 @@
               .matches
               ? "dark"
               : "light";
+          // ⚠️ 同步注意事项(改色必读):
+          //   以下两行背景/前景色是为了在 CSS 加载完成前(避免首屏闪白/闪黑)
+          //   在 <html> 上写入 inline 样式,与 src/index.css 里的主题变量是副本。
+          //   改色时务必同步更新下面四处:
+          //     src/index.css:5   --background light = oklch(1 0 0)
+          //     src/index.css:6   --foreground light = oklch(0.145 0 0)
+          //     src/index.css:52  --background dark  = oklch(0.22 0.022 245)
+          //     src/index.css:53  --foreground dark  = oklch(0.985 0 0)
+          var bg = resolved === "dark" ? "oklch(0.22 0.022 245)" : "oklch(1 0 0)";
+          var fg = resolved === "dark" ? "oklch(0.985 0 0)" : "oklch(0.145 0 0)";
+          document.documentElement.style.backgroundColor = bg;
+          document.documentElement.style.color = fg;
           if (resolved === "dark")
             document.documentElement.classList.add("dark");
         } catch (e) {}
