@@ -371,10 +371,9 @@ jobs:
 
       - name: Rename deb + AppImage
         run: |
-          cd src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb
-          mv apisender_*.deb "apisender-$VERSION-linux-x64.deb"
-          cd ../appimage
-          mv apisender_*.AppImage "apisender-$VERSION-linux-x64.AppImage"
+          cd src-tauri/target/x86_64-unknown-linux-gnu/release/bundle
+          mv deb/apisender_*.deb "deb/apisender-$VERSION-linux-x64.deb"
+          mv appimage/apisender_*.AppImage "appimage/apisender-$VERSION-linux-x64.AppImage"
           ls -la deb appimage
 
       - uses: actions/upload-artifact@v4
@@ -443,10 +442,9 @@ jobs:
 
       - name: Rename deb + AppImage
         run: |
-          cd src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb
-          mv apisender_*.deb "apisender-$VERSION-linux-arm64.deb"
-          cd ../appimage
-          mv apisender_*.AppImage "apisender-$VERSION-linux-arm64.AppImage"
+          cd src-tauri/target/aarch64-unknown-linux-gnu/release/bundle
+          mv deb/apisender_*.deb "deb/apisender-$VERSION-linux-arm64.deb"
+          mv appimage/apisender_*.AppImage "appimage/apisender-$VERSION-linux-arm64.AppImage"
           ls -la deb appimage
 
       - uses: actions/upload-artifact@v4
