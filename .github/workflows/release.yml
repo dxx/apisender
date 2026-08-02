@@ -41,6 +41,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
@@ -91,6 +92,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
@@ -142,6 +144,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           VERSION=${GITHUB_REF_NAME#v}
@@ -208,6 +211,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
           VERSION=${GITHUB_REF_NAME#v}
@@ -282,6 +286,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
@@ -336,6 +341,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Sync version from tag
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
