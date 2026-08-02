@@ -96,3 +96,7 @@ ARM64 设备下载 `linux-arm64` 版本。
 ## 文档
 
 详细文档说明见 [docs](./docs/)。
+
+## 更新日志
+
+见 [CHANGELOG](./CHANGELOG.md)。
