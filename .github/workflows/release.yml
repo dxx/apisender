@@ -166,7 +166,7 @@ jobs:
           }
           $src = Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
           $dst = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-x64.msi"
-          Rename-Item $src.FullName $dst
+          Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
           Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
@@ -247,7 +247,7 @@ jobs:
           }
           $src = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
           $dst = "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-arm64.msi"
-          Rename-Item $src.FullName $dst
+          Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
           Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
