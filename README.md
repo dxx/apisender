@@ -45,6 +45,49 @@ pnpm exec tsc --noEmit
 pnpm tauri build
 ```
 
+## 下载 & 安装
+
+从 [GitHub Releases](https://github.com/dxx/apisender/releases/latest) 下载最新版本。
+
+### 平台选择
+
+文件名格式统一为：`apisender-{ver}-{platform}-{arch}[-portable].{ext}`
+
+| 字段 | 取值 |
+|---|---|
+| `ver` | 版本号（如 `0.1.6`） |
+| `platform` | `macos` / `windows` / `linux` |
+| `arch` | `arm64` / `x64` |
+| `ext` | `dmg` / `msi` / `deb` / `AppImage` |
+| `-portable` | 仅 Windows，免安装版（`.zip`） |
+
+**示例**：
+
+- macOS Apple Silicon：`apisender-0.1.6-macos-arm64.dmg`
+- Windows x64 免安装：`apisender-0.1.6-windows-x64-portable.zip`
+- Linux x64（Debian/Ubuntu）：`apisender-0.1.6-linux-x64.deb` 或 `.AppImage`
+
+### 安装步骤
+
+**macOS**：双击 `.dmg` → 拖入 `Applications`。
+
+**Windows**：
+- `.msi`：双击运行安装向导
+- `portable.zip`：解压后双击 `apisender.exe`
+
+**Linux**：
+
+```bash
+# Debian / Ubuntu
+sudo dpkg -i apisender-{ver}-linux-x64.deb
+
+# 任意发行版（AppImage）
+chmod +x apisender-{ver}-linux-x64.AppImage
+./apisender-{ver}-linux-x64.AppImage
+```
+
+ARM64 设备下载 `linux-arm64` 版本。
+
 ## 文档
 
 详细文档说明：[docs](./docs/)。
