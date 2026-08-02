@@ -44,10 +44,13 @@ pub fn resolve_variable(name: &str, variables: &HashMap<String, String>) -> Opti
         if key.is_empty() {
             return None;
         }
-        match std::env::var(key) {
-            Ok(v) => Some(v),
-            Err(_) => default.map(|d| d.to_string()),
+        if let Ok(v) = std::env::var(key) {
+            return Some(v);
         }
+        if let Some(v) = crate::variables::system_env::get_system_env().get(key) {
+            return Some(v.clone());
+        }
+        default.map(|d| d.to_string())
     } else {
         variables.get(name).cloned()
     }
