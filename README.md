@@ -71,6 +71,11 @@ pnpm tauri build
 
 **macOS**：双击 `.dmg` → 拖入 `Applications`。
 
+**注意**：由于本项目未购买 Apple 签名证书, 下载后会被 macOS Gatekeeper 拦截，把 `apisender.app` 拖进 `/Applications` 后，在终端执行:
+```bash
+xattr -cr /Applications/apisender.app
+```
+
 **Windows**：
 - `.msi`：双击运行安装向导
 - `portable.zip`：解压后双击 `apisender.exe`
@@ -90,4 +95,4 @@ ARM64 设备下载 `linux-arm64` 版本。
 
 ## 文档
 
-详细文档说明：[docs](./docs/)。
+详细文档说明见 [docs](./docs/)。
