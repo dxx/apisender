@@ -66,11 +66,17 @@ jobs:
           tar -czf apisender-$VERSION-macos-arm64.app.tar.gz apisender.app
           ls -la
 
+      - name: Rename dmg
+        run: |
+          cd src-tauri/target/aarch64-apple-darwin/release/bundle/dmg
+          mv apisender_*.dmg "apisender-$VERSION-macos-arm64.dmg"
+          ls -la
+
       - uses: actions/upload-artifact@v4
         with:
           name: macos-arm64
           path: |
-            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/apisender-*-macos-arm64.dmg
             src-tauri/target/aarch64-apple-darwin/release/bundle/macos/apisender-*-macos-arm64.app.tar.gz
 
   build-macos-x64:
@@ -125,11 +131,17 @@ jobs:
           tar -czf apisender-$VERSION-macos-x64.app.tar.gz apisender.app
           ls -la
 
+      - name: Rename dmg
+        run: |
+          cd src-tauri/target/x86_64-apple-darwin/release/bundle/dmg
+          mv apisender_*.dmg "apisender-$VERSION-macos-x64.dmg"
+          ls -la
+
       - uses: actions/upload-artifact@v4
         with:
           name: macos-x64
           path: |
-            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
+            src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/apisender-*-macos-x64.dmg
             src-tauri/target/x86_64-apple-darwin/release/bundle/macos/apisender-*-macos-x64.app.tar.gz
 
   build-windows-x64:
@@ -357,12 +369,20 @@ jobs:
       - name: Build (x86_64-unknown-linux-gnu)
         run: pnpm tauri build --target x86_64-unknown-linux-gnu --bundles deb,appimage
 
+      - name: Rename deb + AppImage
+        run: |
+          cd src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb
+          mv apisender_*.deb "apisender-$VERSION-linux-x64.deb"
+          cd ../appimage
+          mv apisender_*.AppImage "apisender-$VERSION-linux-x64.AppImage"
+          ls -la deb appimage
+
       - uses: actions/upload-artifact@v4
         with:
           name: linux-x64
           path: |
-            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/*.deb
-            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/apisender-*-linux-x64.deb
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-x64.AppImage
 
   build-linux-arm64:
     name: Build (Linux arm64)
@@ -421,12 +441,20 @@ jobs:
       - name: Build (aarch64-unknown-linux-gnu)
         run: pnpm tauri build --target aarch64-unknown-linux-gnu --bundles deb,appimage
 
+      - name: Rename deb + AppImage
+        run: |
+          cd src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb
+          mv apisender_*.deb "apisender-$VERSION-linux-arm64.deb"
+          cd ../appimage
+          mv apisender_*.AppImage "apisender-$VERSION-linux-arm64.AppImage"
+          ls -la deb appimage
+
       - uses: actions/upload-artifact@v4
         with:
           name: linux-arm64
           path: |
-            src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb/*.deb
-            src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/*.AppImage
+            src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb/apisender-*-linux-arm64.deb
+            src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-arm64.AppImage
 
   release:
     name: Upload Release
