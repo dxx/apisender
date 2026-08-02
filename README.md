@@ -71,7 +71,7 @@ pnpm tauri build
 
 **macOS**：双击 `.dmg` → 拖入 `Applications`。
 
-**注意**：由于本项目未购买 Apple 签名证书, 下载后会被 macOS Gatekeeper 拦截，把 `apisender.app` 拖进 `/Applications` 后，在终端执行:
+**注意**：由于本项目未购买 Apple 签名证书，下载后会被 macOS Gatekeeper 拦截，把 `apisender.app` 拖进 `/Applications` 后，在终端执行:
 ```bash
 xattr -cr /Applications/apisender.app
 ```
