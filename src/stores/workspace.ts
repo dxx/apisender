@@ -8,7 +8,6 @@ interface WorkspaceState {
   root: string | null;
   tree: FileTreeNode[];
   recentWorkspaces: RecentWorkspace[];
-  loading: boolean;
   isInitialized: boolean;
   error: string | null;
 
@@ -25,12 +24,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   root: null,
   tree: [],
   recentWorkspaces: [],
-  loading: false,
   isInitialized: false,
   error: null,
 
   init: async () => {
-    set({ loading: true });
     try {
       let root = await api.getWorkspacePath();
       if (!root) {
@@ -45,30 +42,29 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         }
       }
       const recent = await api.listRecentWorkspaces();
-      set({ root, recentWorkspaces: recent, loading: false, isInitialized: true });
+      set({ root, recentWorkspaces: recent, isInitialized: true });
       if (root) {
         await get().refreshTree();
       }
     } catch (e) {
-      set({ loading: false, error: String(e), isInitialized: true });
+      set({ error: String(e), isInitialized: true });
     }
   },
 
   openFolder: async (path?: string) => {
-    set({ loading: true, error: null });
+    set({ error: null });
     try {
       const p = path ?? (await get().openDialog().then(() => undefined));
       if (!p) {
-        set({ loading: false });
         return;
       }
       await api.openWorkspace(p);
       useTabsStore.getState().closeAllTabs(true);
       const [recent] = await Promise.all([api.listRecentWorkspaces()]);
-      set({ root: p, recentWorkspaces: recent, loading: false });
+      set({ root: p, recentWorkspaces: recent });
       await get().refreshTree();
     } catch (e) {
-      set({ loading: false, error: String(e) });
+      set({ error: String(e) });
     }
   },
 
@@ -80,13 +76,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   },
 
   closeWorkspace: async () => {
-    set({ loading: true });
     try {
       await api.closeWorkspace();
       useTabsStore.getState().closeAllTabs(true);
-      set({ root: null, tree: [], loading: false });
+      set({ root: null, tree: [] });
     } catch (e) {
-      set({ loading: false, error: String(e) });
+      set({ error: String(e) });
     }
   },
 

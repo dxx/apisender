@@ -5,7 +5,6 @@ import type { HistoryEntry } from "@/lib/types";
 
 interface HistoryState {
   entries: HistoryEntry[];
-  loading: boolean;
 
   refresh: () => Promise<void>;
   clear: () => Promise<void>;
@@ -14,16 +13,12 @@ interface HistoryState {
 
 export const useHistoryStore = create<HistoryState>((set) => ({
   entries: [],
-  loading: false,
 
   refresh: async () => {
-    set({ loading: true });
     try {
       const entries = await api.listHistory(200);
-      set({ entries, loading: false });
-    } catch {
-      set({ loading: false });
-    }
+      set({ entries });
+    } catch {}
   },
 
   clear: async () => {

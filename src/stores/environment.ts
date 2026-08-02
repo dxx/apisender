@@ -12,7 +12,6 @@ interface EnvironmentState {
   names: string[];
   activeEnv: string | null;
   vars: Record<string, string>;
-  loading: boolean;
   error: string | null;
 
   init: () => Promise<void>;
@@ -24,7 +23,6 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   names: [],
   activeEnv: null,
   vars: {},
-  loading: false,
   error: null,
 
   init: async () => {
@@ -32,7 +30,6 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   },
 
   refresh: async () => {
-    set({ loading: true });
     try {
       const root = useWorkspaceStore.getState().root;
       const [names, activeEnv] = await Promise.all([
@@ -43,10 +40,10 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       if (activeEnv) {
         vars = await api.getEnvironmentVars(activeEnv);
       }
-      set({ names, activeEnv, vars, loading: false });
+      set({ names, activeEnv, vars });
     } catch (e) {
       const msg = String(e);
-      set({ loading: false, error: msg });
+      set({ error: msg });
       const now = Date.now();
       if (msg !== lastErrorMessage || now - lastErrorTime > TOAST_DEDUP_WINDOW_MS) {
         toast.error(msg);
