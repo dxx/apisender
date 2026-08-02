@@ -485,31 +485,14 @@ jobs:
       - name: Arrange release artifacts
         run: |
           mkdir -p dist
-          set +e
-
-          # macOS arm64
-          cp artifacts/macos-arm64/apisender-$VERSION-macos-arm64.app.tar.gz dist/ 2>/dev/null
-          cp artifacts/macos-arm64/*.dmg dist/ 2>/dev/null
-
-          # macOS x64
-          cp artifacts/macos-x64/apisender-$VERSION-macos-x64.app.tar.gz dist/ 2>/dev/null
-          cp artifacts/macos-x64/*.dmg dist/ 2>/dev/null
-
-          # Windows x64
-          cp artifacts/windows-x64/*.msi dist/ 2>/dev/null
-          cp artifacts/windows-x64/apisender-$VERSION-windows-x64-portable.zip dist/ 2>/dev/null
-
-          # Windows arm64
-          cp artifacts/windows-arm64/*.msi dist/ 2>/dev/null
-          cp artifacts/windows-arm64/apisender-$VERSION-windows-arm64-portable.zip dist/ 2>/dev/null
-
-          # Linux x64
-          cp artifacts/linux-x64/*.deb dist/ 2>/dev/null
-          cp artifacts/linux-x64/*.AppImage dist/ 2>/dev/null
-
-          # Linux arm64
-          cp artifacts/linux-arm64/*.deb dist/ 2>/dev/null
-          cp artifacts/linux-arm64/*.AppImage dist/ 2>/dev/null
+          find artifacts -type f \( \
+            -name "*.dmg" -o \
+            -name "*.msi" -o \
+            -name "*.deb" -o \
+            -name "*.AppImage" -o \
+            -name "*-portable.zip" -o \
+            -name "*.app.tar.gz" \
+          \) -exec cp -v {} dist/ \;
 
           echo "=== Final release artifacts ==="
           ls -la dist/
@@ -517,7 +500,5 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: "apisender ${{ github.ref_name }}"
           draft: true
-          generate_release_notes: true
           files: dist/*
