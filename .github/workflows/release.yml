@@ -20,6 +20,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Resolve VERSION
+        id: version
+        run: |
+          ref=${GITHUB_REF_NAME#v}
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=$ref" >> $GITHUB_ENV
+          else
+            echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+          fi
+
       - uses: pnpm/action-setup@v4
         with:
           version: 9
@@ -43,7 +53,6 @@ jobs:
       - name: Sync version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -53,7 +62,6 @@ jobs:
 
       - name: Pack .app.tar.gz
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
           tar -czf apisender-$VERSION-macos-arm64.app.tar.gz apisender.app
           ls -la
@@ -63,13 +71,23 @@ jobs:
           name: macos-arm64
           path: |
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/apisender-${{ github.ref_name }}-macos-arm64.app.tar.gz
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/apisender-*-macos-arm64.app.tar.gz
 
   build-macos-x64:
     name: Build (macOS x64)
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve VERSION
+        id: version
+        run: |
+          ref=${GITHUB_REF_NAME#v}
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=$ref" >> $GITHUB_ENV
+          else
+            echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+          fi
 
       - uses: pnpm/action-setup@v4
         with:
@@ -94,7 +112,6 @@ jobs:
       - name: Sync version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i '' "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -104,7 +121,6 @@ jobs:
 
       - name: Pack .app.tar.gz
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           cd src-tauri/target/x86_64-apple-darwin/release/bundle/macos
           tar -czf apisender-$VERSION-macos-x64.app.tar.gz apisender.app
           ls -la
@@ -114,13 +130,25 @@ jobs:
           name: macos-x64
           path: |
             src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/*.dmg
-            src-tauri/target/x86_64-apple-darwin/release/bundle/macos/apisender-${{ github.ref_name }}-macos-x64.app.tar.gz
+            src-tauri/target/x86_64-apple-darwin/release/bundle/macos/apisender-*-macos-x64.app.tar.gz
 
   build-windows-x64:
     name: Build (Windows x64)
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve VERSION
+        id: version
+        shell: pwsh
+        run: |
+          $ref = $env:GITHUB_REF_NAME -replace '^v',''
+          if ($ref -match '^\d+\.\d+\.\d+') {
+            $VERSION = $ref
+          } else {
+            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
+          }
+          "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: pnpm/action-setup@v4
         with:
@@ -147,7 +175,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -158,36 +185,29 @@ jobs:
       - name: Rename msi (drop _en-US suffix)
         shell: pwsh
         run: |
-          $ref = $env:GITHUB_REF_NAME -replace '^v',''
-          if ($ref -match '^\d+\.\d+\.\d+') {
-            $VERSION = $ref
-          } else {
-            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
-          }
           $src = Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
-          $dst = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-x64.msi"
+          $dst = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/apisender-$env:VERSION-windows-x64.msi"
           Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
           Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
         shell: pwsh
         run: |
-          $VERSION = $env:GITHUB_REF_NAME -replace '^v',''
-          $stageDir = "portable-$VERSION"
+          $stageDir = "portable-$env:VERSION"
           New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
           Copy-Item "src-tauri/target/x86_64-pc-windows-msvc/release/apisender.exe" $stageDir
           if (Test-Path "src-tauri/target/x86_64-pc-windows-msvc/release/resources") {
             Copy-Item -Recurse "src-tauri/target/x86_64-pc-windows-msvc/release/resources" $stageDir
           }
           @"
-          Portable apisender $VERSION (Windows x64)
+          Portable apisender $env:VERSION (Windows x64)
           ==========================================
           - Requires Windows 10 1803+ or Windows 11
           - WebView2 Runtime must be installed (pre-installed on Win11)
           - Download: https://developer.microsoft.com/microsoft-edge/webview2/
           - Just run apisender.exe
           "@ | Out-File "$stageDir/README.txt"
-          Compress-Archive -Path "$stageDir/*" -DestinationPath "apisender-$VERSION-windows-x64-portable.zip" -Force
+          Compress-Archive -Path "$stageDir/*" -DestinationPath "apisender-$env:VERSION-windows-x64-portable.zip" -Force
           Get-ChildItem . -Filter *.zip
 
       - uses: actions/upload-artifact@v4
@@ -195,13 +215,25 @@ jobs:
           name: windows-x64
           path: |
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
-            apisender-${{ github.ref_name }}-windows-x64-portable.zip
+            apisender-*-windows-x64-portable.zip
 
   build-windows-arm64:
     name: Build (Windows arm64)
     runs-on: windows-11-arm
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve VERSION
+        id: version
+        shell: pwsh
+        run: |
+          $ref = $env:GITHUB_REF_NAME -replace '^v',''
+          if ($ref -match '^\d+\.\d+\.\d+') {
+            $VERSION = $ref
+          } else {
+            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
+          }
+          "VERSION=$VERSION" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - uses: pnpm/action-setup@v4
         with:
@@ -228,7 +260,6 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -239,34 +270,27 @@ jobs:
       - name: Rename msi (drop _en-US suffix)
         shell: pwsh
         run: |
-          $ref = $env:GITHUB_REF_NAME -replace '^v',''
-          if ($ref -match '^\d+\.\d+\.\d+') {
-            $VERSION = $ref
-          } else {
-            $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
-          }
           $src = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
-          $dst = "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/apisender-$VERSION-windows-arm64.msi"
+          $dst = "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/apisender-$env:VERSION-windows-arm64.msi"
           Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
           Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
         shell: pwsh
         run: |
-          $VERSION = $env:GITHUB_REF_NAME -replace '^v',''
-          $stageDir = "portable-$VERSION"
+          $stageDir = "portable-$env:VERSION"
           New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
           Copy-Item "src-tauri/target/aarch64-pc-windows-msvc/release/apisender.exe" $stageDir
           if (Test-Path "src-tauri/target/aarch64-pc-windows-msvc/release/resources") {
             Copy-Item -Recurse "src-tauri/target/aarch64-pc-windows-msvc/release/resources" $stageDir
           }
           @"
-          Portable apisender $VERSION (Windows ARM64)
+          Portable apisender $env:VERSION (Windows ARM64)
           ============================================
           - Requires Windows 11 ARM64
           - Just run apisender.exe
           "@ | Out-File "$stageDir/README.txt"
-          Compress-Archive -Path "$stageDir/*" -DestinationPath "apisender-$VERSION-windows-arm64-portable.zip" -Force
+          Compress-Archive -Path "$stageDir/*" -DestinationPath "apisender-$env:VERSION-windows-arm64-portable.zip" -Force
           Get-ChildItem . -Filter *.zip
 
       - uses: actions/upload-artifact@v4
@@ -274,13 +298,23 @@ jobs:
           name: windows-arm64
           path: |
             src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi
-            apisender-${{ github.ref_name }}-windows-arm64-portable.zip
+            apisender-*-windows-arm64-portable.zip
 
   build-linux-x64:
     name: Build (Linux x64)
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve VERSION
+        id: version
+        run: |
+          ref=${GITHUB_REF_NAME#v}
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=$ref" >> $GITHUB_ENV
+          else
+            echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+          fi
 
       - uses: pnpm/action-setup@v4
         with:
@@ -316,7 +350,6 @@ jobs:
       - name: Sync version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -336,6 +369,16 @@ jobs:
     runs-on: ubuntu-22.04-arm
     steps:
       - uses: actions/checkout@v4
+
+      - name: Resolve VERSION
+        id: version
+        run: |
+          ref=${GITHUB_REF_NAME#v}
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=$ref" >> $GITHUB_ENV
+          else
+            echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+          fi
 
       - uses: pnpm/action-setup@v4
         with:
@@ -371,7 +414,6 @@ jobs:
       - name: Sync version from tag
         if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          VERSION=${GITHUB_REF_NAME#v}
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" src-tauri/tauri.conf.json
           sed -i "s/^version = \".*\"/version = \"$VERSION\"/" src-tauri/Cargo.toml
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
@@ -398,14 +440,25 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-22.04
     steps:
+      - uses: actions/checkout@v4
+
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
 
+      - name: Resolve VERSION
+        id: version
+        run: |
+          ref=${GITHUB_REF_NAME#v}
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            echo "VERSION=$ref" >> $GITHUB_ENV
+          else
+            echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
+          fi
+
       - name: Arrange release artifacts
         run: |
           mkdir -p dist
-          VERSION=${GITHUB_REF_NAME#v}
           set +e
 
           # macOS arm64
