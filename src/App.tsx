@@ -91,11 +91,11 @@ function App() {
   if (!isInitialized) {
     return (
       <>
+        <TitleBar />
         <div
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
           style={{ paddingTop: TITLE_BAR_HEIGHT }}
         />
-        <TitleBar />
       </>
     );
   }
@@ -103,13 +103,13 @@ function App() {
   if (!root) {
     return (
       <>
+        <TitleBar />
         <div
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
           style={{ paddingTop: TITLE_BAR_HEIGHT }}
         >
           <WelcomeScreen />
         </div>
-        <TitleBar />
       </>
     );
   }
@@ -118,6 +118,7 @@ function App() {
     <>
       <Toaster />
       <TooltipProvider delayDuration={700}>
+        <TitleBar />
         <div
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
           style={{ paddingTop: TITLE_BAR_HEIGHT }}
@@ -132,7 +133,6 @@ function App() {
             </Panel>
           </Group>
         </div>
-<TitleBar />
       <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </TooltipProvider>
     </>
