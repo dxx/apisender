@@ -54,7 +54,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               padding: "4px 0",
             },
             ".cm-scroller": {
-              lineHeight: "1.6",
+              lineHeight: "1.4",
             },
             ".cm-gutters": {
               fontFamily: "var(--font-mono)",

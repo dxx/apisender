@@ -437,7 +437,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           caretColor: "var(--editor-cursor)",
         },
         ".cm-scroller": {
-          lineHeight: "1.6",
+          lineHeight: "1.4",
         },
         ".cm-cursor, .cm-dropCursor": {
           borderLeft: "2px solid var(--editor-cursor)",
