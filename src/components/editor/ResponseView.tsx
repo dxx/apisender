@@ -53,6 +53,9 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               fontFeatureSettings: '"liga" 0, "calt" 0',
               padding: "4px 0",
             },
+            ".cm-scroller": {
+              lineHeight: "1.6",
+            },
             ".cm-gutters": {
               fontFamily: "var(--font-mono)",
               backgroundColor: "var(--card)",
@@ -66,7 +69,6 @@ export function ResponseView({ text, language }: ResponseViewProps) {
             },
             ".cm-line": {
               padding: "0 6px",
-              lineHeight: "1.6",
             },
             "&.cm-focused": {
               outline: "none",

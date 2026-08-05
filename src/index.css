@@ -26,6 +26,7 @@
   --editor-selection: rgba(13, 148, 136, 0.25);
   --editor-selection-match: rgba(13, 148, 136, 0.18);
   --editor-gutter-fg: oklch(0.72 0 0);
+  --editor-cursor: rgba(245, 158, 11, 1);
 
   --search-panel-bg: oklch(0.95 0 0);
   --search-input-bg: oklch(1 0 0);
@@ -72,6 +73,7 @@
   --editor-selection: rgba(20, 184, 166, 0.30);
   --editor-selection-match: rgba(20, 184, 166, 0.20);
   --editor-gutter-fg: oklch(0.5 0 0);
+  --editor-cursor: rgba(245, 158, 11, 1);
 
   --search-panel-bg: oklch(0.26 0.022 245);
   --search-input-bg: oklch(0.18 0.022 245);

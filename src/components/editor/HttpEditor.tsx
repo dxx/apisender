@@ -8,6 +8,7 @@ import {
   lineNumbers,
   highlightActiveLine,
   highlightActiveLineGutter,
+  drawSelection,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import {
@@ -374,6 +375,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       searchAutocompleteDisabler,
       highlightActiveLine(),
       highlightActiveLineGutter(),
+      drawSelection(),
       httpLanguage,
       keymap.of([
         indentWithTab,
@@ -407,10 +409,22 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           fontSize: "16px",
           height: "100%",
           backgroundColor: "var(--editor-bg)",
-          caretColor: "var(--foreground)",
+          caretColor: "var(--editor-cursor)",
         },
         "& ::selection": {
           backgroundColor: "var(--editor-selection)",
+        },
+        ".cm-selectionLayer": {
+          display: "none !important",
+        },
+        ".cm-line::selection, .cm-line ::selection": {
+          backgroundColor: "var(--editor-selection) !important",
+        },
+        "&.cm-focused .cm-line::selection, &.cm-focused .cm-line ::selection": {
+          backgroundColor: "var(--editor-selection) !important",
+        },
+        "&.cm-focused .cm-content:focus::selection, &.cm-focused .cm-content:focus ::selection": {
+          backgroundColor: "var(--editor-selection) !important",
         },
         ".cm-selectionMatch": {
           backgroundColor: "var(--editor-selection-match)",
@@ -420,10 +434,14 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           fontVariantLigatures: "none",
           fontFeatureSettings: '"liga" 0, "calt" 0',
           padding: "0 0 100px 0",
-          caretColor: "var(--foreground)",
+          caretColor: "var(--editor-cursor)",
+        },
+        ".cm-scroller": {
+          lineHeight: "1.6",
         },
         ".cm-cursor, .cm-dropCursor": {
-          borderLeftColor: "var(--foreground)",
+          borderLeft: "2px solid var(--editor-cursor)",
+          marginLeft: "-1px",
         },
         ".cm-gutters": {
           fontFamily: "var(--font-mono)",
@@ -440,7 +458,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
         ".cm-line": {
           padding: "0 3px",
-          lineHeight: "1.6",
         },
         ".cm-activeLine": {
           backgroundColor: "var(--accent)",

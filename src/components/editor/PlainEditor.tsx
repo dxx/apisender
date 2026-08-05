@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { EditorState, type Extension } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter } from "@codemirror/view";
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
 import { json } from "@codemirror/lang-json";
@@ -63,6 +63,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         searchAutocompleteDisabler,
         highlightActiveLine(),
         highlightActiveLineGutter(),
+        drawSelection(),
         ...languageFor(tab.name),
         keymap.of([
           indentWithTab,
@@ -85,10 +86,22 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             fontSize: "16px",
             height: "100%",
             backgroundColor: "var(--editor-bg)",
-            caretColor: "var(--foreground)",
+            caretColor: "var(--editor-cursor)",
           },
           "& ::selection": {
             backgroundColor: "var(--editor-selection)",
+          },
+          ".cm-selectionLayer": {
+            display: "none !important",
+          },
+          ".cm-line::selection, .cm-line ::selection": {
+            backgroundColor: "var(--editor-selection) !important",
+          },
+          "&.cm-focused .cm-line::selection, &.cm-focused .cm-line ::selection": {
+            backgroundColor: "var(--editor-selection) !important",
+          },
+          "&.cm-focused .cm-content:focus::selection, &.cm-focused .cm-content:focus ::selection": {
+            backgroundColor: "var(--editor-selection) !important",
           },
           ".cm-selectionMatch": {
             backgroundColor: "var(--editor-selection-match)",
@@ -98,10 +111,14 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             fontVariantLigatures: "none",
             fontFeatureSettings: '"liga" 0, "calt" 0',
             padding: "0 0 100px 0",
-            caretColor: "var(--foreground)",
+            caretColor: "var(--editor-cursor)",
+          },
+          ".cm-scroller": {
+            lineHeight: "1.6",
           },
           ".cm-cursor, .cm-dropCursor": {
-            borderLeftColor: "var(--foreground)",
+            borderLeft: "2px solid var(--editor-cursor)",
+            marginLeft: "-1px",
           },
           ".cm-gutters": {
             fontFamily: "var(--font-mono)",
@@ -118,7 +135,6 @@ export function PlainEditor({ tab }: PlainEditorProps) {
           },
           ".cm-line": {
             padding: "0 3px",
-            lineHeight: "1.6",
           },
           ".cm-activeLine": {
             backgroundColor: "var(--accent)",
