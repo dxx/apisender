@@ -141,6 +141,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
           },
           ".cm-activeLineGutter": {
             backgroundColor: "var(--accent)",
+            color: "var(--editor-gutter-active-fg)",
           },
           "&.cm-focused": {
             outline: "none",

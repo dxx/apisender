@@ -464,6 +464,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
         ".cm-activeLineGutter": {
           backgroundColor: "var(--accent)",
+          color: "var(--editor-gutter-active-fg)",
         },
         ".cm-run-gutter": {
           width: "22px",
