@@ -50,6 +50,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Tooltip,
+  TooltipArrow,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -185,41 +186,62 @@ export function FileTree({ nodes }: FileTreeProps) {
           文件树
         </span>
         <div className="flex items-center gap-0.5">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            title="新建文件"
-            disabled={!root}
-            onClick={(e) => {
-              e.stopPropagation();
-              openRootNew(false);
-            }}
-          >
-            <FilePlus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            title="新建文件夹"
-            disabled={!root}
-            onClick={(e) => {
-              e.stopPropagation();
-              openRootNew(true);
-            }}
-          >
-            <FolderPlus className="h-3.5 w-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6"
-            title="刷新"
-            onClick={() => refreshTree()}
-          >
-            <RefreshCw className="h-3.5 w-3.5" />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                disabled={!root}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openRootNew(false);
+                }}
+              >
+                <FilePlus className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <TooltipArrow />
+              新建文件
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                disabled={!root}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openRootNew(true);
+                }}
+              >
+                <FolderPlus className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <TooltipArrow />
+              新建文件夹
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => refreshTree()}
+              >
+                <RefreshCw className="h-3.5 w-3.5" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <TooltipArrow />
+              刷新
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
       <ScrollArea className="flex-1">

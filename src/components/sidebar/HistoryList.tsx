@@ -24,6 +24,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
+  TooltipArrow,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -84,16 +85,23 @@ export function HistoryList() {
         <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
           历史{entries.length > 0 && ` (${entries.length})`}
         </span>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
-          title="清空历史"
-          disabled={entries.length === 0}
-          onClick={() => setClearOpen(true)}
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
+              disabled={entries.length === 0}
+              onClick={() => setClearOpen(true)}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <TooltipArrow />
+            清空历史
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <ScrollArea className="flex-1">
@@ -119,7 +127,7 @@ export function HistoryList() {
                         </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="min-w-0 flex-1 truncate text-xs cursor-default">
+                            <span className="truncate text-xs cursor-default">
                               {entry.url}
                             </span>
                           </TooltipTrigger>

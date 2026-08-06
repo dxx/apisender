@@ -15,6 +15,7 @@ import {
 import { FileTree } from "@/components/filetree/FileTree";
 import { HistoryList } from "@/components/sidebar/HistoryList";
 import { EnvSelector } from "@/components/sidebar/EnvSelector";
+import { Tooltip, TooltipArrow, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceStore } from "@/stores/workspace";
 
 interface SidebarProps {
@@ -125,15 +126,22 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-6 w-6 shrink-0 text-muted-foreground"
-          title="设置"
-          onClick={onSettingsClick}
-        >
-          <Settings className="h-3.5 w-3.5" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-muted-foreground"
+              onClick={onSettingsClick}
+            >
+              <Settings className="h-3.5 w-3.5" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom">
+            <TooltipArrow />
+            设置
+          </TooltipContent>
+        </Tooltip>
       </div>
 
       <div className="flex-1 overflow-hidden">
