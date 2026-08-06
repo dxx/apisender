@@ -124,10 +124,10 @@ function App() {
           style={{ paddingTop: TITLE_BAR_HEIGHT }}
         >
           <Group id="sidebar-main" orientation="horizontal" className="flex-1 overflow-hidden">
-            <Panel id="sidebar" defaultSize="18%" minSize="12%" maxSize="32%">
+            <Panel id="sidebar" defaultSize="18%" minSize="10%" maxSize="60%">
               <Sidebar onSettingsClick={() => setSettingsOpen(true)} />
             </Panel>
-            <Separator className="w-px cursor-col-resize bg-transparent transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary" />
+            <Separator className="relative z-[2] -ml-1 w-1 cursor-col-resize bg-transparent transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary" />
             <Panel id="main" minSize="40%">
               <MainPane />
             </Panel>

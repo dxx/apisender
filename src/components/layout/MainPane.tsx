@@ -432,7 +432,7 @@ export function MainPane() {
             <Panel id="editor" defaultSize="60%" minSize="20%">
               <HttpEditor tab={activeTab} />
             </Panel>
-            <Separator className="h-px cursor-row-resize bg-transparent transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary" />
+            <Separator className="relative z-[2] -mb-1 h-1 cursor-row-resize bg-transparent transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary" />
             <Panel
               id="response"
               defaultSize="40%"

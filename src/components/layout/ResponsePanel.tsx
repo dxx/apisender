@@ -63,7 +63,7 @@ export function ResponsePanel({ tab, panelRef, collapsed }: ResponsePanelProps) 
   }
 
   return (
-    <div className="flex h-full w-full flex-col border-t bg-card">
+    <div className="flex h-full w-full flex-col border-t-2 bg-card">
       <div className="flex h-8 shrink-0 items-center justify-between border-b px-1.5">
         <span className="text-xs font-medium pl-2">响应</span>
         <Button
