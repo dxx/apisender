@@ -88,6 +88,9 @@ export function ResponseView({ text, language }: ResponseViewProps) {
             ".cm-cursor": {
               display: "none",
             },
+            "&.cm-focused > .cm-scroller > .cm-cursorLayer .cm-cursor, &.cm-focused .cm-cursorLayer .cm-cursor": {
+              display: "none !important",
+            },
           }),
         ],
       });
