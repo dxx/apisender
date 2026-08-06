@@ -412,18 +412,13 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           caretColor: "var(--editor-cursor)",
         },
         "& ::selection": {
-          backgroundColor: "var(--editor-selection)",
+          backgroundColor: "transparent",
         },
         ".cm-selectionLayer": {
-          display: "none !important",
+          zIndex: "1 !important",
+          pointerEvents: "none",
         },
-        ".cm-line::selection, .cm-line ::selection": {
-          backgroundColor: "var(--editor-selection) !important",
-        },
-        "&.cm-focused .cm-line::selection, &.cm-focused .cm-line ::selection": {
-          backgroundColor: "var(--editor-selection) !important",
-        },
-        "&.cm-focused .cm-content:focus::selection, &.cm-focused .cm-content:focus ::selection": {
+        ".cm-selectionBackground": {
           backgroundColor: "var(--editor-selection) !important",
         },
         ".cm-selectionMatch": {

@@ -4,6 +4,7 @@ import {
   EditorView,
   keymap,
   lineNumbers,
+  drawSelection,
 } from "@codemirror/view";
 import { defaultKeymap, history } from "@codemirror/commands";
 import type { Language } from "@codemirror/language";
@@ -33,6 +34,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
         extensions: [
           lineNumbers(),
           history(),
+          drawSelection(),
           search(),
           searchPanelTheme,
           searchAutocompleteDisabler,
@@ -46,6 +48,16 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               fontSize: "16px",
               height: "100%",
               backgroundColor: "var(--editor-bg)",
+            },
+            "& ::selection": {
+              backgroundColor: "transparent",
+            },
+            ".cm-selectionLayer": {
+              zIndex: "1 !important",
+              pointerEvents: "none",
+            },
+            ".cm-selectionBackground": {
+              backgroundColor: "var(--editor-selection) !important",
             },
             ".cm-content": {
               fontFamily: "var(--font-mono)",
