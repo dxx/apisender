@@ -3,7 +3,6 @@ import { Copy, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useHistoryStore } from "@/stores/history";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,20 +81,20 @@ export function HistoryList() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 items-center justify-between border-b px-2 py-1.5">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          历史{entries.length > 0 && ` (${entries.length})`}
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          历史记录{entries.length > 0 && ` (${entries.length})`}
         </span>
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-30"
-              disabled={entries.length === 0}
+            <div
+              role="button"
+              tabIndex={entries.length === 0 ? -1 : 0}
+              aria-disabled={entries.length === 0}
+              className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:text-destructive hover:bg-destructive/10 ${entries.length === 0 ? "pointer-events-none opacity-30" : ""}`}
               onClick={() => setClearOpen(true)}
             >
-              <Trash2 className="h-3 w-3" />
-            </Button>
+              <Trash2 className="h-3.5 w-3.5" />
+            </div>
           </TooltipTrigger>
           <TooltipContent side="bottom">
             <TooltipArrow />

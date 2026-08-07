@@ -181,25 +181,25 @@ export function FileTree({ nodes }: FileTreeProps) {
 
   return (
     <div className="flex h-full flex-col" tabIndex={0} onKeyDown={handleKeyDown} onClick={() => setSelectPath(null)}>
-      <div className="flex items-center justify-between px-2 py-1">
-        <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between px-2 py-1.5">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
           文件树
         </span>
         <div className="flex items-center gap-0.5">
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                disabled={!root}
+              <div
+                role="button"
+                tabIndex={!root ? -1 : 0}
+                aria-disabled={!root}
+                className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground ${!root ? "pointer-events-none opacity-50" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   openRootNew(false);
                 }}
               >
                 <FilePlus className="h-3.5 w-3.5" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <TooltipArrow />
@@ -208,18 +208,18 @@ export function FileTree({ nodes }: FileTreeProps) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
-                disabled={!root}
+              <div
+                role="button"
+                tabIndex={!root ? -1 : 0}
+                aria-disabled={!root}
+                className={`inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground ${!root ? "pointer-events-none opacity-50" : ""}`}
                 onClick={(e) => {
                   e.stopPropagation();
                   openRootNew(true);
                 }}
               >
-                <FolderPlus className="h-3.5 w-3.5" />
-              </Button>
+                <FolderPlus className="h-3.5 w-3.5" style={{ transform: "scale(1.1)" }} />
+              </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <TooltipArrow />
@@ -228,14 +228,14 @@ export function FileTree({ nodes }: FileTreeProps) {
           </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6"
+              <div
+                role="button"
+                tabIndex={0}
+                className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 onClick={() => refreshTree()}
               >
                 <RefreshCw className="h-3.5 w-3.5" />
-              </Button>
+              </div>
             </TooltipTrigger>
             <TooltipContent side="bottom">
               <TooltipArrow />

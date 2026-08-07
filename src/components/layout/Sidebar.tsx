@@ -52,7 +52,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
 
   return (
     <aside className="flex h-full w-full shrink-0 flex-col border-r-2 bg-card">
-      <div className="flex h-9 items-center justify-between border-b px-3">
+      <div className="flex h-9 items-center justify-between border-b px-3 pr-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="flex min-w-0 flex-1 items-center gap-1 text-xs font-medium hover:text-primary">
