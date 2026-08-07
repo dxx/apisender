@@ -12,7 +12,7 @@
 
   <rect width="32" height="32" rx="7" fill="url(#bg)" transform="scale(0.8) translate(4, 4)"/>
 
-  <g transform="scale(0.88) translate(1.93, 1.93)" stroke-linecap="round" stroke-linejoin="round" fill="none">
+  <g transform="scale(0.88) translate(2.2, 2.2)" stroke-linecap="round" stroke-linejoin="round" fill="none">
     <g stroke="#4ADE80" stroke-width="2.13">
       <path d="M 11.875 8.75
                C 10 8.75 8.75 10 8.75 11.875
