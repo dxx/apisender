@@ -102,7 +102,7 @@ function WinLinuxTitleBar() {
       {...DRAG_REGION_ATTR}
       style={{ ...DRAG_REGION_STYLE, height: TITLE_BAR_HEIGHT }}
       onDoubleClick={onDoubleClickDrag}
-      className="h-7 fixed top-0 left-0 right-0 z-[60] flex select-none items-center justify-between border-b bg-card pl-2"
+      className="fixed top-0 left-0 right-0 z-[60] flex select-none items-center justify-between border-b bg-card pl-2"
     >
       <div className="flex items-center gap-2">
         <img src={logo} alt="apisender" className="h-6 w-6" />
@@ -117,12 +117,12 @@ function WinLinuxTitleBar() {
 
       <div
         style={NO_DRAG_STYLE}
-        className="flex items-center"
+        className="flex h-full items-center"
       >
         <button
           type="button"
           aria-label="最小化"
-          className="flex h-7 w-11 items-center justify-center text-muted-foreground hover:bg-accent focus:outline-none"
+          className="flex h-full w-11 items-center justify-center text-muted-foreground hover:bg-accent focus:outline-none"
           onClick={() => getCurrentWindow().minimize().catch(() => {})}
         >
           <Minus className="h-3.5 w-3.5" />
@@ -130,7 +130,7 @@ function WinLinuxTitleBar() {
         <button
           type="button"
           aria-label={isMaximized ? "还原" : "最大化"}
-          className="flex h-7 w-11 items-center justify-center text-muted-foreground hover:bg-accent focus:outline-none"
+          className="flex h-full w-11 items-center justify-center text-muted-foreground hover:bg-accent focus:outline-none"
           onClick={() => getCurrentWindow().toggleMaximize().catch(() => {})}
         >
           {isMaximized ? (
@@ -142,7 +142,7 @@ function WinLinuxTitleBar() {
         <button
           type="button"
           aria-label="关闭"
-          className="group flex h-7 w-11 items-center justify-center text-muted-foreground hover:bg-[#e81123] hover:text-white focus:outline-none"
+          className="group flex h-full w-11 items-center justify-center text-muted-foreground hover:bg-[#e81123] hover:text-white focus:outline-none"
           onClick={() => getCurrentWindow().close().catch(() => {})}
         >
           <X className="h-3.5 w-3.5" />
