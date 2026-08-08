@@ -1,5 +1,19 @@
 # 更新日志
 
+## 0.1.9 - 2026-08-08
+
+### 变更
+
+- 添加 fg-active 和 fg-inactive 前景色变量 ([bd84811](https://github.com/dxx/apisender/commit/bd84811835b7e7140fc6ffc6b6dc4c58b7d963aa))
+- 重新生成应用图标 ([cb20436](https://github.com/dxx/apisender/commit/cb20436bc5a914df6e9bb0e2a7a177b24186d117))
+- 调整侧边栏工具栏和标题样式 ([7a8d786](https://github.com/dxx/apisender/commit/7a8d786c6cb22e039282c4a76fdb77194c92c7be))
+- 修改 logo 图标 ([3d21c1b](https://github.com/dxx/apisender/commit/3d21c1b8bcf202a487b9d770b11729dbd8035a6b))
+- 用 Tooltip 组件替换标题 ([6a437ad](https://github.com/dxx/apisender/commit/6a437ad1c9129f5e7c938b38ddf567df22b2430d))
+- 调整拖放样式 ([48e7ae3](https://github.com/dxx/apisender/commit/48e7ae345c8f6c8730b4a920aee09a962dc99355))
+- 修改选中样式 ([f4e79b0](https://github.com/dxx/apisender/commit/f4e79b05e2296589ef8e790e9389ad82e82df04f))
+- 使用 CodeMirror 选中样式 ([0da70dc](https://github.com/dxx/apisender/commit/0da70dc6e9598ae3d9daa2536f625e8080138ef7))
+- 调整行高 ([28960e7](https://github.com/dxx/apisender/commit/28960e7b8c3e2a87ed1ed5c23bfa0172189f31c7))
+
 ## 0.1.8 - 2026-08-05
 
 ### 变更
