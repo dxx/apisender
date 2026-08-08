@@ -398,7 +398,7 @@ function TreeItem({
         <ContextMenuTrigger asChild>
           <div
             className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums hover:bg-accent ${
-              selectPath === node.path ? "bg-accent font-medium" : ""
+              selectPath === node.path ? "bg-accent text-[var(--fg-active)]" : "text-[var(--fg-inactive)]"
             }`}
             style={{ paddingLeft }}
             onClick={handleClick}

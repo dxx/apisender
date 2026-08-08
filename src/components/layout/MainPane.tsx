@@ -364,8 +364,8 @@ export function MainPane() {
                   <div
                     className={`group flex h-full cursor-pointer items-center gap-1.5 px-3 text-sm ${
                       tab.path === activePath
-                        ? "bg-background text-foreground shadow-[inset_0_-2px_0_0_var(--primary)]"
-                        : "bg-card text-foreground hover:bg-accent/50"
+                        ? "bg-background text-[var(--fg-active)] shadow-[inset_0_-2px_0_0_var(--primary)]"
+                        : "bg-card text-[var(--fg-inactive)] hover:bg-accent/50"
                     }`}
                     onClick={() => setActive(tab.path)}
                   >
