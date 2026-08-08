@@ -9,7 +9,7 @@
 HTTP / WebSocket / SSE / gRPC 请求客户端，类似 IntelliJ HTTP Client / VSCode REST Client 的桌面应用，基于 Tauri 2 构建。
 </p>
 
-![HTTP Get](./docs/images/http-get.png)
+![HTTP Get](./docs/images/request.png)
 
 点击[查看](./docs/screenshots.md)更多截图。
 
