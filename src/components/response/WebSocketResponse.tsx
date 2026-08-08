@@ -217,9 +217,6 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
               outline: "none",
               borderColor: "var(--ring)",
             },
-            ".cm-scroller": {
-              fontFamily: "var(--font-mono)",
-            },
           }),
         ],
       });

@@ -272,7 +272,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
       <div className="mb-0.5 flex items-center gap-2 text-sm">
         <span className="font-mono text-muted-foreground text-xs">#{index}</span>
         {evt.event !== "message" && (
-          <span className="rounded bg-primary/10 px-1 font-medium text-primary">
+          <span className="font-mono rounded bg-primary/10 px-1 font-medium text-primary">
             {evt.event}
           </span>
         )}
