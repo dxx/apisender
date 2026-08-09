@@ -187,12 +187,12 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
 
         <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-mono text-xs">
           {grpc.initialMetadata.length === 0 && grpc.trailingMetadata.length === 0 ? (
-            <div className="text-muted-foreground px-3 py-1.5">No metadata</div>
+            <div className="text-muted-foreground text-sm px-3 py-1.5">No metadata</div>
           ) : (
             <ScrollArea className="h-full">
               {grpc.initialMetadata.length > 0 && (
                 <div className="px-3 py-1">
-                  <div className="bg-muted/40 text-[12px] font-medium text-muted-foreground">
+                  <div className="bg-muted/40 text-[10px] font-medium text-muted-foreground">
                     Initial ({grpc.initialMetadata.length})
                   </div>
                   <table className="w-full text-sm">
@@ -212,7 +212,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
                   <div className="bg-muted/40 text-[10px] font-medium text-muted-foreground">
                     Trailing ({grpc.trailingMetadata.length})
                   </div>
-                  <table className="w-full">
+                  <table className="w-full text-sm">
                     <tbody>
                       {grpc.trailingMetadata.map((kv: [string, string], i: number) => (
                         <tr key={`t-${i}`} className="align-top">
@@ -238,7 +238,7 @@ function MessageRow({ msg }: { msg: GrpcMessageRecord }) {
       <div className="mb-1 text-xs text-muted-foreground">
         msg #{msg.index + 1} · {formatTime(msg.tsMs)}
       </div>
-      <pre className="whitespace-pre-wrap break-all font-mono text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
         {formatJson(msg.data)}
       </pre>
     </div>

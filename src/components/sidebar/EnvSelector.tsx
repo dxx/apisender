@@ -85,10 +85,10 @@ export function EnvSelector() {
         <div className="flex flex-col gap-0.5 rounded-md border bg-muted/30 p-1.5">
           {Object.entries(vars).slice(0, 8).map(([k, v]) => (
             <div key={k} className="flex items-center gap-1 text-[11px]">
-              <span className="shrink-0 font-mono text-muted-foreground">{k}</span>
+              <span className="shrink-0 text-muted-foreground">{k}</span>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="truncate font-mono cursor-default">{v}</span>
+                  <span className="truncate cursor-default">{v}</span>
                 </TooltipTrigger>
                 <TooltipContent side="right" className="max-w-md break-all">
                   {v}
