@@ -362,9 +362,9 @@ export function MainPane() {
               <ContextMenu key={tab.path}>
                 <ContextMenuTrigger asChild>
                   <div
-                    className={`group flex h-full cursor-pointer items-center gap-1.5 px-3 text-sm ${
+                    className={`group relative flex h-full cursor-pointer items-center gap-1.5 px-3 text-sm ${
                       tab.path === activePath
-                        ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)] shadow-[inset_0_-2px_0_0_var(--primary)]"
+                        ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
                         : "hover:bg-[var(--editor-active-bg)]/50 text-[var(--editor-inactive-fg)]"
                     }`}
                     onClick={() => setActive(tab.path)}
@@ -391,6 +391,12 @@ export function MainPane() {
                     >
                       <X className="h-4 w-4" />
                     </button>
+                    {tab.path === activePath && (
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-0.5 bg-primary"
+                      />
+                    )}
                   </div>
                 </ContextMenuTrigger>
                 <ContextMenuContent>

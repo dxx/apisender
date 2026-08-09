@@ -97,11 +97,11 @@ export function TabsScrollbar({ scrollRef }: TabsScrollbarProps) {
     <div
       ref={trackRef}
       onClick={handleTrackClick}
-      className="absolute right-0 bottom-0 left-0 z-10 h-1 shrink-0 cursor-pointer bg-border/30 opacity-0 transition-opacity duration-150 group-hover/tabs:opacity-100"
+      className="absolute right-0 bottom-0 left-0 z-10 h-1 shrink-0 cursor-pointer opacity-0 transition-opacity duration-150 group-hover/tabs:opacity-100"
     >
       <div
         onMouseDown={handleThumbMouseDown}
-        className="absolute top-0 h-full cursor-grab rounded-full bg-muted-foreground/30 transition-colors hover:bg-muted-foreground/60 active:cursor-grabbing"
+        className="absolute top-0 h-full cursor-grab rounded-full bg-border transition-colors hover:bg-border active:cursor-grabbing"
         style={{ left: state.left, width: state.width }}
       />
     </div>
