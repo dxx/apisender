@@ -83,7 +83,10 @@ export function EnvSelector() {
       </Select>
       {expanded && hasVars && (
         <div className="flex flex-col gap-0.5 rounded-md border bg-muted/30 p-1.5">
-          {Object.entries(vars).slice(0, 8).map(([k, v]) => (
+          {Object.entries(vars)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .slice(0, 8)
+            .map(([k, v]) => (
             <div key={k} className="flex items-center gap-1 text-[11px]">
               <span className="shrink-0 text-muted-foreground">{k}</span>
               <Tooltip>
