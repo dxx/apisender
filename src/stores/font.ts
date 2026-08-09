@@ -8,8 +8,8 @@ interface FontState {
   systemFonts: string[];
   loaded: boolean;
   init: () => Promise<void>;
-  setEditorFontFamily: (font: string) => Promise<void>;
-  setUiFontFamily: (font: string) => Promise<void>;
+  setEditorFontFamily: (font: string | null) => Promise<void>;
+  setUiFontFamily: (font: string | null) => Promise<void>;
 }
 
 function applyEditorFontFamily(font: string) {
@@ -89,10 +89,17 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setEditorFontFamily: async (font) => {
-    applyEditorFontFamily(font);
-    try {
-      localStorage.setItem("editorFontFamily", font);
-    } catch {}
+    if (font) {
+      applyEditorFontFamily(font);
+      try {
+        localStorage.setItem("editorFontFamily", font);
+      } catch {}
+    } else {
+      clearEditorFontFamily();
+      try {
+        localStorage.removeItem("editorFontFamily");
+      } catch {}
+    }
     set({ editorFontFamily: font });
     try {
       await api.setEditorFontFamily(font);
@@ -102,10 +109,17 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setUiFontFamily: async (font) => {
-    applyUiFontFamily(font);
-    try {
-      localStorage.setItem("uiFontFamily", font);
-    } catch {}
+    if (font) {
+      applyUiFontFamily(font);
+      try {
+        localStorage.setItem("uiFontFamily", font);
+      } catch {}
+    } else {
+      clearUiFontFamily();
+      try {
+        localStorage.removeItem("uiFontFamily");
+      } catch {}
+    }
     set({ uiFontFamily: font });
     try {
       await api.setUiFontFamily(font);

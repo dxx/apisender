@@ -17,11 +17,11 @@ export async function getFonts(): Promise<FontSettings> {
   return invoke<FontSettings>("get_fonts");
 }
 
-export async function setEditorFontFamily(font: string): Promise<void> {
+export async function setEditorFontFamily(font: string | null): Promise<void> {
   await invoke("set_editor_font_family", { font });
 }
 
-export async function setUiFontFamily(font: string): Promise<void> {
+export async function setUiFontFamily(font: string | null): Promise<void> {
   await invoke("set_ui_font_family", { font });
 }
 

@@ -34,16 +34,16 @@ pub async fn get_fonts(app: AppHandle) -> AppResult<FontSettings> {
 }
 
 #[tauri::command]
-pub async fn set_editor_font_family(app: AppHandle, font: String) -> AppResult<()> {
+pub async fn set_editor_font_family(app: AppHandle, font: Option<String>) -> AppResult<()> {
     let mut cfg = AppConfig::load(&app)?;
-    cfg.editor_font_family = Some(font);
+    cfg.editor_font_family = font;
     cfg.save(&app)
 }
 
 #[tauri::command]
-pub async fn set_ui_font_family(app: AppHandle, font: String) -> AppResult<()> {
+pub async fn set_ui_font_family(app: AppHandle, font: Option<String>) -> AppResult<()> {
     let mut cfg = AppConfig::load(&app)?;
-    cfg.ui_font_family = Some(font);
+    cfg.ui_font_family = font;
     cfg.save(&app)
 }
 

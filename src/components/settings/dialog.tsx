@@ -63,22 +63,30 @@ const editorPreviewLines = [
   "}",
 ];
 
+const DEFAULT_VALUE = "__default__";
+
 interface FontSelectorProps {
   label: string;
   value: string | null;
   fonts: string[];
-  onChange: (font: string) => void;
+  onChange: (font: string | null) => void;
   previewLines: string[];
 }
 
-function FontSelector({ label, value, fonts, onChange, previewLines }: FontSelectorProps) {
+function FontSelector({
+  label,
+  value,
+  fonts,
+  onChange,
+  previewLines,
+}: FontSelectorProps) {
   const isLoading = fonts.length === 0;
   return (
     <div className="flex flex-col gap-2">
       <Label className="text-sm">{label}</Label>
       <Select
-        value={value ?? ""}
-        onValueChange={onChange}
+        value={value ?? DEFAULT_VALUE}
+        onValueChange={(v) => onChange(v === DEFAULT_VALUE ? null : v)}
         disabled={isLoading}
       >
         <SelectTrigger>
@@ -90,6 +98,7 @@ function FontSelector({ label, value, fonts, onChange, previewLines }: FontSelec
           align="start"
           style={{ width: "var(--radix-select-trigger-width)", maxHeight: "300px" }}
         >
+          <SelectItem value={DEFAULT_VALUE}>默认</SelectItem>
           {fonts.map((font) => (
             <SelectItem key={font} value={font}>
               <span style={{ fontFamily: `"${font}", sans-serif` }}>{font}</span>
