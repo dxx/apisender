@@ -1,5 +1,17 @@
 # 更新日志
 
+## 0.1.10 - 2026-08-09
+
+### 新增
+
+- 设置中新增字体选择（界面字体、编辑器字体）([2ea06a8](https://github.com/dxx/apisender/commit/2ea06a81410f5ede840844bc90a7880369f908d1))
+- 字体选择增加"默认"选项，恢复系统字体 ([dc9b4c9](https://github.com/dxx/apisender/commit/dc9b4c94c2195d2475bcbed452a497e161084388))
+
+### 变更
+
+- 用 APP_NAME 统一 Rust 端文件名（config / db）([1594ddf](https://github.com/dxx/apisender/commit/1594ddf3795f4ff66f0ea1c53ff8295831b65fa0))
+- 主题和字体以后端 config.json 为准，后端删除字段时同步清除前端 ([25dabdb](https://github.com/dxx/apisender/commit/25dabdb0a26cf4401d4206c5c4964b6007071ee5))
+
 ## 0.1.9 - 2026-08-08
 
 ### 变更
