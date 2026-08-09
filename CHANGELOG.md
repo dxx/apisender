@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.1.11 - 2026-08-10
+
+### 变更
+
+- 修改文件项和标签样式 ([dc3869d](https://github.com/dxx/apisender/commit/dc3869dce9f9fa5557f06027b72d89c8df0a940f))
+- 使用独立阴影 div 并对齐滚动条 ([99e8db3](https://github.com/dxx/apisender/commit/99e8db3f24a32622aec9097eed1ff4b5233eee0b))
+
 ## 0.1.10 - 2026-08-09
 
 ### 新增
