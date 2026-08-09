@@ -4,6 +4,7 @@ use rusqlite::Connection;
 use tauri::{AppHandle, Manager};
 
 use crate::error::{AppError, AppResult};
+use crate::version::APP_NAME;
 
 use self::schema::SCHEMA_SQL;
 
@@ -38,7 +39,7 @@ pub fn init_db(app: &AppHandle) -> AppResult<()> {
 
     std::fs::create_dir_all(&app_dir)?;
 
-    let db_path = app_dir.join("apisender.db");
+    let db_path = app_dir.join(format!("{}.db", APP_NAME));
     let db = Db::new(&db_path)?;
     app.manage(db);
     Ok(())
