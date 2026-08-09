@@ -9,6 +9,7 @@ import {
   FilePlus,
   FolderPlus,
   RefreshCw,
+  Crosshair,
   Pencil,
   Trash2,
 } from "lucide-react";
@@ -71,6 +72,23 @@ function findNode(nodes: FileTreeNode[], path: string): FileTreeNode | null {
   return null;
 }
 
+function getAncestorPaths(filePath: string, root: string): string[] {
+  const normalizedRoot = root.replace(/\/+$/, "");
+  const normalizedFile = filePath.replace(/\/+$/, "");
+  if (!normalizedFile.startsWith(normalizedRoot)) return [];
+
+  const result: string[] = [];
+  let dir = normalizedFile.substring(0, normalizedFile.lastIndexOf("/"));
+  while (dir.length >= normalizedRoot.length) {
+    result.unshift(dir);
+    if (dir === normalizedRoot) break;
+    const next = dir.lastIndexOf("/");
+    if (next === -1) break;
+    dir = dir.substring(0, next);
+  }
+  return result;
+}
+
 function resolveBaseDir(
   selectPath: string | null,
   nodes: FileTreeNode[],
@@ -94,6 +112,16 @@ export function FileTree({ nodes }: FileTreeProps) {
   const [rootNewName, setRootNewName] = useState("");
   const [rootNewIsDir, setRootNewIsDir] = useState(false);
   const [selectPath, setSelectPath] = useState<string | null>(null);
+  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
+
+  const toggleExpandedPath = useCallback((path: string) => {
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      if (next.has(path)) next.delete(path);
+      else next.add(path);
+      return next;
+    });
+  }, []);
 
   const handleCopy = useCallback(async () => {
     if (!selectPath) {
@@ -179,6 +207,36 @@ export function FileTree({ nodes }: FileTreeProps) {
     setRootNewOpen(true);
   };
 
+  const handleLocate = useCallback(() => {
+    const activePath = useTabsStore.getState().activePath;
+    if (!activePath) {
+      toast.info("当前没有打开的标签");
+      return;
+    }
+    if (!root) {
+      toast.error("请先打开工作区");
+      return;
+    }
+    const node = findNode(nodes, activePath);
+    if (!node) {
+      toast.error("当前标签的文件不在工作区中");
+      return;
+    }
+    const ancestors = getAncestorPaths(activePath, root);
+    setExpandedPaths((prev) => {
+      const next = new Set(prev);
+      ancestors.forEach((p) => next.add(p));
+      return next;
+    });
+    setSelectPath(activePath);
+    requestAnimationFrame(() => {
+      const el = document.querySelector(
+        `[data-tree-path="${CSS.escape(activePath)}"]`,
+      );
+      el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    });
+  }, [root, nodes]);
+
   return (
     <div className="flex h-full flex-col" tabIndex={0} onKeyDown={handleKeyDown} onClick={() => setSelectPath(null)}>
       <div className="flex items-center justify-between px-2 py-1.5">
@@ -186,6 +244,25 @@ export function FileTree({ nodes }: FileTreeProps) {
           文件树
         </span>
         <div className="flex items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div
+                role="button"
+                tabIndex={0}
+                className="inline-flex h-6 w-6 cursor-pointer items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleLocate();
+                }}
+              >
+                <Crosshair className="h-3.5 w-3.5" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">
+              <TooltipArrow />
+              定位当前文件
+            </TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <div
@@ -261,6 +338,8 @@ export function FileTree({ nodes }: FileTreeProps) {
                   depth={0}
                   selectPath={selectPath}
                   onSelect={setSelectPath}
+                  expandedPaths={expandedPaths}
+                  onTogglePath={toggleExpandedPath}
                 />
               ))}
             </div>
@@ -310,13 +389,17 @@ function TreeItem({
   depth,
   selectPath,
   onSelect,
+  expandedPaths,
+  onTogglePath,
 }: {
   node: FileTreeNode;
   depth: number;
   selectPath: string | null;
   onSelect: (path: string) => void;
+  expandedPaths: Set<string>;
+  onTogglePath: (path: string) => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const expanded = expandedPaths.has(node.path);
   const openFile = useTabsStore((s) => s.openFile);
   const refreshTree = useWorkspaceStore((s) => s.refreshTree);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -331,12 +414,12 @@ function TreeItem({
       e.stopPropagation();
       onSelect(node.path);
       if (node.type === "dir") {
-        setExpanded((e) => !e);
+        onTogglePath(node.path);
       } else {
         openFile(node.path, node.name);
       }
     },
-    [node, openFile, onSelect],
+    [node, openFile, onSelect, onTogglePath],
   );
 
   const handleDelete = useCallback(async () => {
@@ -400,6 +483,7 @@ function TreeItem({
             className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums hover:bg-accent ${
               selectPath === node.path ? "bg-accent text-[var(--fg-active)]" : "text-[var(--fg-inactive)]"
             }`}
+            data-tree-path={node.path}
             style={{ paddingLeft }}
             onClick={handleClick}
           >
@@ -492,6 +576,8 @@ function TreeItem({
               depth={depth + 1}
               selectPath={selectPath}
               onSelect={onSelect}
+              expandedPaths={expandedPaths}
+              onTogglePath={onTogglePath}
             />
           ))}
         </div>
