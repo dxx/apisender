@@ -1,6 +1,6 @@
 [package]
 name = "apisender"
-version = "0.1.10"
+version = "0.1.11"
 description = "A tool for API"
 authors = ["dxx"]
 edition = "2024"
