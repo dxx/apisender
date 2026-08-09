@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Manager};
 
 use crate::error::{AppError, AppResult};
+use crate::version::APP_NAME;
 
 #[derive(Default, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -18,6 +19,8 @@ pub struct WorkspaceConfig {
 #[serde(rename_all = "camelCase")]
 pub struct AppConfig {
     pub theme: Option<String>,
+    pub editor_font_family: Option<String>,
+    pub ui_font_family: Option<String>,
     pub last_workspace: Option<String>,
     pub workspaces: HashMap<String, WorkspaceConfig>,
 }
@@ -48,5 +51,5 @@ pub fn config_path(app: &AppHandle) -> AppResult<PathBuf> {
         .path()
         .app_data_dir()
         .map_err(|e| AppError::Storage(format!("Failed to get app data dir: {}", e)))?;
-    Ok(dir.join("config.json"))
+    Ok(dir.join(format!("{}.json", APP_NAME)))
 }

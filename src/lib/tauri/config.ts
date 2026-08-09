@@ -8,6 +8,23 @@ export async function setTheme(theme: string): Promise<void> {
   await invoke("set_theme", { theme });
 }
 
+export interface FontSettings {
+  editorFontFamily: string | null;
+  uiFontFamily: string | null;
+}
+
+export async function getFonts(): Promise<FontSettings> {
+  return invoke<FontSettings>("get_fonts");
+}
+
+export async function setEditorFontFamily(font: string): Promise<void> {
+  await invoke("set_editor_font_family", { font });
+}
+
+export async function setUiFontFamily(font: string): Promise<void> {
+  await invoke("set_ui_font_family", { font });
+}
+
 export async function getLastWorkspace(): Promise<string | null> {
   return invoke<string | null>("get_last_workspace");
 }

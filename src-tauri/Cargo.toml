@@ -30,6 +30,7 @@ uuid = { version = "1", features = ["v4"] }
 url = "2"
 cookie = "0.18"
 notify = "8.2"
+font-kit = "0.14"
 async-trait = "0.1"
 base64 = "0.22"
 log = "0.4"

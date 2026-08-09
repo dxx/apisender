@@ -1,4 +1,5 @@
 import { useThemeStore, type Theme } from "@/stores/theme";
+import { useFontStore } from "@/stores/font";
 import {
   Dialog,
   DialogContent,
@@ -36,9 +37,89 @@ const sections = [
   { value: "editor", label: "编辑器" },
 ];
 
+const uiPreviewLines = [
+  "AaBbCc 中文 0123456789",
+  "The quick brown fox jumps over the lazy dog",
+  "— 项目名称 / 文件名 / 按钮标签",
+];
+
+const editorPreviewLines = [
+  "GET https://api.example.com/v1/users/123 HTTP/1.1",
+  "Accept: application/json",
+  "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.xxxx.yyyy",
+  "",
+  "###",
+  "",
+  "HTTP/1.1 200 OK",
+  "Content-Type: application/json; charset=utf-8",
+  "X-Request-Id: 5b8e9a3c-7f12-4d2e-a8c1-9e3f4b7a2d6e",
+  "",
+  "{",
+  '  "id": 123,',
+  '  "name": "John Doe",',
+  '  "email": "john@example.com",',
+  '  "active": true,',
+  '  "score": 98.5',
+  "}",
+];
+
+interface FontSelectorProps {
+  label: string;
+  value: string | null;
+  fonts: string[];
+  onChange: (font: string) => void;
+  previewLines: string[];
+}
+
+function FontSelector({ label, value, fonts, onChange, previewLines }: FontSelectorProps) {
+  const isLoading = fonts.length === 0;
+  return (
+    <div className="flex flex-col gap-2">
+      <Label className="text-sm">{label}</Label>
+      <Select
+        value={value ?? ""}
+        onValueChange={onChange}
+        disabled={isLoading}
+      >
+        <SelectTrigger>
+          <SelectValue placeholder={isLoading ? "加载中…" : "选择字体"} />
+        </SelectTrigger>
+        <SelectContent
+          position="popper"
+          side="bottom"
+          align="start"
+          style={{ width: "var(--radix-select-trigger-width)", maxHeight: "300px" }}
+        >
+          {fonts.map((font) => (
+            <SelectItem key={font} value={font}>
+              <span style={{ fontFamily: `"${font}", sans-serif` }}>{font}</span>
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <pre
+        className="rounded-md border bg-muted/30 px-3 py-2 text-xs whitespace-pre-wrap break-all max-h-40 overflow-auto"
+        style={{ fontFamily: value ? `"${value}"` : undefined }}
+      >
+        {previewLines.map((line, i) => (
+          <span key={i} className="block">
+            {line || "\u00A0"}
+          </span>
+        ))}
+      </pre>
+    </div>
+  );
+}
+
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
+
+  const editorFontFamily = useFontStore((s) => s.editorFontFamily);
+  const setEditorFontFamily = useFontStore((s) => s.setEditorFontFamily);
+  const uiFontFamily = useFontStore((s) => s.uiFontFamily);
+  const setUiFontFamily = useFontStore((s) => s.setUiFontFamily);
+  const systemFonts = useFontStore((s) => s.systemFonts);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -89,10 +170,24 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                   </SelectContent>
                 </Select>
               </div>
+
+              <FontSelector
+                label="界面字体"
+                value={uiFontFamily}
+                fonts={systemFonts}
+                onChange={setUiFontFamily}
+                previewLines={uiPreviewLines}
+              />
             </TabsContent>
 
-            <TabsContent value="editor" className="mt-0">
-              <p className="text-sm text-muted-foreground">暂无设置</p>
+            <TabsContent value="editor" className="mt-0 space-y-4">
+              <FontSelector
+                label="编辑器字体"
+                value={editorFontFamily}
+                fonts={systemFonts}
+                onChange={setEditorFontFamily}
+                previewLines={editorPreviewLines}
+              />
             </TabsContent>
           </div>
         </Tabs>

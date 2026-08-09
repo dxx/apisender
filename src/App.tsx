@@ -7,14 +7,15 @@ import { useEnvironmentStore } from "@/stores/environment";
 import { useHistoryStore } from "@/stores/history";
 import { useTabsStore } from "@/stores/tabs";
 import { useThemeStore } from "@/stores/theme";
+import { useFontStore } from "@/stores/font";
 import { useSystemThemeListener } from "@/hooks/useSystemTheme";
 import type { WorkspaceChangedEvent } from "@/lib/types";
 
-import { WelcomeScreen } from "@/components/WelcomeScreen";
+import { Welcome } from "@/components/Welcome";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MainPane } from "@/components/layout/MainPane";
 import { TitleBar } from "@/components/layout/TitleBar";
-import { SettingsDialog } from "@/components/SettingsDialog";
+import { SettingsDialog } from "@/components/settings/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TITLE_BAR_HEIGHT } from "@/lib/platform";
@@ -31,6 +32,7 @@ function App() {
   const tabs = useTabsStore((s) => s.tabs);
   const reloadTab = useTabsStore((s) => s.reloadFromDisk);
   const initTheme = useThemeStore((s) => s.init);
+  const initFont = useFontStore((s) => s.init);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useSystemThemeListener();
@@ -39,7 +41,8 @@ function App() {
     initTheme();
     initWorkspace();
     initEnv();
-  }, [initTheme, initWorkspace, initEnv]);
+    initFont();
+  }, [initTheme, initWorkspace, initEnv, initFont]);
 
   useEffect(() => {
     if (root) {
@@ -108,7 +111,7 @@ function App() {
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
           style={{ paddingTop: TITLE_BAR_HEIGHT }}
         >
-          <WelcomeScreen />
+          <Welcome />
         </div>
       </>
     );

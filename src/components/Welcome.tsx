@@ -20,7 +20,7 @@ function formatTime(iso: string): string {
   return d.toLocaleDateString();
 }
 
-export function WelcomeScreen() {
+export function Welcome() {
   const openDialog = useWorkspaceStore((s) => s.openDialog);
   const openFolder = useWorkspaceStore((s) => s.openFolder);
   const recent = useWorkspaceStore((s) => s.recentWorkspaces);

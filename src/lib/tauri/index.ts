@@ -4,6 +4,7 @@ export * from "./env";
 export * from "./history";
 export * from "./http";
 export * from "./config";
+export * from "./font";
 export * from "./curl";
 export * from "./clipboard";
 export * from "./sse";

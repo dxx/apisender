@@ -1,8 +1,16 @@
 
+use serde::Serialize;
 use tauri::AppHandle;
 
 use crate::config::AppConfig;
 use crate::error::AppResult;
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct FontSettings {
+    pub editor_font_family: Option<String>,
+    pub ui_font_family: Option<String>,
+}
 
 #[tauri::command]
 pub async fn get_theme(app: AppHandle) -> AppResult<Option<String>> {
@@ -13,6 +21,29 @@ pub async fn get_theme(app: AppHandle) -> AppResult<Option<String>> {
 pub async fn set_theme(app: AppHandle, theme: String) -> AppResult<()> {
     let mut cfg = AppConfig::load(&app)?;
     cfg.theme = Some(theme);
+    cfg.save(&app)
+}
+
+#[tauri::command]
+pub async fn get_fonts(app: AppHandle) -> AppResult<FontSettings> {
+    let cfg = AppConfig::load(&app)?;
+    Ok(FontSettings {
+        editor_font_family: cfg.editor_font_family,
+        ui_font_family: cfg.ui_font_family,
+    })
+}
+
+#[tauri::command]
+pub async fn set_editor_font_family(app: AppHandle, font: String) -> AppResult<()> {
+    let mut cfg = AppConfig::load(&app)?;
+    cfg.editor_font_family = Some(font);
+    cfg.save(&app)
+}
+
+#[tauri::command]
+pub async fn set_ui_font_family(app: AppHandle, font: String) -> AppResult<()> {
+    let mut cfg = AppConfig::load(&app)?;
+    cfg.ui_font_family = Some(font);
     cfg.save(&app)
 }
 

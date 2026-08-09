@@ -124,8 +124,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", Menlo, Monaco, "Cascadia Code", Consolas;
+  --font-sans: var(--font-sans-custom, -apple-system), BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-mono-custom, "JetBrains Mono"), Menlo, Monaco, "Cascadia Code", Consolas;
 }
 
 [data-sonner-toaster][data-sonner-theme='light'] {

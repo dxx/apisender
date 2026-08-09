@@ -38,7 +38,7 @@ pub fn run() {
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
                     tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::LogDir {
-                        file_name: Some("apisender.log".into()),
+                        file_name: Some(format!("{}.log", crate::version::APP_NAME).into()),
                     }),
                 ])
                 .build(),
@@ -69,6 +69,10 @@ pub fn run() {
             commands::workspace::remove_recent_workspace,
             commands::config::get_theme,
             commands::config::set_theme,
+            commands::config::get_fonts,
+            commands::config::set_editor_font_family,
+            commands::config::set_ui_font_family,
+            commands::font::list_system_fonts,
             commands::config::get_last_workspace,
             commands::config::set_last_workspace,
             commands::env::list_environments,
