@@ -31,10 +31,18 @@ export const useThemeStore = create<ThemeState>((set) => ({
   init: async () => {
     try {
       const stored = await api.getTheme();
-      const theme: Theme =
-        stored === "light" || stored === "dark" || stored === "system"
-          ? stored
-          : "system";
+      let theme: Theme;
+      if (stored === "light" || stored === "dark" || stored === "system") {
+        theme = stored;
+        try {
+          localStorage.setItem("theme", theme);
+        } catch {}
+      } else {
+        theme = "system";
+        try {
+          localStorage.removeItem("theme");
+        } catch {}
+      }
       const resolved = computeResolved(theme);
       set({ theme, resolved });
       applyResolved(resolved);
