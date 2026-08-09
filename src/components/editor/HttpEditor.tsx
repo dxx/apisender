@@ -474,7 +474,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           color: "var(--primary)",
           fontSize: "14px",
           fontWeight: "700",
-          // lineHeight: "18px",
           display: "inline-block",
           boxSizing: "border-box",
           width: "20px",
@@ -485,10 +484,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           userSelect: "none",
           flexShrink: "0",
           transition: "background-color 80ms ease, color 80ms ease",
-        },
-        ".cm-run-gutter-btn:hover": {
-          // color: "var(--primary-foreground)",
-          // backgroundColor: "var(--primary)",
         },
         "&.cm-focused": {
           outline: "none",

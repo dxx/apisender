@@ -68,7 +68,7 @@ function MacTitleBar() {
       <div
         aria-hidden
         style={{ height: TITLE_BAR_HEIGHT }}
-        className="pointer-events-none fixed top-0 left-20 right-20 z-[61] flex items-center justify-center text-xs font-medium text-foreground select-none"
+        className="pointer-events-none fixed top-0 left-20 right-20 z-[61] flex items-center justify-center text-xs font-medium text-card-foreground select-none"
       >
         apisender
       </div>
@@ -110,7 +110,7 @@ function WinLinuxTitleBar() {
 
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium text-foreground"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium text-card-foreground"
       >
         apisender
       </div>

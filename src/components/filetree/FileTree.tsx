@@ -480,8 +480,10 @@ function TreeItem({
       <ContextMenu>
         <ContextMenuTrigger asChild>
           <div
-            className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums hover:bg-accent ${
-              selectPath === node.path ? "bg-accent text-[var(--fg-active)]" : "text-[var(--fg-inactive)]"
+            className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums ${
+              selectPath === node.path
+              ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
+              : "hover:bg-[var(--editor-active-bg)]/50 text-[var(--editor-inactive-fg)]"
             }`}
             data-tree-path={node.path}
             style={{ paddingLeft }}

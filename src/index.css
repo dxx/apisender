@@ -22,9 +22,10 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.55 0.13 175);
   --radius: 0.375rem;
-  --fg-active: oklch(0.145 0 0);
-  --fg-inactive: oklch(0.4 0 0);
 
+  --editor-active-fg: oklch(0.145 0 0);
+  --editor-inactive-fg: oklch(0.4 0 0);
+  --editor-active-bg: oklch(0.935 0 0);
   --editor-selection: oklch(0.6002 0.1038 250 / 0.25);
   --editor-selection-match: oklch(0.6002 0.1038 250 / 0.18);
   --editor-gutter-fg: oklch(0.55 0.03 250);
@@ -59,7 +60,7 @@
   --popover: oklch(0.25 0.022 245);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.62 0.13 175);
-  --primary-foreground: oklch(0.885 0 0);
+  --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.3 0.022 245);
   --secondary-foreground: oklch(0.795 0 0);
   --muted: oklch(0.3 0.022 245);
@@ -71,9 +72,10 @@
   --border: oklch(0.33 0.022 245);
   --input: oklch(0.33 0.022 245);
   --ring: oklch(0.62 0.13 175);
-  --fg-active: oklch(0.985 0 0);
-  --fg-inactive: oklch(0.85 0 0);
 
+  --editor-active-fg: oklch(0.985 0 0);
+  --editor-inactive-fg: oklch(0.85 0 0);
+  --editor-active-bg: oklch(0.22 0.022 245);
   --editor-selection: oklch(0.7038 0.1230 250 / 0.30);
   --editor-selection-match: oklch(0.7038 0.1230 250 / 0.20);
   --editor-gutter-fg: oklch(0.4 0.03 250);
