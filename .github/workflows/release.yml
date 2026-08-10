@@ -13,6 +13,11 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  APISENDER_UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
+  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+
 jobs:
   build-macos-arm64:
     name: Build (macOS arm64)
@@ -58,12 +63,14 @@ jobs:
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (aarch64-apple-darwin)
-        run: pnpm tauri build --target aarch64-apple-darwin
+        run: pnpm tauri build --target aarch64-apple-darwin --config src-tauri/tauri.updater.conf.json
 
-      - name: Pack .app.tar.gz
+      - name: Rename updater tar
         run: |
           cd src-tauri/target/aarch64-apple-darwin/release/bundle/macos
-          tar -czf apisender-$VERSION-macos-arm64.app.tar.gz apisender.app
+          tarball=$(ls *.app.tar.gz | head -n 1)
+          mv "$tarball" "apisender-$VERSION-macos-arm64.app.tar.gz"
+          mv "$tarball.sig" "apisender-$VERSION-macos-arm64.app.tar.gz.sig"
           ls -la
 
       - name: Rename dmg
@@ -78,6 +85,7 @@ jobs:
           path: |
             src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/apisender-*-macos-arm64.dmg
             src-tauri/target/aarch64-apple-darwin/release/bundle/macos/apisender-*-macos-arm64.app.tar.gz
+            src-tauri/target/aarch64-apple-darwin/release/bundle/macos/apisender-*-macos-arm64.app.tar.gz.sig
 
   build-macos-x64:
     name: Build (macOS x64)
@@ -123,12 +131,14 @@ jobs:
           sed -i '' "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (x86_64-apple-darwin)
-        run: pnpm tauri build --target x86_64-apple-darwin
+        run: pnpm tauri build --target x86_64-apple-darwin --config src-tauri/tauri.updater.conf.json
 
-      - name: Pack .app.tar.gz
+      - name: Rename updater tar
         run: |
           cd src-tauri/target/x86_64-apple-darwin/release/bundle/macos
-          tar -czf apisender-$VERSION-macos-x64.app.tar.gz apisender.app
+          tarball=$(ls *.app.tar.gz | head -n 1)
+          mv "$tarball" "apisender-$VERSION-macos-x64.app.tar.gz"
+          mv "$tarball.sig" "apisender-$VERSION-macos-x64.app.tar.gz.sig"
           ls -la
 
       - name: Rename dmg
@@ -143,6 +153,7 @@ jobs:
           path: |
             src-tauri/target/x86_64-apple-darwin/release/bundle/dmg/apisender-*-macos-x64.dmg
             src-tauri/target/x86_64-apple-darwin/release/bundle/macos/apisender-*-macos-x64.app.tar.gz
+            src-tauri/target/x86_64-apple-darwin/release/bundle/macos/apisender-*-macos-x64.app.tar.gz.sig
 
   build-windows-x64:
     name: Build (Windows x64)
@@ -192,14 +203,16 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (x86_64-pc-windows-msvc)
-        run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles msi
+        run: pnpm tauri build --target x86_64-pc-windows-msvc --bundles msi --config src-tauri/tauri.updater.conf.json
 
       - name: Rename msi (drop _en-US suffix)
         shell: pwsh
         run: |
           $src = Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
           $dst = "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/apisender-$env:VERSION-windows-x64.msi"
+          $sig = "$($src.FullName).sig"
           Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
+          Rename-Item -Path $sig -NewName "$(Split-Path $dst -Leaf).sig"
           Get-ChildItem "src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
@@ -227,6 +240,7 @@ jobs:
           name: windows-x64
           path: |
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/*.msi.sig
             apisender-*-windows-x64-portable.zip
 
   build-windows-arm64:
@@ -277,14 +291,16 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (aarch64-pc-windows-msvc)
-        run: pnpm tauri build --target aarch64-pc-windows-msvc --bundles msi
+        run: pnpm tauri build --target aarch64-pc-windows-msvc --bundles msi --config src-tauri/tauri.updater.conf.json
 
       - name: Rename msi (drop _en-US suffix)
         shell: pwsh
         run: |
           $src = Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi" | Select-Object -First 1
           $dst = "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/apisender-$env:VERSION-windows-arm64.msi"
+          $sig = "$($src.FullName).sig"
           Rename-Item -Path $src.FullName -NewName (Split-Path $dst -Leaf)
+          Rename-Item -Path $sig -NewName "$(Split-Path $dst -Leaf).sig"
           Get-ChildItem "src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi"
 
       - name: Build portable.zip
@@ -310,6 +326,7 @@ jobs:
           name: windows-arm64
           path: |
             src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi
+            src-tauri/target/aarch64-pc-windows-msvc/release/bundle/msi/*.msi.sig
             apisender-*-windows-arm64-portable.zip
 
   build-linux-x64:
@@ -367,13 +384,14 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (x86_64-unknown-linux-gnu)
-        run: pnpm tauri build --target x86_64-unknown-linux-gnu --bundles deb,appimage
+        run: pnpm tauri build --target x86_64-unknown-linux-gnu --bundles deb,appimage --config src-tauri/tauri.updater.conf.json
 
       - name: Rename deb + AppImage
         run: |
           cd src-tauri/target/x86_64-unknown-linux-gnu/release/bundle
           mv deb/apisender_*.deb "deb/apisender-$VERSION-linux-x64.deb"
           mv appimage/apisender_*.AppImage "appimage/apisender-$VERSION-linux-x64.AppImage"
+          mv appimage/*.AppImage.sig "appimage/apisender-$VERSION-linux-x64.AppImage.sig"
           ls -la deb appimage
 
       - uses: actions/upload-artifact@v4
@@ -382,6 +400,7 @@ jobs:
           path: |
             src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/apisender-*-linux-x64.deb
             src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-x64.AppImage
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-x64.AppImage.sig
 
   build-linux-arm64:
     name: Build (Linux arm64)
@@ -438,13 +457,14 @@ jobs:
           sed -i "s/\"version\": \"[0-9.]*\"/\"version\": \"$VERSION\"/" package.json
 
       - name: Build (aarch64-unknown-linux-gnu)
-        run: pnpm tauri build --target aarch64-unknown-linux-gnu --bundles deb,appimage
+        run: pnpm tauri build --target aarch64-unknown-linux-gnu --bundles deb,appimage --config src-tauri/tauri.updater.conf.json
 
       - name: Rename deb + AppImage
         run: |
           cd src-tauri/target/aarch64-unknown-linux-gnu/release/bundle
           mv deb/apisender_*.deb "deb/apisender-$VERSION-linux-arm64.deb"
           mv appimage/apisender_*.AppImage "appimage/apisender-$VERSION-linux-arm64.AppImage"
+          mv appimage/*.AppImage.sig "appimage/apisender-$VERSION-linux-arm64.AppImage.sig"
           ls -la deb appimage
 
       - uses: actions/upload-artifact@v4
@@ -453,6 +473,7 @@ jobs:
           path: |
             src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/deb/apisender-*-linux-arm64.deb
             src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-arm64.AppImage
+            src-tauri/target/aarch64-unknown-linux-gnu/release/bundle/appimage/apisender-*-linux-arm64.AppImage.sig
 
   release:
     name: Upload Release
@@ -490,12 +511,16 @@ jobs:
             -name "*.msi" -o \
             -name "*.deb" -o \
             -name "*.AppImage" -o \
+            -name "*.sig" -o \
             -name "*-portable.zip" -o \
             -name "*.app.tar.gz" \
           \) -exec cp -v {} dist/ \;
 
           echo "=== Final release artifacts ==="
           ls -la dist/
+
+      - name: Generate latest.json
+        run: node scripts/generate-updater-json.mjs
 
       - uses: softprops/action-gh-release@v2
         with:
