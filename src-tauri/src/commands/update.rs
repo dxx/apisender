@@ -334,26 +334,26 @@ pub async fn install_downloaded_update(state: State<'_, UpdateState>) -> AppResu
 }
 
 /// 入参：Tauri 应用句柄和请求超时时间。
-/// 出参：配置好公钥、GitHub Release endpoint 与超时时间的 updater。
-/// 作用与流程：从编译期环境变量读取公钥，解析固定更新源，并创建官方 updater builder。
+/// 出参：配置好 GitHub Release endpoint 与超时时间的 updater。
+/// 作用与流程：默认使用 tauri.conf.json 中的 updater 公钥；如果构建时提供 APISENDER_UPDATER_PUBLIC_KEY，则用该值覆盖配置。
 fn build_updater(app: &AppHandle, timeout: Duration) -> AppResult<tauri_plugin_updater::Updater> {
-    let pubkey = embedded_updater_public_key().ok_or_else(|| {
-        AppError::Other(
-            "自动更新公钥未配置。请在构建时设置 APISENDER_UPDATER_PUBLIC_KEY。".to_string(),
-        )
-    })?;
     let endpoints = UPDATE_ENDPOINTS
         .iter()
         .map(|endpoint| Url::parse(endpoint))
         .collect::<Result<Vec<_>, _>>()?;
 
-    app.updater_builder()
-        .pubkey(pubkey)
+    let builder = app
+        .updater_builder()
         .endpoints(endpoints)
         .map_err(update_error)?
-        .timeout(timeout)
-        .build()
-        .map_err(update_error)
+        .timeout(timeout);
+    let builder = if let Some(pubkey) = embedded_updater_public_key() {
+        builder.pubkey(pubkey)
+    } else {
+        builder
+    };
+
+    builder.build().map_err(update_error)
 }
 
 /// 入参：无。
