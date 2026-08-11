@@ -15,8 +15,6 @@ permissions:
 
 env:
   APISENDER_UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
-  TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
-  TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
 jobs:
   build-macos-arm64:
@@ -43,6 +41,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -111,6 +115,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -181,6 +191,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -270,6 +286,12 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-pc-windows-msvc
@@ -354,6 +376,12 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
+
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-unknown-linux-gnu
@@ -426,6 +454,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Prepare updater signing key
+        env:
+          UPDATER_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          UPDATER_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: node scripts/prepare-updater-signing-key.mjs
 
       - uses: dtolnay/rust-toolchain@stable
         with:
@@ -525,5 +559,6 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          draft: true
+          draft: false
+          fail_on_unmatched_files: true
           files: dist/*
