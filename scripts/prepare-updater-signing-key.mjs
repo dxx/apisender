@@ -4,6 +4,12 @@ import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const BASE64_PATTERN = /^[A-Za-z0-9+/=]+$/;
+const MISSING_SIGNING_SECRET_MESSAGE = [
+  "Missing updater signing private key.",
+  "Add it in GitHub Repository secrets as TAURI_SIGNING_PRIVATE_KEY, using the raw one-line base64 content from .tauri-updater.key.",
+  "If you used the alternate name UPDATER_SIGNING_PRIVATE_KEY, this workflow also supports it.",
+  "Do not paste tauri.conf.json pubkey, .tauri-updater.key.pub, a local file path, or the decoded key text.",
+].join(" ");
 
 /**
  * 入参：GitHub Secret 中读取到的 updater 私钥字符串。
@@ -14,9 +20,7 @@ export function normalizeSigningSecret(secret) {
   const normalized = String(secret ?? "").replace(/\s+/g, "");
 
   if (!normalized) {
-    throw new Error(
-      "Missing TAURI_SIGNING_PRIVATE_KEY. Set it to the raw one-line base64 content of .tauri-updater.key.",
-    );
+    throw new Error(MISSING_SIGNING_SECRET_MESSAGE);
   }
 
   if (!BASE64_PATTERN.test(normalized)) {
@@ -26,6 +30,18 @@ export function normalizeSigningSecret(secret) {
   }
 
   return normalized;
+}
+
+/**
+ * 入参：当前进程环境变量。
+ * 出参：用于 Tauri updater 签名的私钥和密码字符串。
+ * 作用与流程：优先读取工作流传入的专用变量；兼容直接传入 Tauri 官方变量名，避免 Secret 名称调整造成空值。
+ */
+function readSigningInputs(env) {
+  const privateKey = env.UPDATER_SIGNING_PRIVATE_KEY || env.TAURI_SIGNING_PRIVATE_KEY;
+  const password = env.UPDATER_SIGNING_PRIVATE_KEY_PASSWORD ?? env.TAURI_SIGNING_PRIVATE_KEY_PASSWORD;
+
+  return { privateKey, password };
 }
 
 /**
@@ -98,7 +114,8 @@ export function prepareUpdaterSigningKey({
     throw new Error("GITHUB_ENV is not available. This script must run inside GitHub Actions.");
   }
 
-  const signingSecret = normalizeSigningSecret(env.UPDATER_SIGNING_PRIVATE_KEY);
+  const signingInputs = readSigningInputs(env);
+  const signingSecret = normalizeSigningSecret(signingInputs.privateKey);
   const decodedSecret = Buffer.from(signingSecret, "base64").toString("utf8");
   validateDecodedSigningSecret(decodedSecret);
 
@@ -106,11 +123,12 @@ export function prepareUpdaterSigningKey({
   writeFileSync(keyPath, signingSecret, { mode: 0o600 });
   chmodSync(keyPath, 0o600);
 
-  const password = normalizeSigningPassword(env.UPDATER_SIGNING_PRIVATE_KEY_PASSWORD);
-  if (env.UPDATER_SIGNING_PRIVATE_KEY_PASSWORD === "''" || env.UPDATER_SIGNING_PRIVATE_KEY_PASSWORD === '""') {
+  const password = normalizeSigningPassword(signingInputs.password);
+  if (signingInputs.password === "''" || signingInputs.password === '""') {
     logger.warn("Updater signing password was quoted as an empty string; using an actual empty password.");
   }
 
+  appendGitHubEnv(githubEnvPath, "TAURI_SIGNING_PRIVATE_KEY", signingSecret);
   appendGitHubEnv(githubEnvPath, "TAURI_SIGNING_PRIVATE_KEY_PATH", keyPath);
   appendGitHubEnv(githubEnvPath, "TAURI_SIGNING_PRIVATE_KEY_PASSWORD", password);
   logger.log("Prepared Tauri updater signing key file.");

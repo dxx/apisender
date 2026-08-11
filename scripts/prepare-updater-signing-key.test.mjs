@@ -68,6 +68,39 @@ test("prepareUpdaterSigningKey writes a key file and GitHub env values", () => {
 
   assert.equal(readFileSync(result.keyPath, "utf8"), privateKeySecret);
   const githubEnv = readFileSync(githubEnvPath, "utf8");
+  assert.match(githubEnv, /TAURI_SIGNING_PRIVATE_KEY<</);
   assert.match(githubEnv, /TAURI_SIGNING_PRIVATE_KEY_PATH<</);
   assert.match(githubEnv, /TAURI_SIGNING_PRIVATE_KEY_PASSWORD<</);
+});
+
+test("prepareUpdaterSigningKey also accepts the direct Tauri private key env name", () => {
+  const workDir = mkdtempSync(join(tmpdir(), "apisender-updater-key-"));
+  const githubEnvPath = join(workDir, "github-env");
+
+  const result = prepareUpdaterSigningKey({
+    env: {
+      TAURI_SIGNING_PRIVATE_KEY: privateKeySecret,
+      TAURI_SIGNING_PRIVATE_KEY_PASSWORD: "",
+    },
+    githubEnvPath,
+    runnerTemp: workDir,
+    logger: { log() {}, warn() {} },
+  });
+
+  assert.equal(readFileSync(result.keyPath, "utf8"), privateKeySecret);
+  assert.match(readFileSync(githubEnvPath, "utf8"), /TAURI_SIGNING_PRIVATE_KEY<</);
+});
+
+test("prepareUpdaterSigningKey explains how to fix a missing GitHub secret", () => {
+  const workDir = mkdtempSync(join(tmpdir(), "apisender-updater-key-"));
+
+  assert.throws(
+    () => prepareUpdaterSigningKey({
+      env: {},
+      githubEnvPath: join(workDir, "github-env"),
+      runnerTemp: workDir,
+      logger: { log() {}, warn() {} },
+    }),
+    /Repository secrets/,
+  );
 });
