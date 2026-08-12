@@ -13,6 +13,8 @@ dist-ssr
 *.local
 
 package-lock.json
+.pnpm-store/
+.tauri-updater.key
 
 # Editor directories and files
 .vscode/*
