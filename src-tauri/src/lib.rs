@@ -20,7 +20,11 @@ use commands::http::HttpState;
 use commands::sse::SseState;
 use commands::websocket::WsState;
 use commands::grpc::GrpcState;
+use commands::update::UpdateState;
 
+/// 入参：无。
+/// 出参：无，失败时由 Tauri runtime 输出启动错误。
+/// 作用与流程：安装日志、剪贴板、进程和更新插件，初始化全局状态，并注册所有前端可调用命令。
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     if rustls::crypto::ring::default_provider().install_default().is_err() {
@@ -30,6 +34,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Debug)
@@ -45,6 +50,8 @@ pub fn run() {
         )
         .setup(|app| {
             log::info!("apisender starting up");
+            app.handle()
+                .plugin(tauri_plugin_updater::Builder::new().build())?;
             storage::init_db(app.handle())?;
             app.manage(Mutex::new(WorkspaceState::new()));
             app.manage(Mutex::new(WatcherState { _watcher: None }));
@@ -52,6 +59,7 @@ pub fn run() {
             app.manage(SseState::default());
             app.manage(WsState::default());
             app.manage(GrpcState::default());
+            app.manage(UpdateState::default());
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -96,6 +104,11 @@ pub fn run() {
             commands::clipboard::clipboard_paste_files,
             commands::grpc::execute_grpc,
             commands::grpc::stop_grpc,
+            commands::update::check_update,
+            commands::update::download_update,
+            commands::update::cancel_update_download,
+            commands::update::get_update_status,
+            commands::update::install_downloaded_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

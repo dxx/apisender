@@ -7,5 +7,6 @@ pub mod grpc;
 pub mod history;
 pub mod http;
 pub mod sse;
+pub mod update;
 pub mod websocket;
 pub mod workspace;

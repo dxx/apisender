@@ -20,6 +20,7 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
+import { UpdatePanel } from "@/components/settings/UpdatePanel";
 
 interface SettingsDialogProps {
   open: boolean;
@@ -35,6 +36,7 @@ const themeOptions: { value: Theme; label: string }[] = [
 const sections = [
   { value: "appearance", label: "外观" },
   { value: "editor", label: "编辑器" },
+  { value: "updates", label: "更新" },
 ];
 
 const uiPreviewLines = [
@@ -120,6 +122,11 @@ function FontSelector({
   );
 }
 
+/**
+ * 入参：打开状态和状态变更回调。
+ * 出参：设置弹窗 React 节点。
+ * 作用与流程：按垂直标签页组织外观、编辑器和更新设置，并把延迟安装动作映射为关闭弹窗。
+ */
 export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
@@ -197,6 +204,10 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 onChange={setEditorFontFamily}
                 previewLines={editorPreviewLines}
               />
+            </TabsContent>
+
+            <TabsContent value="updates" className="mt-0 space-y-4">
+              <UpdatePanel onDelayInstall={() => onOpenChange(false)} />
             </TabsContent>
           </div>
         </Tabs>

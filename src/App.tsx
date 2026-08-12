@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { toast } from "sonner";
 import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -10,6 +11,7 @@ import { useThemeStore } from "@/stores/theme";
 import { useFontStore } from "@/stores/font";
 import { useSystemThemeListener } from "@/hooks/useSystemTheme";
 import type { WorkspaceChangedEvent } from "@/lib/types";
+import { checkUpdate } from "@/lib/tauri";
 
 import { Welcome } from "@/components/Welcome";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -43,6 +45,28 @@ function App() {
     initEnv();
     initFont();
   }, [initTheme, initWorkspace, initEnv, initFont]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    let disposed = false;
+    checkUpdate()
+      .then((status) => {
+        if (!disposed && status.phase === "available") {
+          toast.info(`发现新版本 ${status.metadata?.version}`, {
+            action: {
+              label: "查看",
+              onClick: () => setSettingsOpen(true),
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        console.debug("[update] background check failed", error);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (root) {
