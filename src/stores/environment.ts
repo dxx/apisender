@@ -19,6 +19,16 @@ interface EnvironmentState {
   setActive: (name: string | null) => Promise<void>;
 }
 
+/**
+ * 判断当前是否应向后端请求工作区环境数据。
+ * 入参：workspace store 中的当前根目录，未打开工作区时为 null。
+ * 出参：存在非空工作区根目录时返回 true。
+ * 作用与流程：在欢迎页和工作区恢复完成前阻止环境 IPC，避免把正常的“未打开工作区”显示成错误。
+ */
+export function shouldRequestEnvironmentData(root: string | null): root is string {
+  return typeof root === "string" && root.length > 0;
+}
+
 export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   names: [],
   activeEnv: null,
@@ -29,12 +39,21 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
     await get().refresh();
   },
 
+  /**
+   * 刷新当前工作区的环境配置。
+   * 入参：无；出参：Promise<void>。
+   * 作用与流程：无工作区时清空本地状态并停止；有工作区时读取环境列表、当前选择及对应变量，失败时去重提示错误。
+   */
   refresh: async () => {
+    const root = useWorkspaceStore.getState().root;
+    if (!shouldRequestEnvironmentData(root)) {
+      set({ names: [], activeEnv: null, vars: {}, error: null });
+      return;
+    }
     try {
-      const root = useWorkspaceStore.getState().root;
       const [names, activeEnv] = await Promise.all([
         api.listEnvironments(),
-        root ? api.getActiveEnvironment(root) : Promise.resolve(null),
+        api.getActiveEnvironment(root),
       ]);
       let vars: Record<string, string> = {};
       if (activeEnv) {

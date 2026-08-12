@@ -20,6 +20,7 @@ HTTP / WebSocket / SSE / gRPC 请求客户端，类似 IntelliJ HTTP Client / VS
 - WebSocket 双向通信，支持多消息发送与 idle 超时
 - gRPC（Unary + Server Streaming），支持 server reflection / proto 文件加载
 - 工作区文件树管理、环境变量、历史记录、cURL 互转
+- Git 日常开发闭环：克隆/初始化、状态与 diff、暂存、提交、Pull/Push、分支和提交记录
 - 跨平台：Windows / macOS / Linux
 
 ## 环境依赖
@@ -95,7 +96,7 @@ ARM64 设备下载 `linux-arm64` 版本。
 
 ## 文档
 
-详细文档说明见 [docs](./docs/)。
+详细文档说明见 [docs](./docs/)，Git 使用说明见 [Git 同步](./docs/git.md)。
 
 ## 更新日志
 

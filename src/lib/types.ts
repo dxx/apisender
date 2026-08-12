@@ -240,3 +240,95 @@ export interface WorkspaceChangedEvent {
   eventType: "create" | "modify" | "remove";
   paths: string[];
 }
+
+export type GitErrorCode =
+  | "git_not_installed"
+  | "git_version_too_old"
+  | "not_repository"
+  | "target_not_empty"
+  | "remote_missing"
+  | "remote_not_empty"
+  | "remote_already_exists"
+  | "upstream_missing"
+  | "identity_missing"
+  | "authentication_failed"
+  | "non_fast_forward"
+  | "conflict"
+  | "operation_busy"
+  | "output_too_large"
+  | "invalid_path"
+  | "invalid_branch"
+  | "command_failed"
+  | "io";
+
+export interface GitErrorPayload {
+  code: GitErrorCode;
+  message: string;
+  details: string | null;
+}
+
+export interface GitAvailability {
+  available: boolean;
+  supported: boolean;
+  version: string | null;
+  executable: string | null;
+  minimumVersion: string;
+}
+
+export interface GitRepositoryState {
+  workspaceRoot: string;
+  repositoryRoot: string;
+  branch: string | null;
+  detached: boolean;
+  upstream: string | null;
+  ahead: number;
+  behind: number;
+  remotes: string[];
+  files: GitFileStatus[];
+  hasConflicts: boolean;
+}
+
+export interface GitFileStatus {
+  path: string;
+  originalPath: string | null;
+  indexStatus: string | null;
+  worktreeStatus: string | null;
+  conflict: boolean;
+  untracked: boolean;
+}
+
+export interface GitBranch {
+  name: string;
+  current: boolean;
+  remote: boolean;
+  upstream: string | null;
+  ahead: number;
+  behind: number;
+}
+
+export interface GitCommit {
+  sha: string;
+  shortSha: string;
+  authorName: string;
+  authorEmail: string;
+  authoredAt: string;
+  subject: string;
+}
+
+export interface GitDiff {
+  content: string;
+  binary: boolean;
+  truncated: boolean;
+  outputTooLarge: boolean;
+}
+
+export interface GitCommitDetail {
+  commit: GitCommit;
+  files: string[];
+  diff: GitDiff;
+}
+
+export interface GitIdentity {
+  name: string | null;
+  email: string | null;
+}
