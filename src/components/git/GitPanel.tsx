@@ -37,6 +37,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GitDiffDialog } from "@/components/git/GitDiffDialog";
 import {
+  GIT_DEFAULT_IGNORE_RULES,
+  GIT_REMOTE_PLACEHOLDER,
   getDirtyTabPaths,
   getGitOperationPaths,
   groupGitFiles,
@@ -180,30 +182,43 @@ function RepositorySetup() {
   };
 
   return (
-    <div className="space-y-4 p-3 text-xs">
-      <div>
+    <div className="min-w-0 max-w-full space-y-4 overflow-x-hidden p-3 text-xs">
+      <div className="min-w-0">
         <h3 className="text-sm font-medium">初始化 Git 仓库</h3>
-        <p className="mt-1 text-muted-foreground">
+        <p className="mt-1 break-words text-muted-foreground">
           当前工作区尚未加入 Git。远端必须已创建且不包含任何 Git 引用。
         </p>
       </div>
-      <div className="space-y-1">
+      <div className="min-w-0 max-w-full space-y-1">
         <Label htmlFor="git-init-remote">空远端地址</Label>
         <Input
           id="git-init-remote"
+          className="min-w-0 max-w-full"
           value={remoteUrl}
           onChange={(event) => setRemoteUrl(event.target.value)}
-          placeholder="git@github.com:org/repo.git"
+          placeholder={GIT_REMOTE_PLACEHOLDER}
         />
       </div>
-      <div className="space-y-1">
+      <div className="min-w-0 max-w-full space-y-1">
         <Label htmlFor="git-init-branch">默认分支</Label>
-        <Input id="git-init-branch" value={branch} onChange={(event) => setBranch(event.target.value)} />
+        <Input
+          id="git-init-branch"
+          className="min-w-0 max-w-full"
+          value={branch}
+          onChange={(event) => setBranch(event.target.value)}
+        />
       </div>
-      <div className="rounded border bg-muted/30 p-2 text-[11px] text-muted-foreground">
-        将补充忽略：env.private.json、.apisender/、.DS_Store
+      <div className="min-w-0 max-w-full overflow-hidden rounded border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+        <span className="block">将补充忽略：</span>
+        <div className="mt-1 flex min-w-0 max-w-full flex-wrap gap-1">
+          {GIT_DEFAULT_IGNORE_RULES.map((rule) => (
+            <code key={rule} className="max-w-full break-all rounded bg-muted px-1 py-0.5">
+              {rule}
+            </code>
+          ))}
+        </div>
       </div>
-      <Button className="w-full" size="sm" onClick={handleInit} disabled={writing}>
+      <Button className="w-full min-w-0" size="sm" onClick={handleInit} disabled={writing}>
         初始化并连接 origin
       </Button>
     </div>

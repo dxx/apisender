@@ -1,4 +1,6 @@
 import {
+  GIT_DEFAULT_IGNORE_RULES,
+  GIT_REMOTE_PLACEHOLDER,
   getDirtyTabPaths,
   getGitOperationPaths,
   groupGitFiles,
@@ -64,6 +66,17 @@ const dirty = getDirtyTabPaths([
   { path: "/repo/dirty.http", isDirty: true },
 ]);
 expectEqual(dirty.join(","), "/repo/dirty.http", "only unsaved tabs should block Git writes");
+
+expectEqual(
+  GIT_REMOTE_PLACEHOLDER,
+  "请输入远端仓库地址",
+  "repository setup should use a short remote placeholder",
+);
+expectEqual(
+  GIT_DEFAULT_IGNORE_RULES.join(","),
+  "env.private.json,.apisender/,.DS_Store",
+  "repository setup should expose ignore rules as independent items",
+);
 
 expectEqual(validateCommit("", 1), "提交说明不能为空", "empty commit messages should be rejected");
 expectEqual(validateCommit("同步接口", 0), "请先暂存至少一个文件", "empty index should be rejected");
