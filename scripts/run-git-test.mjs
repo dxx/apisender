@@ -12,6 +12,11 @@ try {
     configFile: false,
     root: process.cwd(),
     logLevel: "error",
+    resolve: {
+      alias: {
+        "@": path.resolve(process.cwd(), "src"),
+      },
+    },
     build: {
       emptyOutDir: true,
       outDir,
