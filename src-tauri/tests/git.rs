@@ -3,6 +3,8 @@ use std::ops::Deref;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 use std::sync::atomic::{AtomicUsize, Ordering};
+use std::thread;
+use std::time::Duration;
 
 use apisender_lib::git::{
     GitErrorCode, GitOperationState, clone_repository, connect_origin, create_branch, diff,
@@ -458,4 +460,25 @@ fn oversized_diff_is_truncated_and_marked_too_large() {
     assert!(result.truncated);
     assert!(result.output_too_large);
     assert!(result.content.len() <= 1024 * 1024);
+}
+
+#[test]
+/// 校验 Git 状态读取不会触碰管理目录。
+/// 入参/出参：无；断言读取状态前后的 `.git` 目录修改时间一致。
+/// 作用与流程：创建含提交的临时仓库，跨过低精度文件时间窗口后调用服务层 status，防止 optional lock 再次触发 watcher。
+fn status_read_does_not_touch_git_directory() {
+    let root = temp_dir("status-no-optional-lock");
+    run_git(&root, &["init", "-b", "main"]);
+    set_identity(&root, "Test", "test@example.com").unwrap();
+    fs::write(root.join("request.http"), "GET https://example.com\n").unwrap();
+    stage(&root, &["request.http".to_string()]).unwrap();
+    apisender_lib::git::commit(&root, "初始化测试仓库").unwrap();
+
+    let git_dir = root.join(".git");
+    thread::sleep(Duration::from_millis(1_100));
+    let before = fs::metadata(&git_dir).unwrap().modified().unwrap();
+    status(&root).unwrap();
+    let after = fs::metadata(&git_dir).unwrap().modified().unwrap();
+
+    assert_eq!(before, after, "只读状态查询不应创建 optional lock");
 }

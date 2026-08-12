@@ -265,10 +265,14 @@ fn parse_version(text: &str) -> Option<(u32, u32, String)> {
 /// 探测系统 Git 是否可用且满足最低版本。
 /// 入参：无。
 /// 出参：Git 可用性、版本、可执行文件和最低版本信息。
-/// 作用与流程：执行 `git --version`，区分未安装、版本过低和可用三种状态。
+/// 作用与流程：以只读锁策略执行 `git --version`，区分未安装、版本过低和可用三种状态。
 pub fn probe() -> GitAvailability {
     let minimum_version = format!("{}.{}", MINIMUM_GIT_VERSION.0, MINIMUM_GIT_VERSION.1);
-    match Command::new("git").arg("--version").output() {
+    match Command::new("git")
+        .arg("--version")
+        .env("GIT_OPTIONAL_LOCKS", "0")
+        .output()
+    {
         Ok(output) if output.status.success() => {
             let text = String::from_utf8_lossy(&output.stdout);
             let parsed = parse_version(&text);
@@ -362,18 +366,35 @@ fn classify_command_error(stderr: &str) -> GitErrorCode {
     }
 }
 
+/// 区分 Git 命令是否允许创建索引等可选锁文件。
+#[derive(Clone, Copy)]
+enum GitCommandAccess {
+    ReadOnly,
+    Write,
+}
+
 /// 执行系统 Git 命令并验证退出状态。
-/// 入参：工作目录、参数列表和是否允许退出码 1。
+/// 入参：工作目录、参数列表、是否允许退出码 1 和命令访问类型。
 /// 出参：完整进程输出。
-/// 作用与流程：禁用不可见终端提示，通过参数数组启动 Git，并把失败转换为脱敏结构化错误。
-fn execute_git(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult<Output> {
+/// 作用与流程：只读命令禁用 optional locks；所有命令均禁用终端提示并把失败转换为脱敏结构化错误。
+fn execute_git(
+    cwd: &Path,
+    args: &[OsString],
+    allow_exit_one: bool,
+    access: GitCommandAccess,
+) -> GitResult<Output> {
     ensure_git_available()?;
-    let output = Command::new("git")
+    let mut command = Command::new("git");
+    command
         .current_dir(cwd)
         .env("GIT_TERMINAL_PROMPT", "0")
         .env("LC_ALL", "C")
         .env("LANG", "C")
-        .args(args)
+        .args(args);
+    if matches!(access, GitCommandAccess::ReadOnly) {
+        command.env("GIT_OPTIONAL_LOCKS", "0");
+    }
+    let output = command
         .output()
         .map_err(|cause| error(GitErrorCode::Io, "无法启动 Git", Some(cause.to_string())))?;
 
@@ -389,12 +410,29 @@ fn execute_git(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult
     ))
 }
 
-/// 执行受 10 MiB 限制的普通 Git 命令。
+/// 执行受 10 MiB 限制的普通 Git 写命令。
 /// 入参：工作目录、参数列表和是否允许退出码 1。
 /// 出参：不超过普通命令上限的完整进程输出。
-/// 作用与流程：复用统一执行与错误分类，再拒绝过大的 stdout/stderr，避免把无界日志传给上层。
+/// 作用与流程：保留 Git 默认锁语义，复用统一错误分类后限制输出大小。
 fn run_git(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult<Output> {
-    let output = execute_git(cwd, args, allow_exit_one)?;
+    let output = execute_git(cwd, args, allow_exit_one, GitCommandAccess::Write)?;
+    validate_default_output_size(output)
+}
+
+/// 执行受 10 MiB 限制的只读 Git 命令。
+/// 入参：工作目录、参数列表和是否允许退出码 1。
+/// 出参：不超过普通命令上限的完整进程输出。
+/// 作用与流程：禁用 optional locks 后执行查询，再复用普通输出大小限制。
+fn run_git_read(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult<Output> {
+    let output = execute_git(cwd, args, allow_exit_one, GitCommandAccess::ReadOnly)?;
+    validate_default_output_size(output)
+}
+
+/// 校验普通 Git 命令输出大小。
+/// 入参：Git 完整进程输出。
+/// 出参：未超过 10 MiB 时返回原输出，否则返回 output_too_large。
+/// 作用与流程：集中计算 stdout 与 stderr 总长度，供只读和写入命令复用。
+fn validate_default_output_size(output: Output) -> GitResult<Output> {
     if output.stdout.len().saturating_add(output.stderr.len()) > DEFAULT_OUTPUT_LIMIT {
         return Err(error(
             GitErrorCode::OutputTooLarge,
@@ -408,9 +446,9 @@ fn run_git(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult<Out
 /// 执行由差异载荷自行截断的 Git 命令。
 /// 入参：工作目录、diff/show 参数和是否允许退出码 1。
 /// 出参：用于计算 truncated 与 outputTooLarge 状态的原始输出。
-/// 作用与流程：仅复用退出状态和脱敏错误处理，调用方必须在返回 IPC 前限制为 1 MiB。
+/// 作用与流程：禁用 optional locks 并复用退出状态和脱敏错误处理，调用方必须在返回 IPC 前限制为 1 MiB。
 fn run_git_diff_output(cwd: &Path, args: &[OsString], allow_exit_one: bool) -> GitResult<Output> {
-    execute_git(cwd, args, allow_exit_one)
+    execute_git(cwd, args, allow_exit_one, GitCommandAccess::ReadOnly)
 }
 
 /// 把字符串切片转换为 Git 参数列表。
@@ -426,7 +464,7 @@ fn args(values: &[&str]) -> Vec<OsString> {
 /// 出参：规范化后的父级或当前 Git 仓库根目录。
 /// 作用与流程：调用 `rev-parse --show-toplevel`，从而支持打开仓库子目录的场景。
 pub fn resolve_repository_root(workspace_root: &Path) -> GitResult<PathBuf> {
-    let output = run_git(
+    let output = run_git_read(
         workspace_root,
         &args(&["rev-parse", "--show-toplevel"]),
         false,
@@ -453,7 +491,7 @@ pub fn resolve_repository_root(workspace_root: &Path) -> GitResult<PathBuf> {
 /// 出参：规范化后的实际 Git 管理目录。
 /// 作用与流程：调用 `rev-parse --absolute-git-dir`，兼容普通仓库和 linked worktree 的外部管理目录。
 pub fn resolve_git_dir(workspace_root: &Path) -> GitResult<PathBuf> {
-    let output = run_git(
+    let output = run_git_read(
         workspace_root,
         &args(&["rev-parse", "--absolute-git-dir"]),
         false,
@@ -603,7 +641,7 @@ pub fn parse_porcelain_v2(
 /// 作用与流程：定位仓库根目录，执行 porcelain v2 分支状态命令并解析输出。
 pub fn status(workspace_root: &Path) -> GitResult<GitRepositoryState> {
     let repository_root = resolve_repository_root(workspace_root)?;
-    let output = run_git(
+    let output = run_git_read(
         &repository_root,
         &args(&[
             "status",
@@ -619,7 +657,7 @@ pub fn status(workspace_root: &Path) -> GitResult<GitRepositoryState> {
         &repository_root.to_string_lossy(),
         &output.stdout,
     )?;
-    let remote_output = run_git(&repository_root, &args(&["remote"]), false)?;
+    let remote_output = run_git_read(&repository_root, &args(&["remote"]), false)?;
     state.remotes = String::from_utf8_lossy(&remote_output.stdout)
         .lines()
         .map(str::trim)
@@ -703,7 +741,7 @@ pub fn stage(workspace_root: &Path, paths: &[String]) -> GitResult<()> {
 pub fn unstage(workspace_root: &Path, paths: &[String]) -> GitResult<()> {
     let repository_root = resolve_repository_root(workspace_root)?;
     let safe_paths = validate_paths(&repository_root, paths)?;
-    let has_head = run_git(
+    let has_head = run_git_read(
         &repository_root,
         &args(&["rev-parse", "--verify", "HEAD"]),
         false,
@@ -793,7 +831,7 @@ pub fn diff(
 pub fn get_identity(workspace_root: &Path) -> GitResult<GitIdentity> {
     let repository_root = resolve_repository_root(workspace_root)?;
     let read = |key: &str| -> Option<String> {
-        run_git(&repository_root, &args(&["config", "--get", key]), true)
+        run_git_read(&repository_root, &args(&["config", "--get", key]), true)
             .ok()
             .filter(|output| output.status.success())
             .map(|output| String::from_utf8_lossy(&output.stdout).trim().to_string())
@@ -921,7 +959,7 @@ pub fn list_commits(workspace_root: &Path, skip: usize, limit: usize) -> GitResu
 /// 作用与流程：读取指定提交元数据、name-only 文件清单和完整提交 diff 后统一截断。
 pub fn show_commit(workspace_root: &Path, sha: &str) -> GitResult<GitCommitDetail> {
     let repository_root = resolve_repository_root(workspace_root)?;
-    let metadata = run_git(
+    let metadata = run_git_read(
         &repository_root,
         &[
             OsString::from("show"),
@@ -937,7 +975,7 @@ pub fn show_commit(workspace_root: &Path, sha: &str) -> GitResult<GitCommitDetai
         .into_iter()
         .next()
         .ok_or_else(|| error(GitErrorCode::CommandFailed, "无法解析提交信息", None))?;
-    let files_output = run_git(
+    let files_output = run_git_read(
         &repository_root,
         &[
             OsString::from("diff-tree"),
@@ -957,7 +995,7 @@ pub fn show_commit(workspace_root: &Path, sha: &str) -> GitResult<GitCommitDetai
         .filter(|value| !value.is_empty())
         .map(|value| String::from_utf8_lossy(value).into_owned())
         .collect();
-    let output = run_git(
+    let output = run_git_read(
         &repository_root,
         &[
             OsString::from("show"),
@@ -994,7 +1032,7 @@ pub fn show_commit(workspace_root: &Path, sha: &str) -> GitResult<GitCommitDetai
 /// 作用与流程：使用 for-each-ref 读取稳定字段，并过滤远端 HEAD 占位引用。
 pub fn list_branches(workspace_root: &Path) -> GitResult<Vec<GitBranch>> {
     let repository_root = resolve_repository_root(workspace_root)?;
-    let output = run_git(
+    let output = run_git_read(
         &repository_root,
         &args(&[
             "for-each-ref",
@@ -1036,7 +1074,7 @@ pub fn list_branches(workspace_root: &Path) -> GitResult<Vec<GitBranch>> {
 /// 出参：合法时为空。
 /// 作用与流程：调用 Git 自身 check-ref-format，避免在前端复制不完整规则。
 fn validate_branch(repository_root: &Path, name: &str) -> GitResult<()> {
-    let result = run_git(
+    let result = run_git_read(
         repository_root,
         &args(&["check-ref-format", "--branch", name]),
         false,
@@ -1086,7 +1124,7 @@ pub fn push(workspace_root: &Path, remote: Option<&str>, branch: Option<&str>) -
     let repository_root = resolve_repository_root(workspace_root)?;
     match (remote, branch) {
         (Some(remote), Some(branch)) => {
-            let remotes = run_git(&repository_root, &args(&["remote"]), false)?;
+            let remotes = run_git_read(&repository_root, &args(&["remote"]), false)?;
             if !String::from_utf8_lossy(&remotes.stdout)
                 .lines()
                 .any(|name| name.trim() == remote)
@@ -1140,7 +1178,7 @@ fn validate_remote_locator(remote_url: &str) -> GitResult<&str> {
 /// 作用与流程：执行不带 ref 过滤的 ls-remote；存在任一引用则拒绝初始化绑定，避免覆盖远端历史。
 fn ensure_remote_empty(cwd: &Path, remote_url: &str) -> GitResult<()> {
     let remote_url = validate_remote_locator(remote_url)?;
-    let output = run_git(cwd, &args(&["ls-remote", "--", remote_url]), false)?;
+    let output = run_git_read(cwd, &args(&["ls-remote", "--", remote_url]), false)?;
     if !output.stdout.is_empty() {
         return Err(error(
             GitErrorCode::RemoteNotEmpty,
@@ -1243,7 +1281,7 @@ pub fn init_workspace(
 pub fn connect_origin(workspace_root: &Path, remote_url: &str) -> GitResult<()> {
     let repository_root = resolve_repository_root(workspace_root)?;
     let remote_url = validate_remote_locator(remote_url)?;
-    let existing = run_git(&repository_root, &args(&["remote"]), false)?;
+    let existing = run_git_read(&repository_root, &args(&["remote"]), false)?;
     if String::from_utf8_lossy(&existing.stdout)
         .lines()
         .any(|name| name.trim() == "origin")
