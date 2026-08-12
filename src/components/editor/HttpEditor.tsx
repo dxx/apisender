@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { EditorState, RangeSet, Range, StateField } from "@codemirror/state";
+import { EditorState, RangeSet, StateField, type Transaction } from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -13,6 +13,10 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import {
   bracketMatching,
+  foldEffect,
+  foldedRanges,
+  foldState,
+  unfoldEffect,
 } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
 import { Terminal, Scissors, Copy, ClipboardPaste } from "lucide-react";
@@ -31,6 +35,12 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { httpLanguage } from "./http-lang";
+import {
+  collectHttpFoldRanges,
+  httpFoldingExtensions,
+  refreshHttpFoldPlaceholders,
+  selectHttpFoldControls,
+} from "./http-folding";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
@@ -38,7 +48,18 @@ import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
 const URL_RE = /^https?:\/\/\S+/i;
 const MAX_HISTORY_DEPTH = 100;
-const STATE_FIELDS = { history: historyField };
+const STATE_FIELDS = { history: historyField, fold: foldState };
+
+interface FoldControlRange {
+  from: number;
+  to: number;
+  folded: boolean;
+}
+
+interface EditorControlMarkerInfo {
+  canRun: boolean;
+  foldRange: FoldControlRange | null;
+}
 
 function truncateEditorHistory(state: any, maxDepth: number) {
   const history = state?.history;
@@ -50,19 +71,111 @@ function truncateEditorHistory(state: any, maxDepth: number) {
   }
 }
 
-class RunGutterMarker extends GutterMarker {
+class EditorControlGutterMarker extends GutterMarker {
+  /**
+   * constructor
+   * 入参：当前 gutter 行是否可发送请求，以及该行可切换的折叠区间。
+   * 出参：编辑器左侧控制列 marker 实例。
+   * 作用与流程：保存当前行控制信息，后续 toDOM 根据是否有发送/折叠能力渲染同列按钮。
+   */
+  constructor(private readonly info: EditorControlMarkerInfo) {
+    super();
+  }
+
+  /**
+   * eq
+   * 入参：另一个 gutter marker。
+   * 出参：两个 marker 的展示状态是否相同。
+   * 作用与流程：比较发送能力、折叠起止位置和折叠状态，帮助 CodeMirror 复用未变化的 gutter DOM。
+   */
+  eq(other: GutterMarker): boolean {
+    if (!(other instanceof EditorControlGutterMarker)) return false;
+    return (
+      this.info.canRun === other.info.canRun &&
+      this.info.foldRange?.from === other.info.foldRange?.from &&
+      this.info.foldRange?.to === other.info.foldRange?.to &&
+      this.info.foldRange?.folded === other.info.foldRange?.folded
+    );
+  }
+
+  /**
+   * toDOM
+   * 入参：无。
+   * 出参：当前 gutter 行的控制按钮 DOM。
+   * 作用与流程：发送按钮常显；没有发送按钮的可折叠行渲染悬浮才显示的折叠按钮，
+   * 两类按钮共用同一个居中容器，从而在同一列保持对齐。
+   */
   toDOM() {
-    const btn = document.createElement("span");
-    btn.className = "cm-run-gutter-btn";
-    btn.textContent = "▶";
-    btn.title = "发送请求";
-    btn.setAttribute("aria-hidden", "true");
-    return btn;
+    const wrapper = document.createElement("span");
+    wrapper.className = "cm-editor-control-gutter";
+    if (this.info.canRun) {
+      wrapper.append(createRunGutterButton());
+    } else if (this.info.foldRange) {
+      wrapper.append(createFoldGutterButton(this.info.foldRange));
+    }
+    return wrapper;
   }
 }
 
-function computeRunMarkers(state: EditorState): RangeSet<GutterMarker> {
-  const ranges: Range<GutterMarker>[] = [];
+/**
+ * createRunGutterButton
+ * 入参：无。
+ * 出参：发送请求按钮 DOM。
+ * 作用与流程：创建运行列中的发送按钮，保留原有类名和标题，
+ * 让现有点击处理逻辑可以继续识别并发送当前请求。
+ */
+function createRunGutterButton(): HTMLElement {
+  const btn = document.createElement("span");
+  btn.className = "cm-run-gutter-btn";
+  btn.textContent = "▶";
+  btn.title = "发送请求";
+  btn.setAttribute("aria-hidden", "true");
+  return btn;
+}
+
+/**
+ * createFoldGutterButton
+ * 入参：折叠区间和当前折叠状态。
+ * 出参：折叠/展开按钮 DOM。
+ * 作用与流程：把折叠区间写入 dataset，点击时由编辑器统一读取并派发 fold/unfold effect。
+ */
+function createFoldGutterButton(foldRange: FoldControlRange): HTMLElement {
+  const btn = document.createElement("span");
+  btn.className = "cm-http-fold-gutter-btn";
+  btn.textContent = foldRange.folded ? "›" : "⌄";
+  btn.title = foldRange.folded ? "展开" : "折叠";
+  btn.dataset.foldFrom = String(foldRange.from);
+  btn.dataset.foldTo = String(foldRange.to);
+  btn.dataset.folded = foldRange.folded ? "true" : "false";
+  btn.setAttribute("aria-hidden", "true");
+  return btn;
+}
+
+/**
+ * computeEditorControlMarkers
+ * 入参：当前 CodeMirror 编辑器状态。
+ * 出参：运行按钮列使用的 gutter marker 集合。
+ * 作用与流程：先扫描原有请求发送按钮位置，再扫描 HTTP 折叠入口；
+ * 两类入口合并到同一个行级 marker 中，最终按文档位置排序后交给 gutter 渲染。
+ */
+function computeEditorControlMarkers(state: EditorState): RangeSet<GutterMarker> {
+  const markers = new Map<number, EditorControlMarkerInfo>();
+  addRunControls(state, markers);
+  addFoldControls(state, markers);
+
+  const ranges = Array.from(markers.entries())
+    .map(([lineNumber, info]) => new EditorControlGutterMarker(info).range(state.doc.line(lineNumber).from))
+    .sort((a, b) => a.from - b.from);
+  return RangeSet.of(ranges);
+}
+
+/**
+ * addRunControls
+ * 入参：当前编辑器状态和待写入的 marker 信息表。
+ * 出参：无。
+ * 作用与流程：沿用原有 `###` 请求块扫描逻辑，在块内第一个 method/URL 行标记发送按钮。
+ */
+function addRunControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
   const lines = state.doc.lines;
   let inBlock = false;
   let blockHasMethod = false;
@@ -84,19 +197,114 @@ function computeRunMarkers(state: EditorState): RangeSet<GutterMarker> {
       !blockHasMethod &&
       (METHOD_RE.test(text) || URL_RE.test(text))
     ) {
-      ranges.push(new RunGutterMarker().range(line.from));
+      getOrCreateControlMarkerInfo(markers, line.number).canRun = true;
       blockHasMethod = true;
     }
   }
+}
 
-  return RangeSet.of(ranges);
+/**
+ * addFoldControls
+ * 入参：当前编辑器状态和待写入的 marker 信息表。
+ * 出参：无。
+ * 作用与流程：复用 HTTP 折叠扫描结果选出每行一个折叠入口，
+ * 再结合当前 foldState 判断按钮应显示为折叠还是展开。
+ */
+function addFoldControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
+  const foldControls = selectHttpFoldControls(collectHttpFoldRanges(state.doc.toString()));
+  for (const range of foldControls) {
+    const info = getOrCreateControlMarkerInfo(markers, range.lineFrom);
+    if (info.canRun) continue;
+    info.foldRange = {
+      from: range.from,
+      to: range.to,
+      folded: isFoldRangeFolded(state, range.from, range.to),
+    };
+  }
+}
+
+/**
+ * getOrCreateControlMarkerInfo
+ * 入参：marker 信息表和 1 基行号。
+ * 出参：该行可修改的 marker 信息对象。
+ * 作用与流程：如果当前行已有记录则直接返回，否则创建默认空记录，
+ * 让发送和折叠扫描可以安全合并到同一行。
+ */
+function getOrCreateControlMarkerInfo(
+  markers: Map<number, EditorControlMarkerInfo>,
+  lineNumber: number,
+): EditorControlMarkerInfo {
+  const existing = markers.get(lineNumber);
+  if (existing) return existing;
+  const created: EditorControlMarkerInfo = { canRun: false, foldRange: null };
+  markers.set(lineNumber, created);
+  return created;
+}
+
+/**
+ * isFoldRangeFolded
+ * 入参：当前编辑器状态和折叠区间起止位置。
+ * 出参：该区间当前是否已经折叠。
+ * 作用与流程：遍历 CodeMirror foldState 中的已折叠范围，
+ * 用起止位置精确匹配当前 gutter 按钮需要展示的状态。
+ */
+function isFoldRangeFolded(state: EditorState, from: number, to: number): boolean {
+  let folded = false;
+  foldedRanges(state).between(from, to, (rangeFrom, rangeTo) => {
+    if (rangeFrom === from && rangeTo === to) {
+      folded = true;
+      return false;
+    }
+    return undefined;
+  });
+  return folded;
+}
+
+/**
+ * readFoldButtonRange
+ * 入参：折叠按钮 DOM。
+ * 出参：按钮记录的折叠区间；数据缺失或非法时返回 null。
+ * 作用与流程：从 dataset 读取 from/to，转换为数字并校验，
+ * 供点击事件在不依赖 React 状态的情况下定位需要切换的折叠范围。
+ */
+function readFoldButtonRange(button: HTMLElement): { from: number; to: number } | null {
+  const from = Number(button.dataset.foldFrom);
+  const to = Number(button.dataset.foldTo);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || from >= to) return null;
+  return { from, to };
+}
+
+/**
+ * toggleFoldRange
+ * 入参：当前编辑器视图和需要切换的折叠区间。
+ * 出参：无。
+ * 作用与流程：实时读取当前 foldState 判断区间是否已折叠，
+ * 再派发展开或折叠 effect，让 CodeMirror 负责更新占位符和文档展示。
+ */
+function toggleFoldRange(view: EditorView, range: { from: number; to: number }): void {
+  const effect = isFoldRangeFolded(view.state, range.from, range.to)
+    ? unfoldEffect.of(range)
+    : foldEffect.of(range);
+  view.dispatch({ effects: effect });
+  view.focus();
+}
+
+/**
+ * shouldRefreshControlMarkers
+ * 入参：CodeMirror 事务对象。
+ * 出参：是否需要重算运行/折叠控制列。
+ * 作用与流程：文档变化会改变请求和折叠入口；fold/unfold effect 会改变按钮方向，
+ * 其它选择或滚动变化不需要触发重新扫描。
+ */
+function shouldRefreshControlMarkers(tr: Transaction): boolean {
+  return tr.docChanged || tr.effects.some((effect) => effect.is(foldEffect) || effect.is(unfoldEffect));
 }
 
 const runMarkerField = StateField.define<RangeSet<GutterMarker>>({
-  create: (state) => computeRunMarkers(state),
+  create: (state) => computeEditorControlMarkers(state),
   update: (markers, tr) => {
-    if (tr.docChanged) {
-      return computeRunMarkers(tr.state);
+    if (shouldRefreshControlMarkers(tr)) {
+      return computeEditorControlMarkers(tr.state);
     }
     return markers;
   },
@@ -105,7 +313,7 @@ const runMarkerField = StateField.define<RangeSet<GutterMarker>>({
 const runGutter = gutter({
   class: "cm-run-gutter",
   markers: (view) => view.state.field(runMarkerField),
-  initialSpacer: () => new RunGutterMarker(),
+  initialSpacer: () => new EditorControlGutterMarker({ canRun: true, foldRange: null }),
 });
 
 interface HttpEditorProps {
@@ -364,6 +572,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
 
     const extensions = [
       lineNumbers(),
+      ...httpFoldingExtensions(),
       runGutter,
       runMarkerField,
       history(),
@@ -462,28 +671,60 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           color: "var(--editor-gutter-active-fg)",
         },
         ".cm-run-gutter": {
-          width: "22px",
+          width: "24px",
           backgroundColor: "transparent",
         },
         ".cm-run-gutter .cm-gutterElement": {
           display: "flex",
           justifyContent: "center",
+          padding: "0",
         },
-        ".cm-run-gutter .cm-run-gutter-btn": {
-          cursor: "pointer",
-          color: "var(--primary)",
-          fontSize: "14px",
-          fontWeight: "700",
-          display: "inline-block",
+        ".cm-editor-control-gutter": {
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
           boxSizing: "border-box",
           width: "20px",
           height: "20px",
           marginTop: "2px",
+          flexShrink: "0",
+        },
+        ".cm-run-gutter-btn, .cm-http-fold-gutter-btn": {
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
+          width: "20px",
+          height: "20px",
           textAlign: "center",
           borderRadius: "3px",
           userSelect: "none",
-          flexShrink: "0",
           transition: "background-color 80ms ease, color 80ms ease",
+        },
+        ".cm-run-gutter-btn": {
+          color: "var(--primary)",
+          fontSize: "14px",
+          fontWeight: "700",
+        },
+        ".cm-http-fold-gutter-btn": {
+          color: "var(--editor-gutter-fg)",
+          fontSize: "16px",
+          fontWeight: "700",
+          opacity: "0",
+          pointerEvents: "none",
+          transition: "opacity 80ms ease, background-color 80ms ease, color 80ms ease",
+        },
+        ".cm-run-gutter .cm-gutterElement:hover .cm-http-fold-gutter-btn": {
+          opacity: "1",
+          pointerEvents: "auto",
+        },
+        ".cm-run-gutter-btn:hover, .cm-http-fold-gutter-btn:hover": {
+          backgroundColor: "var(--accent)",
+        },
+        ".cm-http-fold-gutter-btn:hover": {
+          color: "var(--foreground)",
         },
         "&.cm-focused": {
           outline: "none",
@@ -513,6 +754,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         parent: editorRef.current,
       });
       viewRef.current = view;
+      refreshHttpFoldPlaceholders(view);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
@@ -530,8 +772,18 @@ export function HttpEditor({ tab }: HttpEditorProps) {
 
     const container = editorRef.current;
     const onClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target || !target.classList.contains("cm-run-gutter-btn")) return;
+      if (!(event.target instanceof Element)) return;
+      const foldButton = event.target.closest(".cm-http-fold-gutter-btn");
+      if (foldButton instanceof HTMLElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        const range = readFoldButtonRange(foldButton);
+        if (range) toggleFoldRange(view, range);
+        return;
+      }
+
+      const runButton = event.target.closest(".cm-run-gutter-btn");
+      if (!(runButton instanceof HTMLElement)) return;
       event.preventDefault();
       event.stopPropagation();
       const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
