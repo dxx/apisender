@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:folding": "node scripts/run-http-folding-test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
