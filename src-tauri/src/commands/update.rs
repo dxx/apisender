@@ -12,7 +12,7 @@ use crate::error::{AppError, AppResult};
 const UPDATE_CHECK_TIMEOUT_SECS: u64 = 20;
 const UPDATE_DOWNLOAD_TIMEOUT_SECS: u64 = 300;
 const UPDATE_ENDPOINTS: &[&str] =
-    &["https://github.com/aaaaaaaaat/apisender/releases/latest/download/latest.json"];
+    &["https://github.com/dxx/apisender/releases/latest/download/latest.json"];
 
 #[derive(Default)]
 pub struct UpdateState {
