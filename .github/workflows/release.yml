@@ -176,7 +176,7 @@ jobs:
         shell: pwsh
         run: |
           $ref = $env:GITHUB_REF_NAME -replace '^v',''
-          if ($ref -match '^\d+\.\d+\.\d+') {
+          if ($ref -match '^\d+\.\d+\.\d+$') {
             $VERSION = $ref
           } else {
             $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
@@ -270,7 +270,7 @@ jobs:
         shell: pwsh
         run: |
           $ref = $env:GITHUB_REF_NAME -replace '^v',''
-          if ($ref -match '^\d+\.\d+\.\d+') {
+          if ($ref -match '^\d+\.\d+\.\d+$') {
             $VERSION = $ref
           } else {
             $VERSION = (Get-Content "src-tauri/tauri.conf.json" -Raw | ConvertFrom-Json).version
