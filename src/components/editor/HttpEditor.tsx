@@ -678,7 +678,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
         ".cm-run-gutter .cm-gutterElement": {
           display: "flex",
-          alignItems: "center",
           justifyContent: "center",
           padding: "0",
         },
@@ -690,6 +689,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           boxSizing: "border-box",
           width: "20px",
           height: "20px",
+          marginTop: "1px",
           flexShrink: "0",
         },
         ".cm-run-gutter-btn, .cm-http-fold-gutter-btn": {
