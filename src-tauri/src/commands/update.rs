@@ -5,6 +5,7 @@ use serde::Serialize;
 use tauri::{AppHandle, State, ipc::Channel};
 use tauri_plugin_updater::{Update, UpdaterExt};
 use tokio_util::sync::CancellationToken;
+use url::Url;
 
 use crate::error::{AppError, AppResult};
 
@@ -332,11 +333,16 @@ pub async fn install_downloaded_update(state: State<'_, UpdateState>) -> AppResu
 
 /// 入参：Tauri 应用句柄和请求超时时间。
 /// 出参：配置好 GitHub Release endpoint 与超时时间的 updater。
-/// 作用与流程：默认使用 tauri.conf.json 中的 updater 公钥；如果构建时提供 APISENDER_UPDATER_PUBLIC_KEY，则用该值覆盖配置。
+/// 作用与流程：默认使用 tauri.conf.json 中的 updater 公钥；如果构建时提供 APISENDER_UPDATER_PUBLIC_KEY，则用该值覆盖配置。同时按 HTTPS_PROXY → 系统代理 → 直连 的顺序解析代理 URL 并应用到 updater 自带的 reqwest 客户端。
 fn build_updater(app: &AppHandle, timeout: Duration) -> AppResult<tauri_plugin_updater::Updater> {
-    let builder = app
+    let mut builder = app
         .updater_builder()
         .timeout(timeout);
+
+    if let Some(proxy_url) = resolve_proxy_url() {
+        builder = builder.proxy(proxy_url);
+    }
+
     let builder = if let Some(pubkey) = embedded_updater_public_key() {
         builder.pubkey(pubkey)
     } else {
@@ -344,6 +350,49 @@ fn build_updater(app: &AppHandle, timeout: Duration) -> AppResult<tauri_plugin_u
     };
 
     builder.build().map_err(update_error)
+}
+
+/// 入参：无。
+/// 出参：用于 updater 的代理 URL；None 表示走直连。
+/// 作用与流程：先看环境变量 HTTPS_PROXY / https_proxy（用于开发期临时切换），再看系统代理（macOS networksetup / Windows 注册表 / Linux gsettings），都没拿到就不设。
+fn resolve_proxy_url() -> Option<Url> {
+    if let Ok(value) = std::env::var("HTTPS_PROXY").or_else(|_| std::env::var("https_proxy")) {
+        let trimmed = value.trim();
+        if !trimmed.is_empty() {
+            if let Ok(url) = Url::parse(trimmed) {
+                log::info!("updater using HTTPS_PROXY: {}", url);
+                return Some(url);
+            }
+            log::warn!(
+                "HTTPS_PROXY={} is not a valid URL, falling back to system proxy",
+                value
+            );
+        }
+    }
+
+    match sysproxy::Sysproxy::get_system_proxy() {
+        Ok(proxy) if proxy.enable && !proxy.host.is_empty() => {
+            let formatted = format!("http://{}:{}", proxy.host, proxy.port);
+            match Url::parse(&formatted) {
+                Ok(url) => {
+                    log::info!("updater using system proxy: {}", url);
+                    Some(url)
+                }
+                Err(error) => {
+                    log::warn!("failed to parse system proxy url {}: {}", formatted, error);
+                    None
+                }
+            }
+        }
+        Ok(_) => {
+            log::info!("updater has no system proxy enabled, using direct connection");
+            None
+        }
+        Err(error) => {
+            log::warn!("failed to read system proxy: {}", error);
+            None
+        }
+    }
 }
 
 /// 入参：无。
