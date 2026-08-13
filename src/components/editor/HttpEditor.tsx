@@ -73,22 +73,11 @@ function truncateEditorHistory(state: any, maxDepth: number) {
 }
 
 class EditorControlGutterMarker extends GutterMarker {
-  /**
-   * constructor
-   * 入参：当前 gutter 行是否可发送请求，以及该行可切换的折叠区间。
-   * 出参：编辑器左侧控制列 marker 实例。
-   * 作用与流程：保存当前行控制信息，后续 toDOM 根据是否有发送/折叠能力渲染同列按钮。
-   */
+
   constructor(private readonly info: EditorControlMarkerInfo) {
     super();
   }
 
-  /**
-   * eq
-   * 入参：另一个 gutter marker。
-   * 出参：两个 marker 的展示状态是否相同。
-   * 作用与流程：比较发送能力、折叠起止位置和折叠状态，帮助 CodeMirror 复用未变化的 gutter DOM。
-   */
   eq(other: GutterMarker): boolean {
     if (!(other instanceof EditorControlGutterMarker)) return false;
     return (
@@ -99,13 +88,6 @@ class EditorControlGutterMarker extends GutterMarker {
     );
   }
 
-  /**
-   * toDOM
-   * 入参：无。
-   * 出参：当前 gutter 行的控制按钮 DOM。
-   * 作用与流程：发送按钮常显；没有发送按钮的可折叠行渲染悬浮才显示的折叠按钮，
-   * 两类按钮共用同一个居中容器，从而在同一列保持对齐。
-   */
   toDOM() {
     const wrapper = document.createElement("span");
     wrapper.className = "cm-editor-control-gutter";
@@ -118,13 +100,6 @@ class EditorControlGutterMarker extends GutterMarker {
   }
 }
 
-/**
- * createRunGutterButton
- * 入参：无。
- * 出参：发送请求按钮 DOM。
- * 作用与流程：创建运行列中的发送按钮，保留原有类名和标题，
- * 让现有点击处理逻辑可以继续识别并发送当前请求。
- */
 function createRunGutterButton(): HTMLElement {
   const btn = document.createElement("span");
   btn.className = "cm-run-gutter-btn";
@@ -134,12 +109,6 @@ function createRunGutterButton(): HTMLElement {
   return btn;
 }
 
-/**
- * createFoldGutterButton
- * 入参：折叠区间和当前折叠状态。
- * 出参：折叠/展开按钮 DOM。
- * 作用与流程：把折叠区间写入 dataset，点击时由编辑器统一读取并派发 fold/unfold effect。
- */
 function createFoldGutterButton(foldRange: FoldControlRange): HTMLElement {
   const btn = document.createElement("span");
   btn.className = "cm-http-fold-gutter-btn";
@@ -154,13 +123,6 @@ function createFoldGutterButton(foldRange: FoldControlRange): HTMLElement {
   return btn;
 }
 
-/**
- * computeEditorControlMarkers
- * 入参：当前 CodeMirror 编辑器状态。
- * 出参：运行按钮列使用的 gutter marker 集合。
- * 作用与流程：先扫描原有请求发送按钮位置，再扫描 HTTP 折叠入口；
- * 两类入口合并到同一个行级 marker 中，最终按文档位置排序后交给 gutter 渲染。
- */
 function computeEditorControlMarkers(state: EditorState): RangeSet<GutterMarker> {
   const markers = new Map<number, EditorControlMarkerInfo>();
   addRunControls(state, markers);
@@ -172,12 +134,6 @@ function computeEditorControlMarkers(state: EditorState): RangeSet<GutterMarker>
   return RangeSet.of(ranges);
 }
 
-/**
- * addRunControls
- * 入参：当前编辑器状态和待写入的 marker 信息表。
- * 出参：无。
- * 作用与流程：沿用原有 `###` 请求块扫描逻辑，在块内第一个 method/URL 行标记发送按钮。
- */
 function addRunControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
   const lines = state.doc.lines;
   let inBlock = false;
@@ -206,13 +162,6 @@ function addRunControls(state: EditorState, markers: Map<number, EditorControlMa
   }
 }
 
-/**
- * addFoldControls
- * 入参：当前编辑器状态和待写入的 marker 信息表。
- * 出参：无。
- * 作用与流程：复用 HTTP 折叠扫描结果选出每行一个折叠入口，
- * 再结合当前 foldState 判断按钮应显示为折叠还是展开。
- */
 function addFoldControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
   const foldControls = selectHttpFoldControls(collectHttpFoldRanges(state.doc.toString()));
   for (const range of foldControls) {
@@ -226,13 +175,6 @@ function addFoldControls(state: EditorState, markers: Map<number, EditorControlM
   }
 }
 
-/**
- * getOrCreateControlMarkerInfo
- * 入参：marker 信息表和 1 基行号。
- * 出参：该行可修改的 marker 信息对象。
- * 作用与流程：如果当前行已有记录则直接返回，否则创建默认空记录，
- * 让发送和折叠扫描可以安全合并到同一行。
- */
 function getOrCreateControlMarkerInfo(
   markers: Map<number, EditorControlMarkerInfo>,
   lineNumber: number,
@@ -244,13 +186,6 @@ function getOrCreateControlMarkerInfo(
   return created;
 }
 
-/**
- * isFoldRangeFolded
- * 入参：当前编辑器状态和折叠区间起止位置。
- * 出参：该区间当前是否已经折叠。
- * 作用与流程：遍历 CodeMirror foldState 中的已折叠范围，
- * 用起止位置精确匹配当前 gutter 按钮需要展示的状态。
- */
 function isFoldRangeFolded(state: EditorState, from: number, to: number): boolean {
   let folded = false;
   foldedRanges(state).between(from, to, (rangeFrom, rangeTo) => {
@@ -263,13 +198,6 @@ function isFoldRangeFolded(state: EditorState, from: number, to: number): boolea
   return folded;
 }
 
-/**
- * readFoldButtonRange
- * 入参：折叠按钮 DOM。
- * 出参：按钮记录的折叠区间；数据缺失或非法时返回 null。
- * 作用与流程：从 dataset 读取 from/to，转换为数字并校验，
- * 供点击事件在不依赖 React 状态的情况下定位需要切换的折叠范围。
- */
 function readFoldButtonRange(button: HTMLElement): { from: number; to: number } | null {
   const from = Number(button.dataset.foldFrom);
   const to = Number(button.dataset.foldTo);
@@ -277,13 +205,6 @@ function readFoldButtonRange(button: HTMLElement): { from: number; to: number } 
   return { from, to };
 }
 
-/**
- * toggleFoldRange
- * 入参：当前编辑器视图和需要切换的折叠区间。
- * 出参：无。
- * 作用与流程：实时读取当前 foldState 判断区间是否已折叠，
- * 再派发展开或折叠 effect，让 CodeMirror 负责更新占位符和文档展示。
- */
 function toggleFoldRange(view: EditorView, range: { from: number; to: number }): void {
   const effect = isFoldRangeFolded(view.state, range.from, range.to)
     ? unfoldEffect.of(range)
@@ -292,13 +213,6 @@ function toggleFoldRange(view: EditorView, range: { from: number; to: number }):
   view.focus();
 }
 
-/**
- * shouldRefreshControlMarkers
- * 入参：CodeMirror 事务对象。
- * 出参：是否需要重算运行/折叠控制列。
- * 作用与流程：文档变化会改变请求和折叠入口；fold/unfold effect 会改变按钮方向，
- * 其它选择或滚动变化不需要触发重新扫描。
- */
 function shouldRefreshControlMarkers(tr: Transaction): boolean {
   return tr.docChanged || tr.effects.some((effect) => effect.is(foldEffect) || effect.is(unfoldEffect));
 }
