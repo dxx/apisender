@@ -46,6 +46,20 @@ interface ParsedRequestFold {
   isJsonBody: boolean;
 }
 
+interface GrpcSections {
+  requestEndIndex: number;
+  headerStartIndex: number | null;
+  headerEndIndex: number | null;
+  bodyStartIndex: number | null;
+  bodyEndIndex: number | null;
+}
+
+interface WsSections {
+  requestEndIndex: number;
+  bodyStartIndex: number | null;
+  bodyEndIndex: number | null;
+}
+
 interface JsonToken {
   char: "{" | "[";
   pos: number;
@@ -535,17 +549,37 @@ function parseRequestFold(
   }
   const protocol = getMessageProtocol(lines[requestLineIndex].text.trim());
   if (protocol !== null) {
-    const requestEndIndex = protocol === "websocket"
-      ? findLastContentLineIndex(lines, requestLineEndIndex, sectionLimit)
-      : findGrpcRequestEndIndex(lines, requestLineEndIndex, sectionLimit);
+    if (protocol === "websocket") {
+      const sections = scanWsBody(lines, requestLineEndIndex, sectionLimit);
+      return {
+        requestEndIndex: sections.requestEndIndex,
+        nextIndex: sections.requestEndIndex + 1,
+        headerStartIndex: null,
+        headerEndIndex: null,
+        bodyStartIndex: sections.bodyStartIndex,
+        bodyEndIndex: sections.bodyEndIndex,
+        isJsonBody: false,
+      };
+    }
+    const sections = scanGrpcSections(lines, requestLineEndIndex, sectionLimit);
+    const isJsonBody =
+      sections.bodyStartIndex !== null &&
+      sections.bodyEndIndex !== null &&
+      shouldScanJsonBody(
+        lines,
+        sections.headerStartIndex,
+        sections.headerEndIndex,
+        sections.bodyStartIndex,
+        sections.bodyEndIndex,
+      );
     return {
-      requestEndIndex,
-      nextIndex: requestEndIndex + 1,
-      headerStartIndex: null,
-      headerEndIndex: null,
-      bodyStartIndex: null,
-      bodyEndIndex: null,
-      isJsonBody: false,
+      requestEndIndex: sections.requestEndIndex,
+      nextIndex: sections.requestEndIndex + 1,
+      headerStartIndex: sections.headerStartIndex,
+      headerEndIndex: sections.headerEndIndex,
+      bodyStartIndex: sections.bodyStartIndex,
+      bodyEndIndex: sections.bodyEndIndex,
+      isJsonBody,
     };
   }
 
@@ -706,7 +740,7 @@ function collectJsonFoldRanges(
  * addLineRange
  * 入参：目标数组、折叠类型、行索引数组、起止行下标和完整文本。
  * 出参：无，合法时向目标数组追加折叠区间。
- * 作用与流程：把整行范围转换为绝对字符区间，过滤空范围和单行 request 折叠，
+ * 作用与流程：把整行范围转换为绝对字符区间，过滤空范围和单行折叠；
  * request 会额外读取 ### 后面的标题，其余类型统一生成 label、preview 等展示信息。
  */
 function addLineRange(
@@ -718,7 +752,7 @@ function addLineRange(
   text: string,
 ): void {
   if (endIndex < startIndex) return;
-  if (kind === "request" && endIndex === startIndex) return;
+  if (endIndex === startIndex) return;
   const from = lines[startIndex].from;
   const to = lines[endIndex].to;
   if (from >= to) return;
@@ -976,36 +1010,61 @@ function isMultipartContentType(contentType: string | null): boolean {
 }
 
 /**
- * findLastContentLineIndex
+ * scanWsBody
  * 入参：行索引数组、请求行结束下标和当前请求块结束下标。
- * 出参：分隔符前最后一个非空内容行；没有额外内容时返回请求行结束下标。
- * 作用与流程：WS/gRPC 的消息体可包含空行，因此只去掉块尾空白，不按 HTTP body 规则截断。
+ * 出参：WebSocket 块 body 段行下标和请求块最后内容行下标。
+ * 作用与流程：跳过 URL 后空行，收集到下一个 `###` 或文件尾的所有行；
+ * WebSocket 消息体之间允许空行，不在空行处中断；跳过注释行。
  */
-function findLastContentLineIndex(
+function scanWsBody(
   lines: HttpLine[],
   requestLineEndIndex: number,
   limitIndex: number,
-): number {
-  for (let index = limitIndex - 1; index > requestLineEndIndex; index--) {
-    if (lines[index].text.trim() !== "") return index;
+): WsSections {
+  let index = requestLineEndIndex + 1;
+  let bodyStartIndex: number | null = null;
+  let bodyEndIndex: number | null = null;
+  let requestEndIndex = requestLineEndIndex;
+
+  while (index < limitIndex && lines[index].text.trim() === "") {
+    index += 1;
   }
-  return requestLineEndIndex;
+
+  while (index < limitIndex) {
+    const trimmed = lines[index].text.trim();
+    if (isRequestSeparator(trimmed)) break;
+    if (isComment(trimmed)) {
+      index += 1;
+      continue;
+    }
+    if (bodyStartIndex === null) bodyStartIndex = index;
+    bodyEndIndex = index;
+    requestEndIndex = index;
+    index += 1;
+  }
+
+  return { requestEndIndex, bodyStartIndex, bodyEndIndex };
 }
 
 /**
- * findGrpcRequestEndIndex
+ * scanGrpcSections
  * 入参：行索引数组、请求行结束下标和当前请求块结束下标。
- * 出参：gRPC 请求按现有 parser 规则得到的最后内容行下标。
- * 作用与流程：跳过 URL 后空行，扫描 metadata 到空行或消息体起点，再跳过 metadata/body
- * 之间的空行并收集 JSON/XML 消息体，消息体遇空行或 ### 时结束。
+ * 出参：gRPC 块的 metadata / body 段行下标和请求块最后内容行下标。
+ * 作用与流程：跳过 URL 后空行，先扫描 `key: value` 形式的 metadata 段；
+ * 再跳过 metadata/body 之间的空行，收集 JSON/XML 消息体。metadata 遇空行、
+ * JSON/XML 起始行或 `###` 结束；body 遇空行或 `###` 结束。
  */
-function findGrpcRequestEndIndex(
+function scanGrpcSections(
   lines: HttpLine[],
   requestLineEndIndex: number,
   limitIndex: number,
-): number {
+): GrpcSections {
   let index = requestLineEndIndex + 1;
-  let lastContentIndex = requestLineEndIndex;
+  let headerStartIndex: number | null = null;
+  let headerEndIndex: number | null = null;
+  let bodyStartIndex: number | null = null;
+  let bodyEndIndex: number | null = null;
+  let requestEndIndex = requestLineEndIndex;
 
   while (index < limitIndex && lines[index].text.trim() === "") {
     index += 1;
@@ -1020,7 +1079,9 @@ function findGrpcRequestEndIndex(
     }
     if (trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.startsWith("<")) break;
     if (!isHeaderLine(trimmed)) break;
-    lastContentIndex = index;
+    if (headerStartIndex === null) headerStartIndex = index;
+    headerEndIndex = index;
+    requestEndIndex = index;
     index += 1;
   }
 
@@ -1035,11 +1096,19 @@ function findGrpcRequestEndIndex(
       index += 1;
       continue;
     }
-    lastContentIndex = index;
+    if (bodyStartIndex === null) bodyStartIndex = index;
+    bodyEndIndex = index;
+    requestEndIndex = index;
     index += 1;
   }
 
-  return lastContentIndex;
+  return {
+    requestEndIndex,
+    headerStartIndex,
+    headerEndIndex,
+    bodyStartIndex,
+    bodyEndIndex,
+  };
 }
 
 /**
