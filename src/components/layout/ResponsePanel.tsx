@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
+import { SendIcon } from "@/components/editor/SendIcon";
 
 import type { Tab } from "@/stores/tabs";
 import { Button } from "@/components/ui/button";
@@ -85,7 +86,9 @@ export function ResponsePanel({ tab, panelRef, collapsed }: ResponsePanelProps) 
         <SseResponse sse={sse} path={tab.path} />
       ) : !response && !loading && !http.error ? (
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          <span className="text-sm">点击 ▶ 发送请求</span>
+          <span className="text-sm inline-flex items-center gap-1 select-none">
+            点击 <SendIcon className="inline" /> 发送请求
+          </span>
         </div>
       ) : (
         <HttpResponse http={http} loading={loading} />

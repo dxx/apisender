@@ -41,6 +41,7 @@ import {
   refreshHttpFoldPlaceholders,
   selectHttpFoldControls,
 } from "./http-folding";
+import { SEND_ICON_SVG_HTML } from "./SendIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
@@ -129,7 +130,7 @@ function createRunGutterButton(): HTMLElement {
   btn.className = "cm-run-gutter-btn";
   btn.title = "发送请求";
   btn.setAttribute("aria-hidden", "true");
-  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 20 12 6 20"/></svg>`;
+  btn.innerHTML = SEND_ICON_SVG_HTML;
   return btn;
 }
 
