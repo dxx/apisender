@@ -13,42 +13,52 @@ use crate::error::{AppError, AppResult};
 use crate::parser::WsMessage;
 
 
+/// 外部控制 WebSocket 连接的句柄：上行消息通道 + 取消令牌。
 #[derive(Debug)]
 pub struct WsHandle {
     pub to_ws_rx: tokio::sync::mpsc::Receiver<String>,
     pub cancel: CancellationToken,
 }
 
+/// 连接成功时回执当前握手响应头（其它字段暂时不在此暴露）。
 #[derive(Debug, Clone)]
 pub struct WsConnectAck {
     pub response_headers: Vec<(String, String)>,
 }
 
+/// 推给上层的事件流：Open → Message* → Close/IdleTimeout/Error → Closed。
 #[derive(Debug, Clone)]
 pub enum WsEvent {
+    /// 握手完成，已确认状态码与响应头。
     Open {
         status: u16,
         status_text: String,
         response_headers: Vec<(String, String)>,
     },
+    /// 服务端发来的文本帧。
     Message {
         data: String,
         index: u64,
         ts_ms: u64,
     },
+    /// 收到 close 帧或握手后主动 close。
     Close {
         code: u16,
         reason: String,
     },
+    /// 在指定时间内既无收到帧也无发帧时触发。
     IdleTimeout {
         idle_ms: u64,
     },
+    /// 任意阶段的协议/网络错误。
     Error {
         message: String,
     },
+    /// 事件流收尾，与 Open 严格一一对应。
     Closed,
 }
 
+/// WebSocket 传输层统一入口。
 pub struct WebSocketTransport;
 
 impl Default for WebSocketTransport {
@@ -62,6 +72,9 @@ impl WebSocketTransport {
         WebSocketTransport
     }
 
+    /// 发起握手并循环跑读写任务。
+    /// 作用与流程：握手（带超时）→ 解析 `Open` 事件 → 拆 `initial_messages` 为立即发送 / wait-for-server 队列 →
+    /// 进入四路 select（读帧 / 写用户消息 / 取消 / 空闲超时），任意分支终止后输出 `Closed`。
     pub async fn connect(
         &self,
         url: &str,
@@ -103,6 +116,7 @@ impl WebSocketTransport {
 
         let mut pending_waits: VecDeque<String> = VecDeque::new();
         let mut immediate: Vec<String> = Vec::new();
+        // 区分立即发送和等待服务端响应后再发的消息：标记 `wait_for_server` 的进入队列，其余连发。
         for m in initial_messages {
             if m.wait_for_server {
                 pending_waits.push_back(m.text);
@@ -149,6 +163,7 @@ impl WebSocketTransport {
                                 index,
                                 ts_ms,
                             });
+                            // 收到服务端响应后立刻出队一条 wait-for-server 消息继续发送。
                             if let Some(next) = pending_waits.pop_front() {
                                 log::debug!("[ws] wait-for-server resolved, sending next message");
                                 ws.send(Message::Text(next.into())).await.map_err(map_ws_err)?;
@@ -235,6 +250,7 @@ impl WebSocketTransport {
     }
 }
 
+/// 当前 Unix 毫秒时间戳，给事件 `ts_ms` 字段使用。
 fn now_ms() -> u64 {
     SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -242,6 +258,7 @@ fn now_ms() -> u64 {
         .unwrap_or(0)
 }
 
+/// 把 tungstenite 错误统一包装成 `AppError::Invalid`，附带协议前缀。
 fn map_ws_err(e: tokio_tungstenite::tungstenite::Error) -> AppError {
     AppError::Invalid(format!("WebSocket error: {}", e))
 }
