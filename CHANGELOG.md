@@ -1,5 +1,11 @@
 # 更新日志
 
+## 0.1.13 - 2026-08-13
+
+### 新增
+
+- WebSocket 和 gRPC 编辑器支持代码折叠 ([f6c4633](https://github.com/dxx/apisender/commit/f6c463331f4205109b3b08d1031095af6de0d47d))
+
 ## 0.1.12 - 2026-08-13
 
 ### 新增
