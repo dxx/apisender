@@ -149,12 +149,12 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
           orientation="vertical"
           className="flex flex-1 min-h-0"
         >
-          <TabsList className="flex flex-col items-stretch justify-start h-auto w-48 shrink-0 border-r bg-muted/20 pt-4 px-2 pb-2 gap-1 rounded-none">
+          <TabsList className="flex flex-col items-stretch justify-start h-auto w-40 shrink-0 border-r bg-muted/20 pt-4 px-2 pb-2 gap-1 rounded-none">
             {sections.map((s) => (
               <TabsTrigger
                 key={s.value}
                 value={s.value}
-                className="w-full justify-start px-3 py-1.5 hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
+                className="w-full justify-start px-3 py-1.5 rounded-md hover:text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-none"
               >
                 {s.label}
               </TabsTrigger>

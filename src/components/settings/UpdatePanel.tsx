@@ -293,7 +293,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
           size="sm"
           onClick={handleCheck}
           disabled={busy}
-          className="shrink-0"
+          className="shrink-0 rounded-md"
         >
           {checking ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
           检查更新
@@ -333,7 +333,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
 
       <div className="flex flex-wrap justify-end gap-2">
         {status.phase === "available" && (
-          <Button type="button" size="sm" onClick={handleDownload} disabled={busy}>
+          <Button type="button" size="sm" className="rounded-md" onClick={handleDownload} disabled={busy}>
             <Download className="h-3.5 w-3.5" />
             下载更新
           </Button>
@@ -344,6 +344,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
             type="button"
             variant="outline"
             size="sm"
+            className="rounded-md"
             onClick={handleCancel}
             disabled={cancelling}
           >
@@ -354,11 +355,11 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
 
         {status.canInstall && (
           <>
-            <Button type="button" variant="outline" size="sm" onClick={onDelayInstall}>
+            <Button type="button" variant="outline" size="sm" className="rounded-md" onClick={onDelayInstall}>
               <Clock className="h-3.5 w-3.5" />
               稍后安装
             </Button>
-            <Button type="button" size="sm" onClick={handleInstall} disabled={installing}>
+            <Button type="button" size="sm" className="rounded-md" onClick={handleInstall} disabled={installing}>
               {installing ? <Loader className="h-3.5 w-3.5 animate-spin" /> : <RotateCw className="h-3.5 w-3.5" />}
               安装并重启
             </Button>
