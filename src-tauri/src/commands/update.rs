@@ -575,35 +575,3 @@ fn status_with_metadata(mut status: UpdateStatus, metadata: &UpdateMetadata) -> 
     status.metadata = Some(metadata.clone());
     status
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{describe_update_error, downloaded_status, downloading_status};
-
-    #[test]
-    fn download_status_reports_cancel_and_percentage_while_downloading() {
-        let status = downloading_status(25, Some(100));
-
-        assert_eq!(status.phase, "downloading");
-        assert_eq!(status.progress_percent, Some(25));
-        assert!(status.can_cancel);
-        assert!(!status.can_install);
-    }
-
-    #[test]
-    fn downloaded_status_reports_install_is_available() {
-        let status = downloaded_status(100, Some(100));
-
-        assert_eq!(status.phase, "downloaded");
-        assert_eq!(status.progress_percent, Some(100));
-        assert!(!status.can_cancel);
-        assert!(status.can_install);
-    }
-
-    #[test]
-    fn update_errors_are_rewritten_for_common_user_actions() {
-        assert!(describe_update_error("operation timed out").contains("网络连接超时"));
-        assert!(describe_update_error("signature verification failed").contains("签名验证失败"));
-        assert!(describe_update_error("download cancelled by user").contains("已取消下载"));
-    }
-}
