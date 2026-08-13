@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.1.14 - 2026-08-14
+
+### 新增
+
+- Rust updater 自动读取系统代理（macOS networksetup / Windows 注册表 / Linux gsettings），并保留 HTTPS_PROXY 环境变量覆盖 ([d87758a](https://github.com/dxx/apisender/commit/d87758a0b5b29615ab3c804337bd09250ba1319c))
+
+### 变更
+
+- 调整设置界面样式 ([91aaec3](https://github.com/dxx/apisender/commit/91aaec3a0499d181cef5daa5de978c441844bfbc))
+
 ## 0.1.13 - 2026-08-13
 
 ### 新增
