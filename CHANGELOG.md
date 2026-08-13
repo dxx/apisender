@@ -1,5 +1,20 @@
 # 更新日志
 
+## 0.1.12 - 2026-08-13
+
+### 新增
+
+- 接入 Tauri 自动更新并发布 ([PR #2](https://github.com/dxx/apisender/pull/2) contributed by [@aaaaaaaaat](https://github.com/aaaaaaaaat))
+- 实现编辑器折叠交互 ([PR #3](https://github.com/dxx/apisender/pull/3) contributed by [@aaaaaaaaat](https://github.com/aaaaaaaaat))
+
+### 变更
+
+- TitleBar 窗口控制按钮高度自适应父级 ([0f80e33](https://github.com/dxx/apisender/commit/0f80e3335002c87364dd299bc0836a49be8f66e5))
+- CodeMirror 折叠/发送按钮字符替换为 lucide SVG 图标 ([4539b59](https://github.com/dxx/apisender/commit/4539b5922cf4e07d8647fd9f98d3267996b43cf9))
+- 发送按钮去除 color transition，避免 activeLine 切换时白闪 ([4539b59](https://github.com/dxx/apisender/commit/4539b5922cf4e07d8647fd9f98d3267996b43cf9))
+- 折叠按钮去除 opacity transition，避免编辑器挂载时闪烁 ([4539b59](https://github.com/dxx/apisender/commit/4539b5922cf4e07d8647fd9f98d3267996b43cf9))
+- Tauri updater endpoint 配置从 Rust 硬编码迁移到 tauri.conf.json ([567ee21](https://github.com/dxx/apisender/commit/567ee21835dae91629de939f37a98114dbd93fe0))
+
 ## 0.1.11 - 2026-08-10
 
 ### 变更
