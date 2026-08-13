@@ -27,7 +27,7 @@ jobs:
         id: version
         run: |
           ref=${GITHUB_REF_NAME#v}
-          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION=$ref" >> $GITHUB_ENV
           else
             echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
@@ -101,7 +101,7 @@ jobs:
         id: version
         run: |
           ref=${GITHUB_REF_NAME#v}
-          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION=$ref" >> $GITHUB_ENV
           else
             echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
@@ -361,7 +361,7 @@ jobs:
         id: version
         run: |
           ref=${GITHUB_REF_NAME#v}
-          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION=$ref" >> $GITHUB_ENV
           else
             echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
@@ -440,7 +440,7 @@ jobs:
         id: version
         run: |
           ref=${GITHUB_REF_NAME#v}
-          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION=$ref" >> $GITHUB_ENV
           else
             echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
@@ -531,7 +531,7 @@ jobs:
         id: version
         run: |
           ref=${GITHUB_REF_NAME#v}
-          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+          if [[ "$ref" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION=$ref" >> $GITHUB_ENV
           else
             echo "VERSION=$(jq -r .version src-tauri/tauri.conf.json)" >> $GITHUB_ENV
