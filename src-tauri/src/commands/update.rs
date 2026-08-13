@@ -5,14 +5,11 @@ use serde::Serialize;
 use tauri::{AppHandle, State, ipc::Channel};
 use tauri_plugin_updater::{Update, UpdaterExt};
 use tokio_util::sync::CancellationToken;
-use url::Url;
 
 use crate::error::{AppError, AppResult};
 
 const UPDATE_CHECK_TIMEOUT_SECS: u64 = 20;
 const UPDATE_DOWNLOAD_TIMEOUT_SECS: u64 = 300;
-const UPDATE_ENDPOINTS: &[&str] =
-    &["https://github.com/dxx/apisender/releases/latest/download/latest.json"];
 
 #[derive(Default)]
 pub struct UpdateState {
@@ -337,15 +334,8 @@ pub async fn install_downloaded_update(state: State<'_, UpdateState>) -> AppResu
 /// 出参：配置好 GitHub Release endpoint 与超时时间的 updater。
 /// 作用与流程：默认使用 tauri.conf.json 中的 updater 公钥；如果构建时提供 APISENDER_UPDATER_PUBLIC_KEY，则用该值覆盖配置。
 fn build_updater(app: &AppHandle, timeout: Duration) -> AppResult<tauri_plugin_updater::Updater> {
-    let endpoints = UPDATE_ENDPOINTS
-        .iter()
-        .map(|endpoint| Url::parse(endpoint))
-        .collect::<Result<Vec<_>, _>>()?;
-
     let builder = app
         .updater_builder()
-        .endpoints(endpoints)
-        .map_err(update_error)?
         .timeout(timeout);
     let builder = if let Some(pubkey) = embedded_updater_public_key() {
         builder.pubkey(pubkey)
