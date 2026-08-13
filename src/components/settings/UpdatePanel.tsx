@@ -26,22 +26,12 @@ const idleStatus: UpdateStatus = {
   message: null,
 };
 
-/**
- * 入参：未知错误对象。
- * 出参：可展示给用户的错误文本。
- * 作用与流程：优先保留后端增强后的中文错误，其次读取 Error.message，最后给出兜底提示。
- */
 function userMessage(error: unknown): string {
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
   return "更新失败。请稍后重试，或从 GitHub Release 手动下载安装包。";
 }
 
-/**
- * 入参：字节数。
- * 出参：B/KB/MB/GB 格式的短文本。
- * 作用与流程：按 1024 进位选择单位，并为非字节单位保留 1 位小数。
- */
 function formatBytes(bytes: number): string {
   if (bytes <= 0) return "0 B";
   const units = ["B", "KB", "MB", "GB"];
@@ -50,11 +40,6 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(index === 0 ? 0 : 1)} ${units[index]}`;
 }
 
-/**
- * 入参：更新状态。
- * 出参：状态标题文本。
- * 作用与流程：根据后端状态机阶段生成设置页顶部标题，包含可用版本号。
- */
 function statusTitle(status: UpdateStatus): string {
   switch (status.phase) {
     case "upToDate":
@@ -72,11 +57,6 @@ function statusTitle(status: UpdateStatus): string {
   }
 }
 
-/**
- * 入参：更新状态和忙碌标记。
- * 出参：用于状态标题前的图标节点。
- * 作用与流程：下载/安装/检查时显示旋转图标，其它阶段按状态显示固定图标。
- */
 function statusIcon(status: UpdateStatus, busy: boolean) {
   if (busy || status.phase === "downloading" || status.phase === "installing") {
     return <Loader className="h-4 w-4 animate-spin text-primary" />;
@@ -97,11 +77,6 @@ interface UpdatePanelProps {
   onDelayInstall?: () => void;
 }
 
-/**
- * 入参：延迟安装回调。
- * 出参：设置页更新面板 React 节点。
- * 作用与流程：读取后端更新状态，提供检查、下载、取消、稍后安装和安装重启动作，并用 toast 展示关键结果。
- */
 export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
   const [status, setStatus] = useState<UpdateStatus>(idleStatus);
   const [error, setError] = useState<string | null>(null);
@@ -136,11 +111,6 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     };
   }, []);
 
-  /**
-   * 入参：无。
-   * 出参：无。
-   * 作用与流程：触发后端检查更新，刷新状态，并在发现新版本或已是最新版时展示提示。
-   */
   const handleCheck = async () => {
     setChecking(true);
     setError(null);
@@ -161,11 +131,6 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     }
   };
 
-  /**
-   * 入参：下载事件。
-   * 出参：无。
-   * 作用与流程：消费后端 Channel 推送的进度或取消事件，并同步更新进度条状态。
-   */
   const handleDownloadEvent = (event: UpdateDownloadEvent) => {
     if (event.event === "Progress") {
       setStatus((current) => ({
@@ -184,11 +149,6 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     }
   };
 
-  /**
-   * 入参：无。
-   * 出参：无。
-   * 作用与流程：启动下载命令并绑定进度回调，完成后进入可延迟安装状态，失败时恢复后端状态。
-   */
   const handleDownload = async () => {
     setDownloading(true);
     setError(null);
@@ -217,11 +177,6 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     }
   };
 
-  /**
-   * 入参：无。
-   * 出参：无。
-   * 作用与流程：请求后端取消当前下载，取消结果由下载命令和 Channel 事件完成状态回填。
-   */
   const handleCancel = async () => {
     setCancelling(true);
     try {
@@ -238,11 +193,6 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     }
   };
 
-  /**
-   * 入参：无。
-   * 出参：无。
-   * 作用与流程：安装已下载更新包，安装成功后调用 process 插件重启应用，失败时恢复状态并提示原因。
-   */
   const handleInstall = async () => {
     setInstalling(true);
     setError(null);

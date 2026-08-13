@@ -21,11 +21,6 @@ const platformArtifacts = {
 
 const files = await readdir(distDir);
 
-/**
- * 入参：平台标识和文件名后缀。
- * 出参：匹配到的发布文件名。
- * 作用与流程：在 dist 目录中寻找唯一的 updater 安装包，缺失时直接失败，避免发布不完整 latest.json。
- */
 function findArtifact(platform, suffix) {
   const matches = files.filter((file) => file.endsWith(suffix));
   if (matches.length !== 1) {
@@ -34,11 +29,6 @@ function findArtifact(platform, suffix) {
   return matches[0];
 }
 
-/**
- * 入参：发布文件名。
- * 出参：该文件对应的 Tauri 签名字符串。
- * 作用与流程：读取相邻 .sig 文件并去除首尾空白，缺失签名时中断发布。
- */
 async function readSignature(fileName) {
   return (await readFile(path.join(distDir, `${fileName}.sig`), "utf8")).trim();
 }
