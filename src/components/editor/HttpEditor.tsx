@@ -461,18 +461,16 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       const sel = view.state.selection.main;
 
       const httpText = curlToHttpText(text);
-      if (httpText) {
-        const commented = text
-          .split("\n")
-          .map((l) => `# ${l}`)
-          .join("\n");
-        const insert = `###\n${commented}\n${httpText}\n\n###`;
-        view.dispatch({ changes: { from: sel.from, to: sel.to, insert } });
-        toast.success("已将 cURL 转换为 HTTP 请求报文");
-      } else {
-        view.dispatch({ changes: { from: sel.from, to: sel.to, insert: text } });
-      }
+      const insert = httpText
+        ? `###\n${text.split("\n").map((l) => `# ${l}`).join("\n")}\n${httpText}\n\n###`
+        : text;
+      const cursor = sel.from + insert.length;
+      view.dispatch({
+        changes: { from: sel.from, to: sel.to, insert },
+        selection: { anchor: cursor },
+      });
       view.focus();
+      if (httpText) toast.success("已将 cURL 转换为 HTTP 请求报文");
     } catch (e) {
       toast.error(`粘贴失败: ${e}`);
     }
