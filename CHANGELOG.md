@@ -1,5 +1,12 @@
 # 更新日志
 
+## 0.1.15 - 2026-08-14
+
+### 修复
+
+- 修复 Windows 平台设置弹窗关闭按钮点击后出现焦点边框 ([8851966](https://github.com/dxx/apisender/commit/885196601dd34d1f80d696b1d3612237727d36c8))
+- 修复编辑器中 Ctrl+V 粘贴后光标停留在原位置，应移动到粘贴内容末尾 ([7da020a](https://github.com/dxx/apisender/commit/7da020af94d346f6389bc788ec36c2ac6cc987bf))
+
 ## 0.1.14 - 2026-08-14
 
 ### 新增
