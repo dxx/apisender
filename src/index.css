@@ -228,3 +228,13 @@ body {
   min-width: 0 !important;
   display: block !important;
 }
+
+@keyframes indeterminate-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
+.indeterminate-bar {
+  width: 33%;
+  animation: indeterminate-slide 1.5s ease-in-out infinite;
+}

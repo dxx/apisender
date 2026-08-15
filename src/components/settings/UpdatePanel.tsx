@@ -260,7 +260,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
             <div
               className={cn(
                 "h-full bg-primary transition-[width] duration-300",
-                status.progressPercent == null && status.phase === "downloading" ? "w-1/3 animate-pulse" : "",
+                status.progressPercent == null && status.phase === "downloading" ? "indeterminate-bar" : "",
               )}
               style={status.progressPercent == null ? undefined : { width: `${progressPercent}%` }}
             />
