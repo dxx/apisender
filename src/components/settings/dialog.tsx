@@ -109,7 +109,7 @@ function FontSelector({
         </SelectContent>
       </Select>
       <pre
-        className="rounded-md border bg-muted/30 px-3 py-2 text-xs whitespace-pre-wrap break-all max-h-40 overflow-auto"
+        className="rounded-md border bg-[var(--editor-bg)] px-3 py-2 text-xs whitespace-pre-wrap break-all max-h-40 overflow-auto"
         style={{ fontFamily: value ? `"${value}"` : undefined }}
       >
         {previewLines.map((line, i) => (

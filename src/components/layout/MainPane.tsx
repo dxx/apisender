@@ -356,7 +356,7 @@ export function MainPane() {
   return (
     <main className="flex h-full flex-col overflow-hidden bg-background">
       <div className="group/tabs relative">
-        <div ref={tabsScrollRef} className="tabs-scroll flex h-9 shrink-0 items-center overflow-x-auto overflow-y-hidden border-b bg-card">
+        <div ref={tabsScrollRef} className="tabs-scroll flex h-9 shrink-0 items-center overflow-x-auto overflow-y-hidden border-b bg-background">
           <div className="flex h-full items-stretch">
             {tabs.map((tab) => (
               <ContextMenu key={tab.path}>

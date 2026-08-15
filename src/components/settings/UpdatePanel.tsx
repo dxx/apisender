@@ -222,7 +222,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-4 rounded-md border bg-muted/20 px-4 py-3">
         <div className="flex min-w-0 items-start gap-3">
-          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-background">
+          <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border bg-card">
             {statusIcon(status, busy)}
           </div>
           <div className="min-w-0 space-y-1">
@@ -269,7 +269,7 @@ export function UpdatePanel({ onDelayInstall }: UpdatePanelProps) {
       )}
 
       {status.metadata?.notes && (
-        <div className="max-h-32 overflow-auto rounded-md border bg-background px-3 py-2 text-xs leading-5 whitespace-pre-wrap">
+        <div className="max-h-32 overflow-auto rounded-md border bg-card px-3 py-2 text-xs leading-5 whitespace-pre-wrap">
           {status.metadata.notes}
         </div>
       )}

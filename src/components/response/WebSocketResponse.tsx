@@ -308,7 +308,7 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
       </div>
 
       {headersOpen && ws.startPayload?.headers && ws.startPayload.headers.length > 0 && (
-        <div className="shrink-0 border-b bg-card max-h-48 overflow-auto">
+        <div className="shrink-0 border-b bg-background max-h-48 overflow-auto">
           <table className="w-full text-xs font-mono">
             <tbody>
               {ws.startPayload.headers.map(([key, value], i) => (

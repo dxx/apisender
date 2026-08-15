@@ -51,7 +51,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
     : "workspace";
 
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col border-r-2 bg-card">
+    <aside className="flex h-full w-full shrink-0 flex-col border-r-2 bg-background">
       <div className="flex h-9 items-center justify-between border-b px-3 pr-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
