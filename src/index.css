@@ -87,9 +87,9 @@
   --editor-cursor: oklch(0.7686 0.1647 70.08);
   --editor-bg: oklch(0.22 0.034 245);
 
-  --search-panel-bg: oklch(0.26 0.022 245);
-  --search-input-bg: oklch(0.18 0.022 245);
-  --search-button-bg: oklch(0.38 0.022 245);
+  --search-panel-bg: oklch(0.26 0.034 245);
+  --search-input-bg: oklch(0.18 0.034 245);
+  --search-button-bg: oklch(0.38 0.034 245);
 
   --scrollbar-thumb: oklch(0.33 0.022 245);
   --scrollbar-thumb-hover: oklch(0.35 0.022 245);
