@@ -70,7 +70,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
             },
             ".cm-gutters": {
               fontFamily: "var(--font-mono)",
-              backgroundColor: "var(--card)",
+              backgroundColor: "var(--editor-gutter-bg)",
               borderRight: "1px solid var(--border)",
               color: "var(--editor-gutter-fg)",
             },

@@ -117,7 +117,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
           },
           ".cm-gutters": {
             fontFamily: "var(--font-mono)",
-            backgroundColor: "var(--card)",
+            backgroundColor: "var(--editor-gutter-bg)",
             borderRight: "1px solid var(--border)",
             color: "var(--editor-gutter-fg)",
           },
@@ -132,10 +132,10 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             padding: "0 3px",
           },
           ".cm-activeLine": {
-            backgroundColor: "var(--accent)",
+            backgroundColor: "var(--editor-gutter-active-bg)",
           },
           ".cm-activeLineGutter": {
-            backgroundColor: "var(--accent)",
+            backgroundColor: "var(--editor-gutter-active-bg)",
             color: "var(--editor-gutter-active-fg)",
           },
           "&.cm-focused": {

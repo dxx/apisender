@@ -564,7 +564,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
         ".cm-gutters": {
           fontFamily: "var(--font-mono)",
-          backgroundColor: "var(--card)",
+          backgroundColor: "var(--editor-gutter-bg)",
           borderRight: "1px solid var(--border)",
           color: "var(--editor-gutter-fg)",
         },
@@ -579,10 +579,10 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           padding: "0 3px",
         },
         ".cm-activeLine": {
-          backgroundColor: "var(--accent)",
+          backgroundColor: "var(--editor-gutter-active-bg)",
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--accent)",
+          backgroundColor: "var(--editor-gutter-active-bg)",
           color: "var(--editor-gutter-active-fg)",
         },
         ".cm-run-gutter": {
