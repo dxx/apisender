@@ -365,7 +365,7 @@ export function MainPane() {
                     className={`group relative flex h-full cursor-pointer items-center gap-1.5 px-3 text-sm ${
                       tab.path === activePath
                         ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
-                        : "hover:bg-[var(--editor-active-bg)]/50 text-[var(--editor-inactive-fg)]"
+                        : "hover:bg-[var(--editor-active-bg)]/80 text-[var(--editor-inactive-fg)]"
                     }`}
                     onClick={() => setActive(tab.path)}
                   >

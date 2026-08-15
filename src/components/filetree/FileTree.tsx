@@ -483,7 +483,7 @@ function TreeItem({
             className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums ${
               selectPath === node.path
               ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
-              : "hover:bg-[var(--editor-active-bg)]/50 text-[var(--editor-inactive-fg)]"
+              : "hover:bg-[var(--editor-active-bg)]/80 text-[var(--editor-inactive-fg)]"
             }`}
             data-tree-path={node.path}
             style={{ paddingLeft }}
