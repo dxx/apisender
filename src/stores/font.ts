@@ -13,19 +13,19 @@ interface FontState {
 }
 
 function applyEditorFontFamily(font: string) {
-  document.documentElement.style.setProperty("--font-mono-custom", `"${font}"`);
+  document.documentElement.style.setProperty("--font-editor-custom", `"${font}"`);
 }
 
 function clearEditorFontFamily() {
-  document.documentElement.style.removeProperty("--font-mono-custom");
+  document.documentElement.style.removeProperty("--font-editor-custom");
 }
 
 function applyUiFontFamily(font: string) {
-  document.documentElement.style.setProperty("--font-sans-custom", `"${font}"`);
+  document.documentElement.style.setProperty("--font-ui-custom", `"${font}"`);
 }
 
 function clearUiFontFamily() {
-  document.documentElement.style.removeProperty("--font-sans-custom");
+  document.documentElement.style.removeProperty("--font-ui-custom");
 }
 
 export const useFontStore = create<FontState>((set, get) => ({

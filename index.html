@@ -39,14 +39,14 @@
           var editorFontFamily = localStorage.getItem("editorFontFamily");
           if (editorFontFamily) {
             document.documentElement.style.setProperty(
-              "--font-mono-custom",
+              "--font-editor-custom",
               '"' + editorFontFamily + '"'
             );
           }
           var uiFontFamily = localStorage.getItem("uiFontFamily");
           if (uiFontFamily) {
             document.documentElement.style.setProperty(
-              "--font-sans-custom",
+              "--font-ui-custom",
               '"' + uiFontFamily + '"'
             );
           }

@@ -38,7 +38,7 @@ export const searchPanelTheme = EditorView.theme({
     position: "relative",
     backgroundColor: "var(--search-panel-bg)",
     color: "var(--foreground)",
-    fontFamily: "var(--font-sans)",
+    fontFamily: "var(--font-ui)",
     fontSize: "12px",
   },
   ".cm-panels-top": {
@@ -55,7 +55,7 @@ export const searchPanelTheme = EditorView.theme({
     borderRadius: "var(--radius-sm)",
     padding: "3px 8px",
     fontSize: "12px",
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-editor)",
     outline: "none",
     minWidth: "160px",
     WebkitTextFillColor: "var(--foreground)",

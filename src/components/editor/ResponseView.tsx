@@ -60,7 +60,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               backgroundColor: "var(--editor-selection) !important",
             },
             ".cm-content": {
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-response)",
               fontVariantLigatures: "none",
               fontFeatureSettings: '"liga" 0, "calt" 0',
               padding: "4px 0",
@@ -69,7 +69,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               lineHeight: "1.4",
             },
             ".cm-gutters": {
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-response)",
               backgroundColor: "var(--editor-gutter-bg)",
               borderRight: "1px solid var(--border)",
               color: "var(--editor-gutter-fg)",

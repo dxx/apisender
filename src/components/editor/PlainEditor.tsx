@@ -101,7 +101,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             backgroundColor: "var(--editor-selection-match)",
           },
           ".cm-content": {
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-editor)",
             fontVariantLigatures: "none",
             fontFeatureSettings: '"liga" 0, "calt" 0',
             padding: "0 0 100px 0",
@@ -115,7 +115,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             marginLeft: "-1px",
           },
           ".cm-gutters": {
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-editor)",
             backgroundColor: "var(--editor-gutter-bg)",
             borderRight: "1px solid var(--border)",
             color: "var(--editor-gutter-fg)",

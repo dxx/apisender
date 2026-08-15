@@ -200,7 +200,7 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
               borderRadius: "4px",
             },
             ".cm-content": {
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-response)",
               fontVariantLigatures: "none",
               fontFeatureSettings: '"liga" 0, "calt" 0',
               padding: "6px 0",
@@ -309,7 +309,7 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
 
       {headersOpen && ws.startPayload?.headers && ws.startPayload.headers.length > 0 && (
         <div className="shrink-0 border-b bg-background max-h-48 overflow-auto">
-          <table className="w-full text-xs font-mono">
+          <table className="w-full text-xs font-response">
             <tbody>
               {ws.startPayload.headers.map(([key, value], i) => (
                 <tr key={i} className="border-b border-border/30 last:border-b-0">
@@ -334,7 +334,7 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
           fontFeatureSettings: '"liga" 0, "calt" 0',
         }}
       >
-        <div className="flex flex-col text-sm font-mono">
+        <div className="flex flex-col text-sm font-response">
           {ws.messages.length === 0 ? (
             <div className="px-3 py-4 text-center text-muted-foreground">
               {live ? "等待消息..." : "暂无消息"}

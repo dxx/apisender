@@ -169,7 +169,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-mono text-sm">
+        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-response text-sm">
           <ScrollArea ref={scrollRef} className="h-full  bg-(--editor-bg)">
             {grpc.messages.length === 0 ? (
               <div className="text-muted-foreground text-center px-3 py-4">
@@ -185,7 +185,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-mono text-sm">
+        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-response text-sm">
           {grpc.initialMetadata.length === 0 && grpc.trailingMetadata.length === 0 ? (
             <div className="text-muted-foreground px-3 py-1.5">No metadata</div>
           ) : (
