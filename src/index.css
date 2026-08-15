@@ -170,6 +170,11 @@
   --info-text: oklch(0.85 0.10 240);
 }
 
+[data-sonner-toaster] {
+  z-index: 999999999 !important;
+  pointer-events: auto !important;
+}
+
 * {
   border-color: var(--border);
 }

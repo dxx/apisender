@@ -143,7 +143,6 @@ function App() {
 
   return (
     <>
-      <Toaster />
       <TooltipProvider delayDuration={700}>
         <TitleBar />
         <div
@@ -160,8 +159,9 @@ function App() {
             </Panel>
           </Group>
         </div>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </TooltipProvider>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </TooltipProvider>
+      <Toaster />
     </>
   );
 }
