@@ -334,9 +334,9 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
           fontFeatureSettings: '"liga" 0, "calt" 0',
         }}
       >
-        <div className="flex flex-col font-mono">
+        <div className="flex flex-col text-sm font-mono">
           {ws.messages.length === 0 ? (
-            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+            <div className="px-3 py-4 text-center text-muted-foreground">
               {live ? "等待消息..." : "暂无消息"}
             </div>
           ) : (
@@ -398,7 +398,7 @@ function MessageRow({ msg }: { msg: WsMessageRecord }) {
 
   return (
     <div className={`border-b border-border/30 px-3 py-1.5 ${colorClass}`}>
-      <div className="mb-0.5 flex items-center gap-2 text-sm">
+      <div className="mb-0.5 flex items-center gap-2">
         <Icon className={`h-3 w-3 ${iconColor}`} />
         <span className="text-xs text-muted-foreground">{formatTime(msg.ts)}</span>
         <span className="text-xs text-muted-foreground">#{dirPrefix}-{msg.index}</span>
@@ -426,7 +426,7 @@ function MessageRow({ msg }: { msg: WsMessageRecord }) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all text-(--syntax-string)">
         {msg.data}
       </pre>
     </div>

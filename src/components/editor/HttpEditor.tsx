@@ -41,7 +41,7 @@ import {
   refreshHttpFoldPlaceholders,
   selectHttpFoldControls,
 } from "./http-folding";
-import { SEND_ICON_SVG_HTML } from "./SendIcon";
+import { CHEVRON_DOWN_SVG_HTML, CHEVRON_RIGHT_SVG_HTML, SEND_ICON_SVG_HTML } from "./EditorIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
@@ -89,7 +89,7 @@ class EditorControlGutterMarker extends GutterMarker {
   }
 
   toDOM() {
-    const wrapper = document.createElement("span");
+    const wrapper = document.createElement("div");
     wrapper.className = "cm-editor-control-gutter";
     if (this.info.canRun) {
       wrapper.append(createRunGutterButton());
@@ -118,8 +118,8 @@ function createFoldGutterButton(foldRange: FoldControlRange): HTMLElement {
   btn.dataset.folded = foldRange.folded ? "true" : "false";
   btn.setAttribute("aria-hidden", "true");
   btn.innerHTML = foldRange.folded
-    ? `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 18 15 12 9 6"/></svg>`
-    : `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"/></svg>`;
+    ? CHEVRON_RIGHT_SVG_HTML
+    : CHEVRON_DOWN_SVG_HTML;
   return btn;
 }
 
@@ -527,7 +527,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
       ]),
       updateListener,
-      EditorView.lineWrapping,
       EditorView.theme({
         "&": {
           fontSize: "16px",
@@ -586,13 +585,12 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           color: "var(--editor-gutter-active-fg)",
         },
         ".cm-run-gutter": {
-          width: "22px",
           backgroundColor: "transparent",
         },
         ".cm-run-gutter .cm-gutterElement": {
           display: "flex",
           justifyContent: "center",
-          padding: "0",
+          paddingRight: "2px",
         },
         ".cm-editor-control-gutter": {
           position: "relative",
@@ -600,9 +598,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           alignItems: "center",
           justifyContent: "center",
           boxSizing: "border-box",
-          width: "20px",
-          height: "20px",
-          marginTop: "1px",
           flexShrink: "0",
         },
         ".cm-run-gutter-btn, .cm-http-fold-gutter-btn": {
@@ -611,10 +606,9 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           alignItems: "center",
           justifyContent: "center",
           boxSizing: "border-box",
-          width: "20px",
-          height: "20px",
           textAlign: "center",
           borderRadius: "3px",
+          padding: "1px",
           userSelect: "none",
         },
         ".cm-run-gutter-btn": {
@@ -631,9 +625,9 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           opacity: "1",
           pointerEvents: "auto",
         },
-        // ".cm-run-gutter-btn:hover, .cm-http-fold-gutter-btn:hover": {
-        //   backgroundColor: "var(--accent)",
-        // },
+        ".cm-run-gutter-btn:hover, .cm-http-fold-gutter-btn:hover": {
+          backgroundColor: "var(--editor-gutter-active-bg)",
+        },
         ".cm-http-fold-gutter-btn:hover": {
           color: "var(--foreground)",
         },

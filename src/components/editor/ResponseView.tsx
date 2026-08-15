@@ -45,7 +45,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
           EditorState.readOnly.of(true),
           EditorView.theme({
             "&": {
-              fontSize: "16px",
+              fontSize: "14px",
               height: "100%",
               backgroundColor: "var(--editor-bg)",
             },

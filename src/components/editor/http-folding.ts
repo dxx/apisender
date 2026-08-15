@@ -929,7 +929,6 @@ const httpFoldingTheme = EditorView.theme({
     color: "var(--muted-foreground)",
     padding: "0 6px",
     margin: "0 2px",
-    fontSize: "12px",
     cursor: "pointer",
   },
   ".cm-tooltip.cm-tooltip-hover": {

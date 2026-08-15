@@ -169,10 +169,10 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-mono text-xs">
+        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-mono text-sm">
           <ScrollArea ref={scrollRef} className="h-full  bg-(--editor-bg)">
             {grpc.messages.length === 0 ? (
-              <div className="text-muted-foreground text-center text-sm px-3 py-4">
+              <div className="text-muted-foreground text-center px-3 py-4">
                 {grpc.status === "connecting" || grpc.status === "streaming" ? "等待中..." : "没有消息"}
               </div>
             ) : (
@@ -185,9 +185,9 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-mono text-xs">
+        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-mono text-sm">
           {grpc.initialMetadata.length === 0 && grpc.trailingMetadata.length === 0 ? (
-            <div className="text-muted-foreground text-sm px-3 py-1.5">No metadata</div>
+            <div className="text-muted-foreground px-3 py-1.5">No metadata</div>
           ) : (
             <ScrollArea className="h-full">
               {grpc.initialMetadata.length > 0 && (
@@ -195,7 +195,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
                   <div className="bg-muted/40 text-[10px] font-medium text-muted-foreground">
                     Initial ({grpc.initialMetadata.length})
                   </div>
-                  <table className="w-full text-sm">
+                  <table className="w-full">
                     <tbody>
                       {grpc.initialMetadata.map((kv: [string, string], i: number) => (
                         <tr key={`i-${i}`} className="align-top">
@@ -212,7 +212,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
                   <div className="bg-muted/40 text-[10px] font-medium text-muted-foreground">
                     Trailing ({grpc.trailingMetadata.length})
                   </div>
-                  <table className="w-full text-sm">
+                  <table className="w-full">
                     <tbody>
                       {grpc.trailingMetadata.map((kv: [string, string], i: number) => (
                         <tr key={`t-${i}`} className="align-top">
@@ -238,7 +238,7 @@ function MessageRow({ msg }: { msg: GrpcMessageRecord }) {
       <div className="mb-1 text-xs text-muted-foreground">
         msg #{msg.index + 1} · {formatTime(msg.tsMs)}
       </div>
-      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all text-(--syntax-string)">
         {formatJson(msg.data)}
       </pre>
     </div>

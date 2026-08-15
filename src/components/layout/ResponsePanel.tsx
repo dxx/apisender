@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
-import { SendIcon } from "@/components/editor/SendIcon";
+import { SendIcon } from "@/components/editor/EditorIcon";
 
 import type { Tab } from "@/stores/tabs";
 import { Button } from "@/components/ui/button";

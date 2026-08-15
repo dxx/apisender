@@ -184,9 +184,9 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="events" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea ref={scrollRef} className="h-full bg-(--editor-bg)">
-            <div className="flex flex-col font-mono">
+            <div className="flex flex-col text-sm font-mono">
               {events.length === 0 ? (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-4 text-center text-muted-foreground">
                   {live ? "等待事件..." : "无事件"}
                 </div>
               ) : (
@@ -219,7 +219,7 @@ export function SseResponse({ sse, path }: SseResponseProps) {
                   ))
                 ) : (
                   <tr>
-                    <td className="px-3 py-4 text-center text-sm text-muted-foreground">
+                    <td className="px-3 py-4 text-center text-muted-foreground">
                       No Headers
                     </td>
                   </tr>
@@ -231,18 +231,18 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="cookies" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="flex flex-col font-mono">
+            <div className="flex flex-col text-sm font-mono">
               {start && start.cookies.length > 0 ? (
                 start.cookies.map((c, i) => (
                   <div
                     key={i}
-                    className="border-b border-border/30 px-3 py-1.5 text-sm break-all text-(--syntax-string)"
+                    className="border-b border-border/30 px-3 py-1.5 break-all text-(--syntax-string)"
                   >
                     {c}
                   </div>
                 ))
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-4 text-center text-muted-foreground">
                   No Cookie
                 </div>
               )}
@@ -269,7 +269,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
 
   return (
     <div className="border-b border-border/30 px-3 py-1.5">
-      <div className="mb-0.5 flex items-center gap-2 text-sm">
+      <div className="mb-0.5 flex items-center gap-2">
         <span className="text-muted-foreground text-xs">#{index}</span>
         {evt.event !== "message" && (
           <span className="rounded bg-primary/10 px-1 font-medium text-primary">
@@ -303,7 +303,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all text-(--syntax-string)">
         {evt.data}
       </pre>
     </div>

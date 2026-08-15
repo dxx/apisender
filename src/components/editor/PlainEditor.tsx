@@ -80,7 +80,6 @@ export function PlainEditor({ tab }: PlainEditorProps) {
           },
         ]),
         updateListener,
-        EditorView.lineWrapping,
         EditorView.theme({
           "&": {
             fontSize: "16px",
