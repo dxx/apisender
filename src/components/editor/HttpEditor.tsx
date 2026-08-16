@@ -529,7 +529,8 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       updateListener,
       EditorView.theme({
         "&": {
-          fontSize: "16px",
+          fontFamily: "var(--font-editor)",
+          fontSize: "var(--text-editor-size)",
           height: "100%",
           backgroundColor: "var(--editor-bg)",
           caretColor: "var(--editor-cursor)",
@@ -548,7 +549,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           backgroundColor: "var(--editor-selection-match)",
         },
         ".cm-content": {
-          fontFamily: "var(--font-editor)",
           fontVariantLigatures: "none",
           fontFeatureSettings: '"liga" 0, "calt" 0',
           padding: "0 0 100px 0",
@@ -562,7 +562,6 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           marginLeft: "-1px",
         },
         ".cm-gutters": {
-          fontFamily: "var(--font-editor)",
           backgroundColor: "var(--editor-gutter-bg)",
           borderRight: "1px solid var(--border)",
           color: "var(--editor-gutter-fg)",
@@ -590,7 +589,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         ".cm-run-gutter .cm-gutterElement": {
           display: "flex",
           justifyContent: "center",
-          paddingRight: "2px",
+          paddingRight: "3px",
         },
         ".cm-editor-control-gutter": {
           position: "relative",

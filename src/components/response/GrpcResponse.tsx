@@ -169,7 +169,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </TabsList>
         </div>
 
-        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-response text-sm">
+        <TabsContent value="messages" className="mt-0 flex-1 overflow-hidden font-response text-response-size">
           <ScrollArea ref={scrollRef} className="h-full  bg-(--editor-bg)">
             {grpc.messages.length === 0 ? (
               <div className="text-muted-foreground text-center px-3 py-4">
@@ -185,7 +185,7 @@ export function GrpcResponse({ grpc, path }: GrpcResponseProps) {
           </ScrollArea>
         </TabsContent>
 
-        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-response text-sm">
+        <TabsContent value="metadata" className="mt-0 flex-1 overflow-auto font-response text-response-size">
           {grpc.initialMetadata.length === 0 && grpc.trailingMetadata.length === 0 ? (
             <div className="text-muted-foreground px-3 py-1.5">No metadata</div>
           ) : (
@@ -238,7 +238,7 @@ function MessageRow({ msg }: { msg: GrpcMessageRecord }) {
       <div className="mb-1 text-xs text-muted-foreground">
         msg #{msg.index + 1} · {formatTime(msg.tsMs)}
       </div>
-      <pre className="whitespace-pre-wrap break-all text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all font-response text-(--syntax-string)">
         {formatJson(msg.data)}
       </pre>
     </div>

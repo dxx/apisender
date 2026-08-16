@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useThemeStore, type Theme } from "@/stores/theme";
 import { useFontStore } from "@/stores/font";
 import {
@@ -20,6 +21,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
 import { UpdatePanel } from "@/components/settings/UpdatePanel";
 
 interface SettingsDialogProps {
@@ -46,22 +49,37 @@ const uiPreviewLines = [
 ];
 
 const editorPreviewLines = [
-  "GET https://api.example.com/v1/users/123 HTTP/1.1",
+  "POST https://api.example.com/v1/users HTTP/1.1",
+  "Content-Type: application/json",
   "Accept: application/json",
   "Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.xxxx.yyyy",
   "",
-  "###",
-  "",
+  "{",
+  '  "name": "John Doe",',
+  '  "email": "john@example.com",',
+  '  "age": 30,',
+  '  "role": "admin",',
+  '  "tags": ["alpha", "beta"],',
+  '  "active": true',
+  "}",
+];
+
+const responsePreviewLines = [
   "HTTP/1.1 200 OK",
   "Content-Type: application/json; charset=utf-8",
+  "Date: Wed, 21 Aug 2024 07:28:00 GMT",
+  "Server: nginx/1.27.1",
   "X-Request-Id: 5b8e9a3c-7f12-4d2e-a8c1-9e3f4b7a2d6e",
   "",
   "{",
-  '  "id": 123,',
-  '  "name": "John Doe",',
-  '  "email": "john@example.com",',
-  '  "active": true,',
-  '  "score": 98.5',
+  '  "users": [',
+  '    { "id": 1, "name": "Alice",   "role": "admin" },',
+  '    { "id": 2, "name": "Bob",     "role": "user"  },',
+  '    { "id": 3, "name": "Charlie", "role": "user"  }',
+  "  ],",
+  '  "total": 3,',
+  '  "page": 1,',
+  '  "perPage": 20',
   "}",
 ];
 
@@ -73,6 +91,8 @@ interface FontSelectorProps {
   fonts: string[];
   onChange: (font: string | null) => void;
   previewLines: string[];
+  previewSize?: number;
+  aside?: ReactNode;
 }
 
 function FontSelector({
@@ -81,36 +101,57 @@ function FontSelector({
   fonts,
   onChange,
   previewLines,
+  previewSize,
+  aside,
 }: FontSelectorProps) {
   const isLoading = fonts.length === 0;
+  const selectEl = (
+    <Select
+      value={value ?? DEFAULT_VALUE}
+      onValueChange={(v) => onChange(v === DEFAULT_VALUE ? null : v)}
+      disabled={isLoading}
+    >
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder={isLoading ? "加载中…" : "选择字体"} />
+      </SelectTrigger>
+      <SelectContent
+        position="popper"
+        side="bottom"
+        align="start"
+        style={{ width: "var(--radix-select-trigger-width)", maxHeight: "300px" }}
+      >
+        <SelectItem value={DEFAULT_VALUE}>默认</SelectItem>
+        {fonts.map((font) => (
+          <SelectItem key={font} value={font}>
+            <span style={{ fontFamily: `"${font}", sans-serif` }}>{font}</span>
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+
   return (
     <div className="flex flex-col gap-2">
-      <Label className="text-sm">{label}</Label>
-      <Select
-        value={value ?? DEFAULT_VALUE}
-        onValueChange={(v) => onChange(v === DEFAULT_VALUE ? null : v)}
-        disabled={isLoading}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={isLoading ? "加载中…" : "选择字体"} />
-        </SelectTrigger>
-        <SelectContent
-          position="popper"
-          side="bottom"
-          align="start"
-          style={{ width: "var(--radix-select-trigger-width)", maxHeight: "300px" }}
-        >
-          <SelectItem value={DEFAULT_VALUE}>默认</SelectItem>
-          {fonts.map((font) => (
-            <SelectItem key={font} value={font}>
-              <span style={{ fontFamily: `"${font}", sans-serif` }}>{font}</span>
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {aside ? (
+        <div className="grid grid-cols-[1fr_auto] items-stretch gap-4">
+          <div className="flex min-w-0 flex-col gap-2">
+            <Label className="text-sm">{label}</Label>
+            {selectEl}
+          </div>
+          {aside}
+        </div>
+      ) : (
+        <>
+          <Label className="text-sm">{label}</Label>
+          {selectEl}
+        </>
+      )}
       <pre
         className="rounded-md border bg-[var(--editor-bg)] px-3 py-2 text-xs whitespace-pre-wrap break-all max-h-40 overflow-auto"
-        style={{ fontFamily: value ? `"${value}"` : undefined }}
+        style={{
+          fontFamily: value ? `"${value}"` : undefined,
+          fontSize: previewSize !== undefined ? `${previewSize}px` : undefined,
+        }}
       >
         {previewLines.map((line, i) => (
           <span key={i} className="block">
@@ -118,6 +159,95 @@ function FontSelector({
           </span>
         ))}
       </pre>
+    </div>
+  );
+}
+
+interface FontSizeSelectorProps {
+  label: string;
+  value: number | null;
+  onChange: (size: number | null) => void;
+  min: number;
+  max: number;
+  defaultValue: number;
+  cssVar: string;
+}
+
+function FontSizeSelector({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  defaultValue,
+  cssVar,
+}: FontSizeSelectorProps) {
+  const initial = value ?? defaultValue;
+  const [draft, setDraft] = useState(initial);
+  const debounceRef = useRef<number | null>(null);
+  const lastCommittedRef = useRef<number | null>(null);
+  const isDefault = value === null;
+
+  useEffect(() => {
+    setDraft(initial);
+  }, [initial]);
+
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, []);
+
+  return (
+    <div className="flex h-full w-[200px] flex-col gap-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-sm">{label}</Label>
+        <div className="flex items-center gap-2">
+          <span className="tabular-nums text-xs text-muted-foreground">{draft}px</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 px-1.5 text-xs"
+            disabled={isDefault}
+            onClick={() => {
+              if (debounceRef.current) clearTimeout(debounceRef.current);
+              lastCommittedRef.current = null;
+              onChange(null);
+            }}
+          >
+            默认
+          </Button>
+        </div>
+      </div>
+      <div className="flex flex-1 items-center">
+        <Slider
+          className="w-full"
+          value={[draft]}
+          min={min}
+          max={max}
+          step={1}
+          onValueChange={(v) => {
+            const s = v[0];
+            setDraft(s);
+            document.documentElement.style.setProperty(cssVar, `${s}px`);
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            debounceRef.current = window.setTimeout(() => {
+              if (lastCommittedRef.current !== s) {
+                lastCommittedRef.current = s;
+                onChange(s);
+              }
+            }, 250);
+          }}
+          onValueCommit={(v) => {
+            const s = v[0];
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            if (lastCommittedRef.current !== s) {
+              lastCommittedRef.current = s;
+              onChange(s);
+            }
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -135,11 +265,17 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
   const setEditorFontFamily = useFontStore((s) => s.setEditorFontFamily);
   const uiFontFamily = useFontStore((s) => s.uiFontFamily);
   const setUiFontFamily = useFontStore((s) => s.setUiFontFamily);
+  const responseFontFamily = useFontStore((s) => s.responseFontFamily);
+  const setResponseFontFamily = useFontStore((s) => s.setResponseFontFamily);
+  const editorFontSize = useFontStore((s) => s.editorFontSize);
+  const setEditorFontSize = useFontStore((s) => s.setEditorFontSize);
+  const responseFontSize = useFontStore((s) => s.responseFontSize);
+  const setResponseFontSize = useFontStore((s) => s.setResponseFontSize);
   const systemFonts = useFontStore((s) => s.systemFonts);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[60vw] h-[60vh] max-w-5xl gap-0 p-0 overflow-hidden flex flex-col">
+        <DialogContent className="w-[70vw] h-[75vh] max-w-6xl gap-0 p-0 overflow-hidden flex flex-col">
         <DialogHeader className="pl-4 pt-3 pb-3 pr-14 border-b">
           <DialogTitle>设置</DialogTitle>
         </DialogHeader>
@@ -203,6 +339,37 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
                 fonts={systemFonts}
                 onChange={setEditorFontFamily}
                 previewLines={editorPreviewLines}
+                previewSize={editorFontSize ?? 16}
+                aside={
+                  <FontSizeSelector
+                    label="编辑器字号"
+                    value={editorFontSize}
+                    onChange={setEditorFontSize}
+                    min={10}
+                    max={32}
+                    defaultValue={16}
+                    cssVar="--text-editor-size-custom"
+                  />
+                }
+              />
+              <FontSelector
+                label="响应内容字体"
+                value={responseFontFamily}
+                fonts={systemFonts}
+                onChange={setResponseFontFamily}
+                previewLines={responsePreviewLines}
+                previewSize={responseFontSize ?? 14}
+                aside={
+                  <FontSizeSelector
+                    label="响应内容字号"
+                    value={responseFontSize}
+                    onChange={setResponseFontSize}
+                    min={10}
+                    max={32}
+                    defaultValue={14}
+                    cssVar="--text-response-size-custom"
+                  />
+                }
               />
             </TabsContent>
 

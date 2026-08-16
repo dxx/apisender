@@ -32,17 +32,10 @@
           if (resolved === "dark")
             document.documentElement.classList.add("dark");
 
-          // ⚠️ 字体预读(双变量):
-          //   --font-*-custom 由 inline script 在 CSS 加载前写入,
-          //   --font-*- 在 src/index.css 的 @theme inline 中通过
-          //   var(--font-*-custom, default) 引用,fallback 链仅在 CSS 中维护。
-          var editorFontFamily = localStorage.getItem("editorFontFamily");
-          if (editorFontFamily) {
-            document.documentElement.style.setProperty(
-              "--font-editor-custom",
-              '"' + editorFontFamily + '"'
-            );
-          }
+          // ⚠️ UI 字体预读(避免首屏 UI 元素字体闪烁):
+          //   --font-ui-custom 由 inline script 在 CSS 加载前写入。
+          //   编辑器/响应区域的字体和字号仅在对应 Tab 打开时由 store 加载,
+          //   首屏不渲染这些区域,无需 pre-read,无 FOUC 风险。
           var uiFontFamily = localStorage.getItem("uiFontFamily");
           if (uiFontFamily) {
             document.documentElement.style.setProperty(

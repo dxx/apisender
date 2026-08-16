@@ -184,7 +184,7 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="events" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea ref={scrollRef} className="h-full bg-(--editor-bg)">
-            <div className="flex flex-col text-sm font-response">
+            <div className="flex flex-col font-response text-response-size">
               {events.length === 0 ? (
                 <div className="px-3 py-4 text-center text-muted-foreground">
                   {live ? "等待事件..." : "无事件"}
@@ -204,7 +204,7 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="headers" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <table className="w-full text-sm font-response">
+            <table className="w-full font-response text-response-size">
               <tbody>
                 {start && start.headers.length > 0 ? (
                   start.headers.map(([key, value], i) => (
@@ -231,7 +231,7 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="cookies" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="flex flex-col text-sm font-response">
+            <div className="flex flex-col font-response text-response-size">
               {start && start.cookies.length > 0 ? (
                 start.cookies.map((c, i) => (
                   <div
@@ -303,7 +303,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <pre className="whitespace-pre-wrap break-all text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all font-response text-(--syntax-string)">
         {evt.data}
       </pre>
     </div>

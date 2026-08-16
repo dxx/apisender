@@ -5,11 +5,17 @@ import * as api from "@/lib/tauri";
 interface FontState {
   editorFontFamily: string | null;
   uiFontFamily: string | null;
+  responseFontFamily: string | null;
+  editorFontSize: number | null;
+  responseFontSize: number | null;
   systemFonts: string[];
   loaded: boolean;
   init: () => Promise<void>;
   setEditorFontFamily: (font: string | null) => Promise<void>;
   setUiFontFamily: (font: string | null) => Promise<void>;
+  setResponseFontFamily: (font: string | null) => Promise<void>;
+  setEditorFontSize: (size: number | null) => Promise<void>;
+  setResponseFontSize: (size: number | null) => Promise<void>;
 }
 
 function applyEditorFontFamily(font: string) {
@@ -28,9 +34,36 @@ function clearUiFontFamily() {
   document.documentElement.style.removeProperty("--font-ui-custom");
 }
 
+function applyResponseFontFamily(font: string) {
+  document.documentElement.style.setProperty("--font-response-custom", `"${font}"`);
+}
+
+function clearResponseFontFamily() {
+  document.documentElement.style.removeProperty("--font-response-custom");
+}
+
+function applyEditorFontSize(size: number) {
+  document.documentElement.style.setProperty("--text-editor-size-custom", `${size}px`);
+}
+
+function clearEditorFontSize() {
+  document.documentElement.style.removeProperty("--text-editor-size-custom");
+}
+
+function applyResponseFontSize(size: number) {
+  document.documentElement.style.setProperty("--text-response-size-custom", `${size}px`);
+}
+
+function clearResponseFontSize() {
+  document.documentElement.style.removeProperty("--text-response-size-custom");
+}
+
 export const useFontStore = create<FontState>((set, get) => ({
   editorFontFamily: null,
   uiFontFamily: null,
+  responseFontFamily: null,
+  editorFontSize: null,
+  responseFontSize: null,
   systemFonts: [],
   loaded: false,
 
@@ -39,12 +72,22 @@ export const useFontStore = create<FontState>((set, get) => ({
 
     let editorFontFamily: string | null = null;
     let uiFontFamily: string | null = null;
+    let responseFontFamily: string | null = null;
+    let editorFontSize: number | null = null;
+    let responseFontSize: number | null = null;
     try {
       editorFontFamily = localStorage.getItem("editorFontFamily");
       uiFontFamily = localStorage.getItem("uiFontFamily");
+      responseFontFamily = localStorage.getItem("responseFontFamily");
+      const editorSizeRaw = localStorage.getItem("editorFontSize");
+      const responseSizeRaw = localStorage.getItem("responseFontSize");
+      editorFontSize = editorSizeRaw ? Number(editorSizeRaw) : null;
+      responseFontSize = responseSizeRaw ? Number(responseSizeRaw) : null;
+      if (editorFontSize !== null && Number.isNaN(editorFontSize)) editorFontSize = null;
+      if (responseFontSize !== null && Number.isNaN(responseFontSize)) responseFontSize = null;
     } catch {}
 
-    set({ editorFontFamily, uiFontFamily, loaded: true });
+    set({ editorFontFamily, uiFontFamily, responseFontFamily, editorFontSize, responseFontSize, loaded: true });
 
     try {
       const fonts = await api.listSystemFonts();
@@ -83,8 +126,56 @@ export const useFontStore = create<FontState>((set, get) => ({
         }
         set({ uiFontFamily: fonts.uiFontFamily });
       }
+      if (fonts.responseFontFamily !== responseFontFamily) {
+        if (fonts.responseFontFamily) {
+          applyResponseFontFamily(fonts.responseFontFamily);
+          try {
+            localStorage.setItem("responseFontFamily", fonts.responseFontFamily);
+          } catch {}
+        } else {
+          clearResponseFontFamily();
+          try {
+            localStorage.removeItem("responseFontFamily");
+          } catch {}
+        }
+        set({ responseFontFamily: fonts.responseFontFamily });
+      }
     } catch (e) {
       console.error("[font] getFonts failed:", e);
+    }
+
+    try {
+      const sizes = await api.getFontSizes();
+      if (sizes.editorFontSize !== editorFontSize) {
+        if (sizes.editorFontSize !== null) {
+          applyEditorFontSize(sizes.editorFontSize);
+          try {
+            localStorage.setItem("editorFontSize", String(sizes.editorFontSize));
+          } catch {}
+        } else {
+          clearEditorFontSize();
+          try {
+            localStorage.removeItem("editorFontSize");
+          } catch {}
+        }
+        set({ editorFontSize: sizes.editorFontSize });
+      }
+      if (sizes.responseFontSize !== responseFontSize) {
+        if (sizes.responseFontSize !== null) {
+          applyResponseFontSize(sizes.responseFontSize);
+          try {
+            localStorage.setItem("responseFontSize", String(sizes.responseFontSize));
+          } catch {}
+        } else {
+          clearResponseFontSize();
+          try {
+            localStorage.removeItem("responseFontSize");
+          } catch {}
+        }
+        set({ responseFontSize: sizes.responseFontSize });
+      }
+    } catch (e) {
+      console.error("[font] getFontSizes failed:", e);
     }
   },
 
@@ -125,6 +216,66 @@ export const useFontStore = create<FontState>((set, get) => ({
       await api.setUiFontFamily(font);
     } catch (e) {
       console.error("[font] setUiFontFamily IPC failed:", e);
+    }
+  },
+
+  setResponseFontFamily: async (font) => {
+    if (font) {
+      applyResponseFontFamily(font);
+      try {
+        localStorage.setItem("responseFontFamily", font);
+      } catch {}
+    } else {
+      clearResponseFontFamily();
+      try {
+        localStorage.removeItem("responseFontFamily");
+      } catch {}
+    }
+    set({ responseFontFamily: font });
+    try {
+      await api.setResponseFontFamily(font);
+    } catch (e) {
+      console.error("[font] setResponseFontFamily IPC failed:", e);
+    }
+  },
+
+  setEditorFontSize: async (size) => {
+    if (size !== null) {
+      applyEditorFontSize(size);
+      try {
+        localStorage.setItem("editorFontSize", String(size));
+      } catch {}
+    } else {
+      clearEditorFontSize();
+      try {
+        localStorage.removeItem("editorFontSize");
+      } catch {}
+    }
+    set({ editorFontSize: size });
+    try {
+      await api.setEditorFontSize(size);
+    } catch (e) {
+      console.error("[font] setEditorFontSize IPC failed:", e);
+    }
+  },
+
+  setResponseFontSize: async (size) => {
+    if (size !== null) {
+      applyResponseFontSize(size);
+      try {
+        localStorage.setItem("responseFontSize", String(size));
+      } catch {}
+    } else {
+      clearResponseFontSize();
+      try {
+        localStorage.removeItem("responseFontSize");
+      } catch {}
+    }
+    set({ responseFontSize: size });
+    try {
+      await api.setResponseFontSize(size);
+    } catch (e) {
+      console.error("[font] setResponseFontSize IPC failed:", e);
     }
   },
 }));
