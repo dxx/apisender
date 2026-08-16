@@ -28,7 +28,6 @@ function App() {
   const initWorkspace = useWorkspaceStore((s) => s.init);
   const refreshTree = useWorkspaceStore((s) => s.refreshTree);
   const openWorkspaceDialog = useWorkspaceStore((s) => s.openDialog);
-  const initEnv = useEnvironmentStore((s) => s.init);
   const refreshEnv = useEnvironmentStore((s) => s.refresh);
   const refreshHistory = useHistoryStore((s) => s.refresh);
   const tabs = useTabsStore((s) => s.tabs);
@@ -41,10 +40,9 @@ function App() {
 
   useEffect(() => {
     initTheme();
-    initWorkspace();
-    initEnv();
     initFont();
-  }, [initTheme, initWorkspace, initEnv, initFont]);
+    initWorkspace();
+  }, [initTheme, initWorkspace, initFont]);
 
   useEffect(() => {
     if (!import.meta.env.PROD) return;
