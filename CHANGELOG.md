@@ -1,5 +1,26 @@
 # 更新日志
 
+## 0.1.16 - 2026-08-16
+
+### 新增
+
+- 设置中新增编辑器字体大小和响应内容字体大小 ([328ae64](https://github.com/dxx/apisender/commit/328ae64))
+- 响应内容字体独立于编辑器字体 ([328ae64](https://github.com/dxx/apisender/commit/328ae64))
+
+### 修复
+
+- 修复首次启动时 workspace 未打开的环境加载错误 ([8a54dac](https://github.com/dxx/apisender/commit/8a54dac))
+- 修复 Sidebar 工作区切换按钮关闭 dropdown 后残留浏览器默认 focus outline 边框 ([299b8e1](https://github.com/dxx/apisender/commit/299b8e1))
+
+### 变更
+
+- 字体变量重命名 ([77eb7fc](https://github.com/dxx/apisender/commit/77eb7fc))
+- 编辑器和响应视图样式分离、字号变量单独定义 ([234689b](https://github.com/dxx/apisender/commit/234689b), [da74c3e](https://github.com/dxx/apisender/commit/da74c3e))
+- Toaster 样式调整 ([299b8e1](https://github.com/dxx/apisender/commit/299b8e1))
+- 深色主题样式优化 ([aeb8727](https://github.com/dxx/apisender/commit/aeb8727), [2d1d1b4](https://github.com/dxx/apisender/commit/2d1d1b4))
+- 进度条样式调整 ([b6a52b9](https://github.com/dxx/apisender/commit/b6a52b9))
+- 预览区样式调整 ([f450627](https://github.com/dxx/apisender/commit/f450627))
+
 ## 0.1.15 - 2026-08-14
 
 ### 修复
