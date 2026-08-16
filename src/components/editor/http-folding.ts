@@ -17,6 +17,10 @@ import {
   type ViewUpdate,
 } from "@codemirror/view";
 
+import { copyText } from "@/lib/tauri";
+
+import { COPY_ICON_SVG_HTML, CHECK_ICON_SVG_HTML } from "./EditorIcon";
+
 export type HttpFoldKind = "request" | "headers" | "body" | "json-object" | "json-array";
 
 export interface HttpFoldRange {
@@ -75,6 +79,7 @@ interface FoldPlaceholderInfo {
 interface FoldTooltipControls {
   keepOpen: () => void;
   scheduleClose: () => void;
+  offsetX: number;
 }
 
 const REQUEST_LINE_RE =
@@ -83,7 +88,7 @@ const BARE_URL_RE = /^https?:\/\/\S+/i;
 const HEADER_RE = /^[^:\s][^:]*:/;
 const MAX_TOOLTIP_CHARS = 6000;
 const HTTP_FOLD_TOOLTIP_OPEN_DELAY_MS = 200;
-export const HTTP_FOLD_TOOLTIP_CLOSE_DELAY_MS = 700;
+export const HTTP_FOLD_TOOLTIP_CLOSE_DELAY_MS = 200;
 
 const httpFoldRangesField = StateField.define<readonly HttpFoldRange[]>({
   create: (state) => collectHttpFoldRanges(state.doc.toString()),
@@ -177,6 +182,7 @@ const foldPreviewPlugin = ViewPlugin.fromClass(
       const tooltip = createFoldPreviewTooltip(this.view, folded, {
         keepOpen: this.keepOpen,
         scheduleClose: this.scheduleClose,
+        offsetX: getPlaceholderOffset(this.view, folded.from),
       });
       if (!tooltip) return;
 
@@ -626,6 +632,37 @@ function getHttpFoldRanges(state: EditorState): readonly HttpFoldRange[] {
   return state.field(httpFoldRangesField, false) ?? collectHttpFoldRanges(state.doc.toString());
 }
 
+// CM LTR tooltip 水平公式: tooltip.left = pos.left - CM_ARROW_OFFSET + offset.x
+// (CM_ARROW_OFFSET = 14 来自 @codemirror/view 源码 const ArrowOffset = 14)
+const CM_ARROW_OFFSET = 14;
+// .cm-http-fold-tooltip-title paddingLeft = 8 (CSS padding: "6px 8px")
+const TOOLTIP_TITLE_PADDING_LEFT = 8;
+
+function getPlaceholderOffset(view: EditorView, pos: number): number {
+  const posCoords = view.coordsAtPos(pos);
+  if (!posCoords) return 0;
+  const placeholders = view.dom.querySelectorAll(".cm-http-fold-placeholder");
+  let el: HTMLElement | null = null;
+  for (const p of Array.from(placeholders)) {
+    try {
+      if (view.posAtDOM(p) === pos) {
+        el = p as HTMLElement;
+        break;
+      }
+    } catch {}
+  }
+  if (!el) return 0;
+  const cs = getComputedStyle(el);
+  return (
+    el.getBoundingClientRect().left -
+    posCoords.left +
+    CM_ARROW_OFFSET -
+    TOOLTIP_TITLE_PADDING_LEFT +
+    (parseFloat(cs.borderLeftWidth) || 0) +
+    (parseFloat(cs.paddingLeft) || 0)
+  );
+}
+
 function createFoldPreviewTooltip(
   view: EditorView,
   folded: { from: number; to: number },
@@ -642,16 +679,39 @@ function createFoldPreviewTooltip(
     create: () => {
       const dom = document.createElement("div");
       dom.className = "cm-http-fold-tooltip";
+
       const title = document.createElement("div");
       title.className = "cm-http-fold-tooltip-title";
       title.textContent = info.label;
       const pre = document.createElement("pre");
-      pre.textContent = trimTooltipPreview(info.preview);
-      dom.append(title, pre);
+      pre.textContent = formatFoldPreview(info.preview, info.kind);
+
+      const copyBtn = document.createElement("button");
+      copyBtn.type = "button";
+      copyBtn.className = "cm-http-fold-tooltip-copy";
+      copyBtn.title = "复制";
+      copyBtn.setAttribute("aria-label", "复制 preview 内容");
+      copyBtn.innerHTML = COPY_ICON_SVG_HTML;
+      copyBtn.addEventListener("mousedown", (e) => e.preventDefault());
+      copyBtn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        await copyText(pre.textContent ?? "");
+        copyBtn.innerHTML = CHECK_ICON_SVG_HTML;
+        copyBtn.classList.add("cm-http-fold-tooltip-copy-checked");
+        setTimeout(() => {
+          copyBtn.innerHTML = COPY_ICON_SVG_HTML;
+          copyBtn.classList.remove("cm-http-fold-tooltip-copy-checked");
+        }, 1200);
+      });
+
+      // dom.append(title, pre);
+      dom.append(copyBtn, pre);
       dom.addEventListener("mouseenter", controls.keepOpen);
       dom.addEventListener("mouseleave", controls.scheduleClose);
+      dom.addEventListener("contextmenu", (e) => e.preventDefault());
       return {
         dom,
+        offset: { x: controls.offsetX, y: 0 },
         destroy: () => {
           dom.removeEventListener("mouseenter", controls.keepOpen);
           dom.removeEventListener("mouseleave", controls.scheduleClose);
@@ -850,6 +910,17 @@ function trimTooltipPreview(preview: string): string {
   return `${preview.slice(0, MAX_TOOLTIP_CHARS)}\n...`;
 }
 
+function formatFoldPreview(preview: string, kind: HttpFoldKind | "unknown"): string {
+  if (kind !== "json-object" && kind !== "json-array") {
+    return trimTooltipPreview(preview);
+  }
+  try {
+    return trimTooltipPreview(JSON.stringify(JSON.parse(preview), null, 2));
+  } catch {
+    return trimTooltipPreview(preview);
+  }
+}
+
 function labelPrefix(kind: HttpFoldKind): string {
   switch (kind) {
     case "request":
@@ -939,13 +1010,47 @@ const httpFoldingTheme = EditorView.theme({
   },
   ".cm-http-fold-tooltip": {
     maxWidth: "min(720px, calc(100vw - 48px))",
-    maxHeight: "320px",
+    maxHeight: "220px",
     overflow: "auto",
     border: "1px solid var(--border)",
     borderRadius: "6px",
     backgroundColor: "var(--popover)",
     color: "var(--popover-foreground)",
     boxShadow: "0 12px 32px rgba(0, 0, 0, 0.18)",
+    position: "relative",
+  },
+  ".cm-http-fold-tooltip ::selection": {
+    backgroundColor: "var(--editor-selection)",
+    color: "inherit",
+  },
+  ".cm-http-fold-tooltip-copy": {
+    position: "absolute",
+    top: "6px",
+    right: "6px",
+    width: "20px",
+    height: "20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "4px",
+    border: "1px solid transparent",
+    backgroundColor: "transparent",
+    color: "var(--muted-foreground)",
+    cursor: "pointer",
+    zIndex: "1",
+    opacity: "0",
+    fontSize: "14px",
+    transition: "opacity 120ms, background-color 120ms, color 120ms",
+  },
+  ".cm-http-fold-tooltip:hover .cm-http-fold-tooltip-copy": {
+    opacity: "1",
+  },
+  ".cm-http-fold-tooltip-copy:hover": {
+    backgroundColor: "var(--accent)",
+    color: "var(--accent-foreground)",
+  },
+  ".cm-http-fold-tooltip-copy-checked": {
+    color: "hsl(140 60% 45%)",
   },
   ".cm-http-fold-tooltip-title": {
     position: "sticky",
