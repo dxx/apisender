@@ -3,6 +3,7 @@ import { EditorState, type Extension } from "@codemirror/state";
 import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
+import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import { json } from "@codemirror/lang-json";
 
 import type { Tab } from "@/stores/tabs";
@@ -12,6 +13,8 @@ import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-the
 import { protoLanguage } from "./proto-lang";
 
 const MAX_HISTORY_DEPTH = 100;
+const PREPARSE_BUDGET_MS = 100;
+const PREPARSE_INTERVAL_MS = 50;
 const STATE_FIELDS = { history: historyField };
 
 function truncateEditorHistory(state: any, maxDepth: number) {
@@ -45,9 +48,25 @@ export function PlainEditor({ tab }: PlainEditorProps) {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    let preparseTimer: number | undefined;
+    let editorDestroyed = false;
+    const preparseSyntaxTree = () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+        preparseTimer = undefined;
+      }
+      const currentView = viewRef.current;
+      if (!currentView || editorDestroyed) return;
+      if (ensureSyntaxTree(currentView.state, currentView.state.doc.length, PREPARSE_BUDGET_MS) === syntaxTree(currentView.state)) {
+        return;
+      }
+      preparseTimer = window.setTimeout(preparseSyntaxTree, PREPARSE_INTERVAL_MS);
+    };
+
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         updateContent(tab.path, update.state.doc.toString());
+        preparseSyntaxTree();
       }
     });
 
@@ -163,6 +182,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         parent: editorRef.current,
       });
       viewRef.current = view;
+      preparseSyntaxTree();
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
@@ -179,6 +199,10 @@ export function PlainEditor({ tab }: PlainEditorProps) {
     }
 
     return () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+      }
+      editorDestroyed = true;
       if (view) {
         try {
           const json = view.state.toJSON(STATE_FIELDS);

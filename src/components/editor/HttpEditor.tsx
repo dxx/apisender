@@ -13,9 +13,11 @@ import {
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import {
   bracketMatching,
+  ensureSyntaxTree,
   foldEffect,
   foldedRanges,
   foldState,
+  syntaxTree,
   unfoldEffect,
 } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
@@ -49,6 +51,8 @@ import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
 const URL_RE = /^https?:\/\/\S+/i;
 const MAX_HISTORY_DEPTH = 100;
+const PREPARSE_BUDGET_MS = 100;
+const PREPARSE_INTERVAL_MS = 50;
 const STATE_FIELDS = { history: historyField, fold: foldState };
 
 interface FoldControlRange {
@@ -479,9 +483,25 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    let preparseTimer: number | undefined;
+    let editorDestroyed = false;
+    const preparseSyntaxTree = () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+        preparseTimer = undefined;
+      }
+      const view = viewRef.current;
+      if (!view || editorDestroyed) return;
+      if (ensureSyntaxTree(view.state, view.state.doc.length, PREPARSE_BUDGET_MS) === syntaxTree(view.state)) {
+        return;
+      }
+      preparseTimer = window.setTimeout(preparseSyntaxTree, PREPARSE_INTERVAL_MS);
+    };
+
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         updateContent(tab.path, update.state.doc.toString());
+        preparseSyntaxTree();
       }
     });
 
@@ -659,6 +679,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         parent: editorRef.current,
       });
       viewRef.current = view;
+      preparseSyntaxTree();
       refreshHttpFoldPlaceholders(view);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
@@ -711,6 +732,10 @@ export function HttpEditor({ tab }: HttpEditorProps) {
     return () => {
       container.removeEventListener("click", onClick, true);
       container.removeEventListener("contextmenu", onContextMenu, true);
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+      }
+      editorDestroyed = true;
       if (view) {
         try {
           const json = view.state.toJSON(STATE_FIELDS);
