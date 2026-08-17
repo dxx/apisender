@@ -315,12 +315,12 @@ export function selectHttpFoldControls(ranges: readonly HttpFoldRange[]): HttpFo
   return selected;
 }
 
-export function refreshHttpFoldPlaceholders(view: EditorView): void {
+export function refreshHttpFoldPlaceholders(view: EditorView): boolean {
   const restored: Array<{ from: number; to: number }> = [];
   foldedRanges(view.state).between(0, view.state.doc.length, (from, to) => {
     restored.push({ from, to });
   });
-  if (restored.length === 0) return;
+  if (restored.length === 0) return false;
 
   view.dispatch({
     effects: restored.flatMap((range) => [
@@ -328,6 +328,7 @@ export function refreshHttpFoldPlaceholders(view: EditorView): void {
       foldEffect.of(range),
     ]),
   });
+  return true;
 }
 
 function buildLines(text: string): HttpLine[] {

@@ -184,6 +184,28 @@ export function PlainEditor({ tab }: PlainEditorProps) {
       viewRef.current = view;
       preparseSyntaxTree();
 
+      // 恢复上次的滚动位置。CodeMirror 首次测量可能重置 scrollTop/scrollLeft，
+      // 必须在测量完成后、paint 之前写回，否则会出现先到顶再跳下的闪烁。
+      // 这里 dispatch 一次空 transaction，触发与 HttpEditor 相同的测量+重绘周期。
+      view.dispatch({});
+
+      const savedScroll =
+        tab.editorState && typeof tab.editorState === "object"
+          ? (tab.editorState as { scrollTop?: number; scrollLeft?: number })
+          : null;
+      const savedScrollTop = savedScroll?.scrollTop ?? null;
+      const savedScrollLeft = savedScroll?.scrollLeft ?? null;
+      if (typeof savedScrollTop === "number" && savedScrollTop > 0 ||
+          typeof savedScrollLeft === "number" && savedScrollLeft > 0) {
+        const applyScroll = () => {
+          const dom = view.scrollDOM;
+          if (!dom) return;
+          if (typeof savedScrollTop === "number") dom.scrollTop = savedScrollTop;
+          if (typeof savedScrollLeft === "number") dom.scrollLeft = savedScrollLeft;
+        };
+        view.requestMeasure({ read: () => null, write: applyScroll });
+      }
+
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
       // 若不修正，后续 reverse sync useEffect 的 view.dispatch 会触发 updateListener，
@@ -207,6 +229,10 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         try {
           const json = view.state.toJSON(STATE_FIELDS);
           truncateEditorHistory(json, MAX_HISTORY_DEPTH);
+
+          json.scrollTop = view.scrollDOM.scrollTop;
+          json.scrollLeft = view.scrollDOM.scrollLeft;
+          
           useTabsStore.getState().saveEditorState(tab.path, json);
         } catch (_) {
           // 序列化失败不致命，丢弃 state
