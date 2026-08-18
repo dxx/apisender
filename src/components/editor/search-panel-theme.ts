@@ -100,6 +100,20 @@ export const searchPanelTheme = EditorView.theme({
     cursor: "pointer",
   },
 
+  ".cm-panel.cm-search .cm-search-counter": {
+    position: "absolute",
+    right: "34px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: "12px",
+    fontFamily: "var(--font-ui)",
+    color: "var(--muted-foreground)",
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    userSelect: "none",
+    pointerEvents: "none",
+  },
+
   ".cm-panel.cm-search [name=close]": {
     color: "var(--muted-foreground)",
     fontSize: "18px",
@@ -109,6 +123,7 @@ export const searchPanelTheme = EditorView.theme({
     backgroundColor: "transparent",
     borderRadius: "var(--radius-sm)",
     cursor: "pointer",
+    flexShrink: "0",
   },
   ".cm-panel.cm-search [name=close]:hover": {
     color: "var(--foreground)",

@@ -46,6 +46,7 @@ import {
 import { CHEVRON_DOWN_SVG_HTML, CHEVRON_RIGHT_SVG_HTML, SEND_ICON_SVG_HTML } from "./EditorIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
 import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
 
@@ -518,6 +519,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       search(),
       searchPanelTheme,
       searchAutocompleteDisabler,
+      searchMatchCounter,
       highlightActiveLine(),
       highlightActiveLineGutter(),
       drawSelection(),

@@ -10,6 +10,7 @@ import type { Tab } from "@/stores/tabs";
 import { useTabsStore } from "@/stores/tabs";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
 import { protoLanguage } from "./proto-lang";
 import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 
@@ -82,6 +83,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         search(),
         searchPanelTheme,
         searchAutocompleteDisabler,
+        searchMatchCounter,
         highlightActiveLine(),
         highlightActiveLineGutter(),
         drawSelection(),

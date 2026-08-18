@@ -13,6 +13,7 @@ import { search, searchKeymap } from "@codemirror/search";
 import { responseLanguage } from "./http-lang";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
 
 interface ResponseViewProps {
   text: string;
@@ -37,6 +38,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
           search(),
           searchPanelTheme,
           searchAutocompleteDisabler,
+          searchMatchCounter,
           keymap.of([...defaultKeymap, ...searchKeymap]),
           syntaxHighlightingExt,
           languageCompartment.current.of(language ?? responseLanguage),
