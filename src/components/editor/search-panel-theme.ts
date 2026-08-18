@@ -61,6 +61,10 @@ export const searchPanelTheme = EditorView.theme({
     WebkitTextFillColor: "var(--foreground)",
     caretColor: "var(--foreground)",
   },
+  ".cm-panel.cm-search .cm-textfield::selection": {
+    backgroundColor: "var(--editor-selection)",
+    color: "inherit",
+  },
   ".cm-panel.cm-search .cm-textfield:focus": {
     borderColor: "var(--primary)",
     boxShadow: "0 0 0 1px var(--primary)",
