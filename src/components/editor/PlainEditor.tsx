@@ -186,10 +186,6 @@ export function PlainEditor({ tab }: PlainEditorProps) {
       viewRef.current = view;
       preparseSyntaxTree();
 
-      scrollController = createEditorScrollController(view);
-
-      // 恢复上次的滚动位置。CodeMirror 首次测量可能重置 scrollTop/scrollLeft，
-      // 必须在测量完成后、paint 之前写回，否则会出现先到顶再跳下的闪烁。
       // 这里 dispatch 一次空 transaction，触发与 HttpEditor 相同的测量+重绘周期。
       view.dispatch({});
 
@@ -197,6 +193,8 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         tab.editorState && typeof tab.editorState === "object"
           ? (tab.editorState as SavedScroll | null)
           : null;
+      
+      scrollController = createEditorScrollController(view);
       scrollController.applySaved(savedScroll);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
