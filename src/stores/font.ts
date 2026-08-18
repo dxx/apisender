@@ -58,6 +58,62 @@ function clearResponseFontSize() {
   document.documentElement.style.removeProperty("--text-response-size-custom");
 }
 
+function applyFamily(
+  value: string | null,
+  apply: (font: string) => void,
+  clear: () => void,
+) {
+  if (value) {
+    apply(value);
+  } else {
+    clear();
+  }
+}
+
+function applySize(
+  value: number | null,
+  apply: (size: number) => void,
+  clear: () => void,
+) {
+  if (value !== null) {
+    apply(value);
+  } else {
+    clear();
+  }
+}
+
+function syncFontFamily(
+  value: string | null,
+  apply: (font: string) => void,
+  clear: () => void,
+  storageKey: string,
+) {
+  applyFamily(value, apply, clear);
+  try {
+    if (value) {
+      localStorage.setItem(storageKey, value);
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  } catch {}
+}
+
+function syncFontSize(
+  value: number | null,
+  apply: (size: number) => void,
+  clear: () => void,
+  storageKey: string,
+) {
+  applySize(value, apply, clear);
+  try {
+    if (value !== null) {
+      localStorage.setItem(storageKey, String(value));
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  } catch {}
+}
+
 export const useFontStore = create<FontState>((set, get) => ({
   editorFontFamily: null,
   uiFontFamily: null,
@@ -87,6 +143,13 @@ export const useFontStore = create<FontState>((set, get) => ({
       if (responseFontSize !== null && Number.isNaN(responseFontSize)) responseFontSize = null;
     } catch {}
 
+    // 立即把 localStorage 里的值应用到 CSS 变量，避免页面加载后编辑器/响应区域使用默认字体
+    applyFamily(editorFontFamily, applyEditorFontFamily, clearEditorFontFamily);
+    applyFamily(uiFontFamily, applyUiFontFamily, clearUiFontFamily);
+    applyFamily(responseFontFamily, applyResponseFontFamily, clearResponseFontFamily);
+    applySize(editorFontSize, applyEditorFontSize, clearEditorFontSize);
+    applySize(responseFontSize, applyResponseFontSize, clearResponseFontSize);
+
     set({ editorFontFamily, uiFontFamily, responseFontFamily, editorFontSize, responseFontSize, loaded: true });
 
     try {
@@ -98,99 +161,32 @@ export const useFontStore = create<FontState>((set, get) => ({
 
     try {
       const fonts = await api.getFonts();
-      if (fonts.editorFontFamily !== editorFontFamily) {
-        if (fonts.editorFontFamily) {
-          applyEditorFontFamily(fonts.editorFontFamily);
-          try {
-            localStorage.setItem("editorFontFamily", fonts.editorFontFamily);
-          } catch {}
-        } else {
-          clearEditorFontFamily();
-          try {
-            localStorage.removeItem("editorFontFamily");
-          } catch {}
-        }
-        set({ editorFontFamily: fonts.editorFontFamily });
-      }
-      if (fonts.uiFontFamily !== uiFontFamily) {
-        if (fonts.uiFontFamily) {
-          applyUiFontFamily(fonts.uiFontFamily);
-          try {
-            localStorage.setItem("uiFontFamily", fonts.uiFontFamily);
-          } catch {}
-        } else {
-          clearUiFontFamily();
-          try {
-            localStorage.removeItem("uiFontFamily");
-          } catch {}
-        }
-        set({ uiFontFamily: fonts.uiFontFamily });
-      }
-      if (fonts.responseFontFamily !== responseFontFamily) {
-        if (fonts.responseFontFamily) {
-          applyResponseFontFamily(fonts.responseFontFamily);
-          try {
-            localStorage.setItem("responseFontFamily", fonts.responseFontFamily);
-          } catch {}
-        } else {
-          clearResponseFontFamily();
-          try {
-            localStorage.removeItem("responseFontFamily");
-          } catch {}
-        }
-        set({ responseFontFamily: fonts.responseFontFamily });
-      }
+      // 始终以 Rust 端配置为准，重新应用 CSS 变量并同步 localStorage
+      editorFontFamily = fonts.editorFontFamily;
+      uiFontFamily = fonts.uiFontFamily;
+      responseFontFamily = fonts.responseFontFamily;
+      syncFontFamily(editorFontFamily, applyEditorFontFamily, clearEditorFontFamily, "editorFontFamily");
+      syncFontFamily(uiFontFamily, applyUiFontFamily, clearUiFontFamily, "uiFontFamily");
+      syncFontFamily(responseFontFamily, applyResponseFontFamily, clearResponseFontFamily, "responseFontFamily");
+      set({ editorFontFamily, uiFontFamily, responseFontFamily });
     } catch (e) {
       console.error("[font] getFonts failed:", e);
     }
 
     try {
       const sizes = await api.getFontSizes();
-      if (sizes.editorFontSize !== editorFontSize) {
-        if (sizes.editorFontSize !== null) {
-          applyEditorFontSize(sizes.editorFontSize);
-          try {
-            localStorage.setItem("editorFontSize", String(sizes.editorFontSize));
-          } catch {}
-        } else {
-          clearEditorFontSize();
-          try {
-            localStorage.removeItem("editorFontSize");
-          } catch {}
-        }
-        set({ editorFontSize: sizes.editorFontSize });
-      }
-      if (sizes.responseFontSize !== responseFontSize) {
-        if (sizes.responseFontSize !== null) {
-          applyResponseFontSize(sizes.responseFontSize);
-          try {
-            localStorage.setItem("responseFontSize", String(sizes.responseFontSize));
-          } catch {}
-        } else {
-          clearResponseFontSize();
-          try {
-            localStorage.removeItem("responseFontSize");
-          } catch {}
-        }
-        set({ responseFontSize: sizes.responseFontSize });
-      }
+      editorFontSize = sizes.editorFontSize;
+      responseFontSize = sizes.responseFontSize;
+      syncFontSize(editorFontSize, applyEditorFontSize, clearEditorFontSize, "editorFontSize");
+      syncFontSize(responseFontSize, applyResponseFontSize, clearResponseFontSize, "responseFontSize");
+      set({ editorFontSize, responseFontSize });
     } catch (e) {
       console.error("[font] getFontSizes failed:", e);
     }
   },
 
   setEditorFontFamily: async (font) => {
-    if (font) {
-      applyEditorFontFamily(font);
-      try {
-        localStorage.setItem("editorFontFamily", font);
-      } catch {}
-    } else {
-      clearEditorFontFamily();
-      try {
-        localStorage.removeItem("editorFontFamily");
-      } catch {}
-    }
+    syncFontFamily(font, applyEditorFontFamily, clearEditorFontFamily, "editorFontFamily");
     set({ editorFontFamily: font });
     try {
       await api.setEditorFontFamily(font);
@@ -200,17 +196,7 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setUiFontFamily: async (font) => {
-    if (font) {
-      applyUiFontFamily(font);
-      try {
-        localStorage.setItem("uiFontFamily", font);
-      } catch {}
-    } else {
-      clearUiFontFamily();
-      try {
-        localStorage.removeItem("uiFontFamily");
-      } catch {}
-    }
+    syncFontFamily(font, applyUiFontFamily, clearUiFontFamily, "uiFontFamily");
     set({ uiFontFamily: font });
     try {
       await api.setUiFontFamily(font);
@@ -220,17 +206,7 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setResponseFontFamily: async (font) => {
-    if (font) {
-      applyResponseFontFamily(font);
-      try {
-        localStorage.setItem("responseFontFamily", font);
-      } catch {}
-    } else {
-      clearResponseFontFamily();
-      try {
-        localStorage.removeItem("responseFontFamily");
-      } catch {}
-    }
+    syncFontFamily(font, applyResponseFontFamily, clearResponseFontFamily, "responseFontFamily");
     set({ responseFontFamily: font });
     try {
       await api.setResponseFontFamily(font);
@@ -240,17 +216,7 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setEditorFontSize: async (size) => {
-    if (size !== null) {
-      applyEditorFontSize(size);
-      try {
-        localStorage.setItem("editorFontSize", String(size));
-      } catch {}
-    } else {
-      clearEditorFontSize();
-      try {
-        localStorage.removeItem("editorFontSize");
-      } catch {}
-    }
+    syncFontSize(size, applyEditorFontSize, clearEditorFontSize, "editorFontSize");
     set({ editorFontSize: size });
     try {
       await api.setEditorFontSize(size);
@@ -260,17 +226,7 @@ export const useFontStore = create<FontState>((set, get) => ({
   },
 
   setResponseFontSize: async (size) => {
-    if (size !== null) {
-      applyResponseFontSize(size);
-      try {
-        localStorage.setItem("responseFontSize", String(size));
-      } catch {}
-    } else {
-      clearResponseFontSize();
-      try {
-        localStorage.removeItem("responseFontSize");
-      } catch {}
-    }
+    syncFontSize(size, applyResponseFontSize, clearResponseFontSize, "responseFontSize");
     set({ responseFontSize: size });
     try {
       await api.setResponseFontSize(size);
