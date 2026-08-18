@@ -6,7 +6,7 @@ import {
   lineNumbers,
   drawSelection,
 } from "@codemirror/view";
-import { defaultKeymap, history } from "@codemirror/commands";
+import { defaultKeymap } from "@codemirror/commands";
 import type { Language } from "@codemirror/language";
 import { search, searchKeymap } from "@codemirror/search";
 
@@ -33,7 +33,6 @@ export function ResponseView({ text, language }: ResponseViewProps) {
         doc: text,
         extensions: [
           lineNumbers(),
-          history(),
           drawSelection(),
           search(),
           searchPanelTheme,
@@ -43,6 +42,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
           languageCompartment.current.of(language ?? responseLanguage),
           EditorView.lineWrapping,
           EditorState.readOnly.of(true),
+          EditorState.allowMultipleSelections.of(false),
           EditorView.theme({
             "&": {
               fontSize: "var(--text-response-size)",
