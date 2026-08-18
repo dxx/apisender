@@ -1,5 +1,21 @@
 # 更新日志
 
+## 0.1.17 - 2026-08-18
+
+### 新增
+
+- 编辑器滚动状态保存与恢复 ([4265b40](https://github.com/dxx/apisender/commit/4265b40), [e77982e](https://github.com/dxx/apisender/commit/e77982e))
+- 编辑区内容后台预解析 ([43b61e7](https://github.com/dxx/apisender/commit/43b61e7))
+- 编辑器搜索面板增加匹配数计数器 ([d88a208](https://github.com/dxx/apisender/commit/d88a208))
+
+### 修复
+
+- 字体设置在多窗口/重启间同步 ([5f5951d](https://github.com/dxx/apisender/commit/5f5951d))
+
+### 变更
+
+- 编辑器搜索框添加选中样式 ([4f80b15](https://github.com/dxx/apisender/commit/4f80b15))
+
 ## 0.1.16 - 2026-08-16
 
 ### 新增
