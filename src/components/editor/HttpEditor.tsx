@@ -46,6 +46,7 @@ import {
 import { CHEVRON_DOWN_SVG_HTML, CHEVRON_RIGHT_SVG_HTML, SEND_ICON_SVG_HTML } from "./EditorIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
 
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
@@ -658,6 +659,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
     ];
 
     let view: EditorView;
+    let scrollController: ReturnType<typeof createEditorScrollController> | null = null;
     try {
       let state: EditorState;
       if (tab.editorState) {
@@ -682,6 +684,8 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       preparseSyntaxTree();
       const hadFoldedRanges = refreshHttpFoldPlaceholders(view);
 
+      scrollController = createEditorScrollController(view);
+
       // 恢复上次的滚动位置。CodeMirror 首次测量可能重置 scrollTop，
       // 必须在测量完成后、paint 之前写回，否则会出现先到顶再跳下的闪烁。
       // 无折叠时 refreshHttpFoldPlaceholders 不会 dispatch，这里补一次空
@@ -690,20 +694,9 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       
       const savedScroll =
         tab.editorState && typeof tab.editorState === "object"
-          ? (tab.editorState as { scrollTop?: number; scrollLeft?: number })
+          ? (tab.editorState as SavedScroll | null)
           : null;
-      const savedScrollTop = savedScroll?.scrollTop ?? null;
-      const savedScrollLeft = savedScroll?.scrollLeft ?? null;
-      if (typeof savedScrollTop === "number" && savedScrollTop > 0 ||
-          typeof savedScrollLeft === "number" && savedScrollLeft > 0) {
-        const applyScroll = () => {
-          const dom = view.scrollDOM;
-          if (!dom) return;
-          if (typeof savedScrollTop === "number") dom.scrollTop = savedScrollTop;
-          if (typeof savedScrollLeft === "number") dom.scrollLeft = savedScrollLeft;
-        };
-        view.requestMeasure({ read: () => null, write: applyScroll });
-      }
+      scrollController.applySaved(savedScroll);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
@@ -764,13 +757,14 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           const json = view.state.toJSON(STATE_FIELDS);
           truncateEditorHistory(json, MAX_HISTORY_DEPTH);
           
-          json.scrollTop = view.scrollDOM.scrollTop;
-          json.scrollLeft = view.scrollDOM.scrollLeft;
+          json.scrollTop = scrollController?.cache.scrollTop ?? 0;
+          json.scrollLeft = scrollController?.cache.scrollLeft ?? 0;
 
           useTabsStore.getState().saveEditorState(tab.path, json);
         } catch (_) {
           // 序列化失败不致命，丢弃 state
         }
+        scrollController?.dispose();
         view.destroy();
         viewRef.current = null;
       }
