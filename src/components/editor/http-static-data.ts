@@ -65,7 +65,7 @@ export const HTTP_HEADERS: Completion[] = [
   "X-Forwarded-Host",
   "X-Forwarded-Proto",
   "X-Real-IP",
-].map((label) => ({ label, type: "propertyName", boost: 8 }));
+].map((label) => ({ label, type: "property", boost: 8 }));
 
 export const HEADER_VALUES: Record<string, Completion[]> = {
   "content-type": [

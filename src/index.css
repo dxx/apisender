@@ -34,6 +34,10 @@
   --editor-gutter-active-bg: oklch(0.97 0 0);
   --editor-cursor: oklch(0.7686 0.1647 70.08);
   --editor-bg: oklch(0.992 0.008 240);
+  --editor-diagnostic-error: oklch(0.577 0.245 27.325);
+  --editor-diagnostic-warning: oklch(0.75 0.16 80);
+  --editor-diagnostic-info: oklch(0.65 0.10 245);
+  --editor-diagnostic-hint: oklch(0.62 0.12 285);
 
   --search-panel-bg: oklch(0.95 0 0);
   --search-input-bg: oklch(1 0 0);
@@ -86,6 +90,9 @@
   --editor-gutter-active-bg: oklch(0.3 0.034 245);
   --editor-cursor: oklch(0.7686 0.1647 70.08);
   --editor-bg: oklch(0.22 0.034 245);
+  --editor-diagnostic-warning: oklch(0.78 0.14 80);
+  --editor-diagnostic-info: oklch(0.72 0.10 245);
+  --editor-diagnostic-hint: oklch(0.72 0.12 285);
 
   --search-panel-bg: oklch(0.26 0.034 245);
   --search-input-bg: oklch(0.18 0.034 245);

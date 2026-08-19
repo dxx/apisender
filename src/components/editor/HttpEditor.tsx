@@ -51,6 +51,8 @@ import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-the
 import { searchMatchCounter } from "./search-match-counter";
 import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
+import { lintTheme } from "./lint-theme";
+import { autocompleteTheme } from "./autocomplete-theme";
 
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
 const URL_RE = /^https?:\/\/\S+/i;
@@ -529,6 +531,8 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       httpLanguage,
       httpAutocomplete(),
       httpLinter({ envVars }),
+      autocompleteTheme,
+      lintTheme,
       keymap.of([
         indentWithTab,
         ...defaultKeymap,
