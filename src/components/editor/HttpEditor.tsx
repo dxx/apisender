@@ -43,6 +43,8 @@ import {
   refreshHttpFoldPlaceholders,
   selectHttpFoldControls,
 } from "./http-folding";
+import { httpAutocomplete } from "./http-autocomplete";
+import { httpLinter } from "./http-linter";
 import { CHEVRON_DOWN_SVG_HTML, CHEVRON_RIGHT_SVG_HTML, SEND_ICON_SVG_HTML } from "./EditorIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
@@ -256,6 +258,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   const startGrpc = useTabsStore((s) => s.startGrpc);
   const setGrpcError = useTabsStore((s) => s.setGrpcError);
   const activeEnv = useEnvironmentStore((s) => s.activeEnv);
+  const envVars = useEnvironmentStore.getState().vars;
   const tabRef = useRef(tab);
   tabRef.current = tab;
   const envRef = useRef(activeEnv);
@@ -524,6 +527,8 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       highlightActiveLineGutter(),
       drawSelection(),
       httpLanguage,
+      httpAutocomplete(),
+      httpLinter({ envVars }),
       keymap.of([
         indentWithTab,
         ...defaultKeymap,
