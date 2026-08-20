@@ -10,6 +10,7 @@ export interface CursorContext {
     | "comment"
     | "separator"
     | "variable-decl"
+    | "http-version"
     | "other";
   blockVars: Map<string, string>;
   globalVars: Map<string, string>;
@@ -168,8 +169,20 @@ export function analyzeCursorContext(state: EditorState, pos: number): CursorCon
     segment = "comment";
   } else if (!methodLineSeen && isTagLine(t)) {
     segment = t.includes("=") ? "variable-decl" : "tag";
-  } else if (!methodLineSeen && isMethodLine(t)) {
-    segment = "method";
+  } else if (!methodLineSeen) {
+    // 仅当光标仍在行首的方法名 token 内（从行首到光标为纯字母）时才判为 method 段，
+    // 避免在完整请求行（GET url HTTP/1.1）末尾继续弹出方法补全
+    const lineStart = doc.line(lineFrom).from;
+    const beforeCursor = lineText.slice(0, pos - lineStart);
+    if (/^[A-Za-z]*$/.test(beforeCursor)) {
+      segment = "method";
+    } else {
+      // 请求行内：光标位于 URL 之后的 HTTP/ 前缀区域时判为 http-version 段
+      const versionIdx = lineText.search(/\s+HTTP\/[^/\s]*$/i);
+      if (versionIdx >= 0 && pos >= versionIdx) {
+        segment = "http-version";
+      }
+    }
   } else if (methodLineSeen && (inBody || (inHeaders && t === ""))) {
     segment = "body";
   } else if (methodLineSeen && !inBody && !t.startsWith(">")) {

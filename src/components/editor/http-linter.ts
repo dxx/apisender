@@ -356,15 +356,15 @@ function checkRequestLine(line: string, offset: number, diags: Diagnostic[]) {
   }
 
   // HTTP 版本
-  const versionMatch = line.match(/\s+(HTTP\/[\d.]+)\s*$/i);
+  const versionMatch = line.match(/\s+(HTTP\/[^\s]*)\s*$/i);
   if (versionMatch) {
     const version = versionMatch[1];
-    if (!/^HTTP\/[0-9]+(?:\.[0-9]+)?$/.test(version)) {
+    if (!/^HTTP\/(1\.1|2)$/.test(version)) {
       diags.push({
         from: offset + line.length - version.length,
         to: offset + line.length,
         severity: "warning",
-        message: `HTTP 版本 "${version}" 格式不规范（应为 HTTP/1.0、HTTP/1.1、HTTP/2 等）`,
+        message: `HTTP 版本 "${version}" 格式不规范（应为 HTTP/1.1 或 HTTP/2）`,
       });
     }
   }

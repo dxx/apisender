@@ -6,6 +6,7 @@ import { useEnvironmentStore } from "@/stores/environment";
 import { analyzeCursorContext } from "./http-context";
 import {
   HTTP_METHODS,
+  HTTP_VERSIONS,
   SEPARATOR,
   HTTP_TAGS,
   HTTP_HEADERS,
@@ -102,13 +103,16 @@ function httpCompletionSource(ctx: CompletionContext): CompletionResult | null {
       };
     }
 
-    case "method":
+    case "method": {
+      const word = ctx.matchBefore(/[A-Za-z]*/);
+      const from = word ? word.from : pos;
       return {
-        from: pos,
+        from,
         to: pos,
         options: HTTP_METHODS,
-        validFor: /^[A-Z]*$/i,
+        validFor: /^[A-Za-z]*$/,
       };
+    }
 
     case "tag": {
       // from 设为 @ 之后，候选 label（如 "no-redirect"）才能正确匹配用户输入
@@ -148,6 +152,22 @@ function httpCompletionSource(ctx: CompletionContext): CompletionResult | null {
         to: pos,
         options: candidates,
         validFor: /^\S*$/,
+      };
+    }
+
+    case "http-version": {
+      // 用正则定位行尾的 HTTP/ 前缀起始位置（大小写不敏感），
+      // from 落到 H 位置以替换用户已输入的 "http/" 前缀，避免插入到光标后
+      const line = state.doc.lineAt(pos);
+      const match = line.text.match(/\s+(HTTP\/[^\s]*)$/i);
+      if (!match || match.index === undefined) return null;
+      const httpStart = match.index + match[0].length - match[1].length;
+      const from = line.from + httpStart;
+      return {
+        from,
+        to: pos,
+        options: HTTP_VERSIONS,
+        validFor: /^HTTP\/[0-9.]*$/i,
       };
     }
 

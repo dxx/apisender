@@ -120,6 +120,11 @@ export const HEADER_VALUES: Record<string, Completion[]> = {
   ],
 };
 
+export const HTTP_VERSIONS: Completion[] = [
+  { label: "HTTP/1.1", type: "string", boost: 10 },
+  { label: "HTTP/2", type: "string", boost: 9 },
+];
+
 export const WS_SEPARATORS: Completion[] = [
   { label: "===", type: "operator", detail: "WS 消息分隔符", boost: 10 },
   { label: "=== wait-for-server", type: "operator", detail: "等待服务端回包", boost: 9 },
