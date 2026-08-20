@@ -175,7 +175,7 @@ export function httpAutocomplete() {
   return autocompletion({
     override: [httpCompletionSource],
     activateOnTyping: true,
-    closeOnBlur: false,
+    closeOnBlur: true,
     defaultKeymap: true,
   });
 }
