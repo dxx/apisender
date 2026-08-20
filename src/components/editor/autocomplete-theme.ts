@@ -15,10 +15,8 @@ const ICON = {
   command: "<path d='M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3'/>",
   // lucide tag：用于 tag（@tag 标签）
   tag: "<path d='M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z'/><circle cx='7.5' cy='7.5' r='.5' fill='black'/>",
-  // lucide type：用于 property（保留兼容）
-  type: "<path d='M12 4v16'/><path d='M4 7V5a1 1 0 0 1 1-1h14a1 1 0 0 1 1 1v2'/><path d='M9 20h6'/>",
-  // lucide heading：用于 header（HTTP header 名）
-  heading: "<path d='M6 12h12'/><path d='M6 20V4'/><path d='M18 20V4'/>",
+  // lucide type-outline：用于 property
+  type: "<path d='M14 16.5a.5.5 0 0 0 .5.5h.5a2 2 0 0 1 0 4H9a2 2 0 0 1 0-4h.5a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5V8a2 2 0 0 1-4 0V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v3a2 2 0 0 1-4 0v-.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5Z'/>",
   // lucide quote：用于 string（header 值）
   quote: "<path d='M16 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z'/><path d='M5 3a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2 1 1 0 0 1 1 1v1a2 2 0 0 1-2 2 1 1 0 0 0-1 1v2a1 1 0 0 0 1 1 6 6 0 0 0 6-6V5a2 2 0 0 0-2-2z'/>",
   // lucide arrow-right：用于 operator（=== 等）
@@ -92,7 +90,7 @@ export const autocompleteTheme = EditorView.theme({
   ".cm-completionIcon-keyword:after": iconMask(ICON.keyword),
   ".cm-completionIcon-command:after": iconMask(ICON.command),
   ".cm-completionIcon-tag:after": iconMask(ICON.tag),
-  ".cm-completionIcon-header:after": iconMask(ICON.heading),
+  ".cm-completionIcon-header:after": iconMask(ICON.type),
   ".cm-completionIcon-property:after": iconMask(ICON.type),
   ".cm-completionIcon-string:after": iconMask(ICON.quote),
   ".cm-completionIcon-operator:after": iconMask(ICON.arrow),
