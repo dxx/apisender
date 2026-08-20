@@ -17,6 +17,10 @@ export const lintTheme = EditorView.theme({
   ".cm-tooltip-arrow:before": { borderTopColor: "var(--border)" },
   ".cm-tooltip-arrow:after": { borderTopColor: "var(--popover)" },
 
+  ".cm-tooltip-lint": {
+    fontFamily: "var(--font-editor)",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
+  },
   ".cm-tooltip-lint ::selection": {
     backgroundColor: "var(--editor-selection)",
   },

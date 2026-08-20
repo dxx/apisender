@@ -161,7 +161,8 @@ export function analyzeCursorContext(state: EditorState, pos: number): CursorCon
   let segment: CursorContext["segment"] = "other";
   const t = lineText.trim();
 
-  if (isSeparator(t)) {
+  if (/^#+$/.test(t)) {
+    // 纯 # 字符（1-3 个或更多）：视为分隔符输入中，触发补全
     segment = "separator";
   } else if (isComment(t)) {
     segment = "comment";

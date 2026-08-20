@@ -12,7 +12,7 @@ export const HTTP_METHODS: Completion[] = [
   "TRACE",
   "WEBSOCKET",
   "GRPC",
-].map((label) => ({ label, type: "keyword", boost: 10 }));
+].map((label) => ({ label, type: "command", boost: 10 }));
 
 export const SEPARATOR: Completion[] = [
   { label: "###", type: "keyword", boost: 10, apply: "### " },
@@ -20,16 +20,16 @@ export const SEPARATOR: Completion[] = [
 ];
 
 export const HTTP_TAGS: Completion[] = [
-  { label: "no-redirect", type: "keyword", detail: "禁用重定向", boost: 10 },
-  { label: "no-log", type: "keyword", detail: "不记录历史", boost: 9 },
-  { label: "no-cookie", type: "keyword", detail: "禁用 Cookie", boost: 8 },
-  { label: "no-auto-encoding", type: "keyword", detail: "禁用响应自动解码", boost: 7 },
-  { label: "timeout", type: "keyword", detail: "请求超时 (ms/s/m)", boost: 6 },
-  { label: "connection-timeout", type: "keyword", detail: "连接超时", boost: 5 },
-  { label: "idle-timeout", type: "keyword", detail: "空闲超时 (WS/SSE)", boost: 4 },
-  { label: "proto", type: "keyword", detail: "gRPC proto 文件路径", boost: 3 },
-  { label: "proto-include", type: "keyword", detail: "gRPC proto import 路径", boost: 2 },
-  { label: "sse", type: "keyword", detail: "标记为 SSE 请求", boost: 1 },
+  { label: "no-redirect", type: "tag", detail: "禁用重定向", boost: 10 },
+  { label: "no-log", type: "tag", detail: "不记录历史", boost: 9 },
+  { label: "no-cookie", type: "tag", detail: "禁用 Cookie", boost: 8 },
+  { label: "no-auto-encoding", type: "tag", detail: "禁用响应自动解码", boost: 7 },
+  { label: "timeout", type: "tag", detail: "请求超时 (ms/s/m)", boost: 6 },
+  { label: "connection-timeout", type: "tag", detail: "连接超时", boost: 5 },
+  { label: "idle-timeout", type: "tag", detail: "空闲超时 (WS/SSE)", boost: 4 },
+  { label: "proto", type: "tag", detail: "gRPC proto 文件路径", boost: 3 },
+  { label: "proto-include", type: "tag", detail: "gRPC proto import 路径", boost: 2 },
+  { label: "sse", type: "tag", detail: "标记为 SSE 请求", boost: 1 },
 ];
 
 export const HTTP_HEADERS: Completion[] = [
@@ -65,7 +65,7 @@ export const HTTP_HEADERS: Completion[] = [
   "X-Forwarded-Host",
   "X-Forwarded-Proto",
   "X-Real-IP",
-].map((label) => ({ label, type: "property", boost: 8 }));
+].map((label) => ({ label, type: "header", boost: 8 }));
 
 export const HEADER_VALUES: Record<string, Completion[]> = {
   "content-type": [
@@ -123,9 +123,4 @@ export const HEADER_VALUES: Record<string, Completion[]> = {
 export const WS_SEPARATORS: Completion[] = [
   { label: "===", type: "operator", detail: "WS 消息分隔符", boost: 10 },
   { label: "=== wait-for-server", type: "operator", detail: "等待服务端回包", boost: 9 },
-];
-
-export const REDIRECTS: Completion[] = [
-  { label: ">", type: "operator", detail: "重定向响应", boost: 10 },
-  { label: ">>", type: "operator", detail: "追加响应", boost: 9 },
 ];

@@ -1,4 +1,4 @@
-import type { CompletionContext, CompletionResult } from "@codemirror/autocomplete";
+import type { Completion, CompletionContext, CompletionResult } from "@codemirror/autocomplete";
 import { autocompletion } from "@codemirror/autocomplete";
 
 import { useEnvironmentStore } from "@/stores/environment";
@@ -11,7 +11,6 @@ import {
   HTTP_HEADERS,
   HEADER_VALUES,
   WS_SEPARATORS,
-  REDIRECTS,
 } from "./http-static-data";
 
 function envVarsCompletions(vars: Record<string, string>, label: string): CompletionLike[] {
@@ -45,7 +44,7 @@ function truncate(s: string, n: number): string {
   return s.length <= n ? s : s.slice(0, n) + "...";
 }
 
-function toCompletion(c: CompletionLike): import("@codemirror/autocomplete").Completion {
+function toCompletion(c: CompletionLike): Completion {
   return c;
 }
 
@@ -93,8 +92,8 @@ function httpCompletionSource(ctx: CompletionContext): CompletionResult | null {
   switch (cx.segment) {
     case "separator": {
       const word = ctx.matchBefore(/#+/);
-      // 已输入完整 ### 后不再补全，避免选中按回车被 apply 再插一次
-      if (word && word.text.length >= 3) return null;
+      // 输入超过 3 个 # 不再补全（#### 等视为误操作）
+      if (word && word.text.length > 3) return null;
       return {
         from: word ? word.from : pos,
         to: pos,
@@ -164,15 +163,6 @@ function httpCompletionSource(ctx: CompletionContext): CompletionResult | null {
           validFor: /^=?=?[\w-]*$/,
         };
       }
-      // 重定向
-      if (ctx.matchBefore(/>>?/)) {
-        return {
-          from: pos,
-          to: pos,
-          options: REDIRECTS,
-          validFor: /^>*$/,
-        };
-      }
       return null;
     }
 
@@ -185,7 +175,7 @@ export function httpAutocomplete() {
   return autocompletion({
     override: [httpCompletionSource],
     activateOnTyping: true,
-    closeOnBlur: true,
+    closeOnBlur: false,
     defaultKeymap: true,
   });
 }
