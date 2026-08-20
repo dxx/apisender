@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.1.18 - 2026-08-20
+
+### 新增
+
+- HTTP 请求编辑器自动补全：方法名、分隔符、@tag、header 名/值、变量 `{{...}}`、WebSocket 消息分隔符 ([353f32c](https://github.com/dxx/apisender/commit/353f32c), [f2baf21](https://github.com/dxx/apisender/commit/f2baf21))
+- HTTP 请求编辑器 lint 校验：请求行、header 格式、@tag 值、JSON body 语法、未定义变量、gRPC URL ([353f32c](https://github.com/dxx/apisender/commit/353f32c), [acbc70c](https://github.com/dxx/apisender/commit/acbc70c))
+- HTTP 版本补全（`HTTP/1.1`、`HTTP/2`）与校验 ([e53dac8](https://github.com/dxx/apisender/commit/e53dac8))
+- `PlainEditor` 为 `.json` 文件启用 `jsonParseLinter` 与 lint 主题 ([8c98dc0](https://github.com/dxx/apisender/commit/8c98dc0))
+- `@timeout` / `@connection-timeout` / `@idle-timeout` 补全详情说明 ([c56b0c5](https://github.com/dxx/apisender/commit/c56b0c5))
+
 ## 0.1.17 - 2026-08-18
 
 ### 新增
