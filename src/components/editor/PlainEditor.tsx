@@ -4,11 +4,13 @@ import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLi
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
-import { json } from "@codemirror/lang-json";
+import { linter } from "@codemirror/lint";
+import { json, jsonParseLinter } from "@codemirror/lang-json";
 
 import type { Tab } from "@/stores/tabs";
 import { useTabsStore } from "@/stores/tabs";
 import { syntaxHighlightingExt } from "./syntax-theme";
+import { lintTheme } from "./lint-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
 import { searchMatchCounter } from "./search-match-counter";
 import { protoLanguage } from "./proto-lang";
@@ -31,7 +33,9 @@ function truncateEditorHistory(state: any, maxDepth: number) {
 
 function languageFor(name: string): Extension[] {
   const lower = name.toLowerCase();
-  if (lower.endsWith(".json")) return [json()];
+  if (lower.endsWith(".json")) {
+    return [json(), linter(jsonParseLinter(), { delay: 350 })];
+  }
   if (lower.endsWith(".proto") || lower.endsWith(".proto.text") || lower.endsWith(".prototxt")) {
     return [protoLanguage];
   }
@@ -79,6 +83,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         lineNumbers(),
         history(),
         syntaxHighlightingExt,
+        lintTheme,
         highlightSelectionMatches(),
         search(),
         searchPanelTheme,
