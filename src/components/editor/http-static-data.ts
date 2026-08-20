@@ -25,7 +25,7 @@ export const HTTP_TAGS: Completion[] = [
   { label: "no-cookie", type: "tag", detail: "禁用 Cookie", boost: 8 },
   { label: "no-auto-encoding", type: "tag", detail: "禁用响应自动解码", boost: 7 },
   { label: "timeout", type: "tag", detail: "请求超时 (ms/s/m)", boost: 6 },
-  { label: "connection-timeout", type: "tag", detail: "连接超时", boost: 5 },
+  { label: "connection-timeout", type: "tag", detail: "连接超时 (ms/s/m)", boost: 5 },
   { label: "idle-timeout", type: "tag", detail: "空闲超时 (WS/SSE)", boost: 4 },
   { label: "proto", type: "tag", detail: "gRPC proto 文件路径", boost: 3 },
   { label: "proto-include", type: "tag", detail: "gRPC proto import 路径", boost: 2 },
