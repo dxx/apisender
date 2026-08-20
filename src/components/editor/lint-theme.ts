@@ -1,7 +1,7 @@
 import { EditorView } from "@codemirror/view";
 
 export const lintTheme = EditorView.theme({
-  ".cm-tooltip": {
+  ".cm-tooltip.cm-tooltip-lint": {
     border: "1px solid var(--border)",
     backgroundColor: "var(--popover)",
     color: "var(--popover-foreground)",

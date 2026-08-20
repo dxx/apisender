@@ -28,6 +28,14 @@ const ICON = {
 };
 
 export const autocompleteTheme = EditorView.theme({
+  ".cm-tooltip.cm-tooltip-autocomplete": {
+    border: "1px solid var(--border)",
+    backgroundColor: "var(--popover)",
+    color: "var(--popover-foreground)",
+    borderRadius: "var(--radius)",
+    padding: "4px 0",
+    boxShadow: "0 2px 8px rgb(0 0 0 / 0.08)",
+  },
   ".cm-tooltip.cm-tooltip-autocomplete > ul": {
     fontFamily: "var(--font-editor)",
     fontSize: "calc(var(--text-editor-size) - 2px)",

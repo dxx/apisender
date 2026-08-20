@@ -1040,7 +1040,7 @@ const httpFoldingTheme = EditorView.theme({
     cursor: "pointer",
     zIndex: "1",
     opacity: "0",
-    fontSize: "14px",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
     transition: "opacity 120ms, background-color 120ms, color 120ms",
   },
   ".cm-http-fold-tooltip:hover .cm-http-fold-tooltip-copy": {
@@ -1060,8 +1060,8 @@ const httpFoldingTheme = EditorView.theme({
     backgroundColor: "var(--popover)",
     color: "var(--muted-foreground)",
     padding: "6px 8px",
-    fontSize: "12px",
-    fontFamily: "var(--font-ui)",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
+    fontFamily: "var(--font-editor)",
   },
   ".cm-http-fold-tooltip pre": {
     margin: "0",
@@ -1069,7 +1069,7 @@ const httpFoldingTheme = EditorView.theme({
     whiteSpace: "pre-wrap",
     wordBreak: "break-word",
     fontFamily: "var(--font-editor)",
-    fontSize: "12px",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
     lineHeight: "1.45",
   },
 });
