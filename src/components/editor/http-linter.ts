@@ -65,6 +65,13 @@ function collectDiagnostics(view: EditorView, opts: LintOptions): Diagnostic[] {
       continue;
     }
 
+    // 顶层 @tag（无 =）：校验值格式
+    if (trimmed.startsWith("@") && !trimmed.includes("=")) {
+      checkTag(trimmed, lines[i].from, diags);
+      i++;
+      continue;
+    }
+
     // 块开始：### 或裸 method 行
     if (trimmed.startsWith("###")) {
       i = processBlock(lines, i, diags);
