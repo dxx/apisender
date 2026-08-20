@@ -1,7 +1,9 @@
 import { EditorView } from "@codemirror/view";
 
 export const lintTheme = EditorView.theme({
-  ".cm-tooltip.cm-tooltip-lint": {
+  // CodeMirror 把 cm-tooltip-lint 放在内部 <ul> 上，外壳 <div> 无专属 class。
+  // 用 :has() 匹配含 cm-tooltip-lint 的外壳，避免全局 .cm-tooltip 影响其他 tooltip。
+  ".cm-tooltip:has(.cm-tooltip-lint)": {
     border: "1px solid var(--border)",
     backgroundColor: "var(--popover)",
     color: "var(--popover-foreground)",
