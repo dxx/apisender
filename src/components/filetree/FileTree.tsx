@@ -61,9 +61,14 @@ interface FileTreeProps {
   nodes: FileTreeNode[];
 }
 
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, "/");
+}
+
 function findNode(nodes: FileTreeNode[], path: string): FileTreeNode | null {
+  const target = normalizePath(path);
   for (const n of nodes) {
-    if (n.path === path) return n;
+    if (normalizePath(n.path) === target) return n;
     if (n.children) {
       const found = findNode(n.children, path);
       if (found) return found;
@@ -73,8 +78,8 @@ function findNode(nodes: FileTreeNode[], path: string): FileTreeNode | null {
 }
 
 function getAncestorPaths(filePath: string, root: string): string[] {
-  const normalizedRoot = root.replace(/\/+$/, "");
-  const normalizedFile = filePath.replace(/\/+$/, "");
+  const normalizedRoot = normalizePath(root).replace(/\/+$/, "");
+  const normalizedFile = normalizePath(filePath).replace(/\/+$/, "");
   if (!normalizedFile.startsWith(normalizedRoot)) return [];
 
   const result: string[] = [];
@@ -115,10 +120,11 @@ export function FileTree({ nodes }: FileTreeProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
 
   const toggleExpandedPath = useCallback((path: string) => {
+    const normalized = normalizePath(path);
     setExpandedPaths((prev) => {
       const next = new Set(prev);
-      if (next.has(path)) next.delete(path);
-      else next.add(path);
+      if (next.has(normalized)) next.delete(normalized);
+      else next.add(normalized);
       return next;
     });
   }, []);
@@ -228,10 +234,10 @@ export function FileTree({ nodes }: FileTreeProps) {
       ancestors.forEach((p) => next.add(p));
       return next;
     });
-    setSelectPath(activePath);
+    setSelectPath(normalizePath(activePath));
     requestAnimationFrame(() => {
       const el = document.querySelector(
-        `[data-tree-path="${CSS.escape(activePath)}"]`,
+        `[data-tree-path="${CSS.escape(normalizePath(activePath))}"]`,
       );
       el?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
@@ -399,7 +405,7 @@ function TreeItem({
   expandedPaths: Set<string>;
   onTogglePath: (path: string) => void;
 }) {
-  const expanded = expandedPaths.has(node.path);
+  const expanded = expandedPaths.has(normalizePath(node.path));
   const openFile = useTabsStore((s) => s.openFile);
   const refreshTree = useWorkspaceStore((s) => s.refreshTree);
   const [renameOpen, setRenameOpen] = useState(false);
@@ -412,7 +418,7 @@ function TreeItem({
   const handleClick = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
       e.stopPropagation();
-      onSelect(node.path);
+      onSelect(normalizePath(node.path));
       if (node.type === "dir") {
         onTogglePath(node.path);
       } else {
@@ -481,11 +487,11 @@ function TreeItem({
         <ContextMenuTrigger asChild>
           <div
             className={`group flex h-7 cursor-pointer items-center gap-1 pr-2 text-sm tabular-nums ${
-              selectPath === node.path
+              selectPath === normalizePath(node.path)
               ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
               : "hover:bg-[var(--editor-active-bg)]/80 text-[var(--editor-inactive-fg)]"
             }`}
-            data-tree-path={node.path}
+            data-tree-path={normalizePath(node.path)}
             style={{ paddingLeft }}
             onClick={handleClick}
           >
