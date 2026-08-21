@@ -9,6 +9,7 @@ import {
   highlightActiveLine,
   highlightActiveLineGutter,
   drawSelection,
+  tooltips,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import {
@@ -52,6 +53,7 @@ import { searchMatchCounter } from "./search-match-counter";
 import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
 import { lintTheme } from "./lint-theme";
+import { editorTooltipSpace } from "./editor-tooltip";
 import { autocompleteTheme } from "./autocomplete-theme";
 
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
@@ -533,6 +535,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       httpLinter({ envVars }),
       autocompleteTheme,
       lintTheme,
+      tooltips({ tooltipSpace: editorTooltipSpace }),
       keymap.of([
         indentWithTab,
         ...defaultKeymap,

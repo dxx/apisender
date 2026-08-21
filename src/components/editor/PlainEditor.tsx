@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { EditorState, type Extension } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from "@codemirror/view";
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, tooltips } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
@@ -11,6 +11,7 @@ import type { Tab } from "@/stores/tabs";
 import { useTabsStore } from "@/stores/tabs";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { lintTheme } from "./lint-theme";
+import { editorTooltipSpace } from "./editor-tooltip";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
 import { searchMatchCounter } from "./search-match-counter";
 import { protoLanguage } from "./proto-lang";
@@ -84,6 +85,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         history(),
         syntaxHighlightingExt,
         lintTheme,
+        tooltips({ tooltipSpace: editorTooltipSpace }),
         highlightSelectionMatches(),
         search(),
         searchPanelTheme,
