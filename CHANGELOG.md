@@ -1,5 +1,13 @@
 # 更新日志
 
+## 0.1.19 - 2026-08-21
+
+### 修复
+
+- 修复粘贴 curl 时抛出 RangeError ([d8edea5](https://github.com/dxx/apisender/commit/d8edea5))
+- 修复 tooltip 上方空间不足时的显示问题 ([98bfa42](https://github.com/dxx/apisender/commit/98bfa42))
+- 修复 Windows 上自动展开目录 ([73cbe93](https://github.com/dxx/apisender/commit/73cbe93))
+
 ## 0.1.18 - 2026-08-20
 
 ### 新增
