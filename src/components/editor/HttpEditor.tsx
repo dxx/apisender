@@ -477,7 +477,10 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       const insert = httpText
         ? `###\n${text.split("\n").map((l) => `# ${l}`).join("\n")}\n${httpText}\n\n###`
         : text;
-      const cursor = sel.from + insert.length;
+      // CodeMirror 会把 insert 里的 \r\n 规范化为 \n，
+      // 用 toText 计算规范化后的长度，避免 cursor 超出文档范围
+      const insertLen = view.state.toText(insert).length;
+      const cursor = sel.from + insertLen;
       view.dispatch({
         changes: { from: sel.from, to: sel.to, insert },
         selection: { anchor: cursor },
