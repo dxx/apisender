@@ -110,7 +110,7 @@
 ### 变更
 
 - 用 APP_NAME 统一 Rust 端文件名（config / db）([1594ddf](https://github.com/dxx/apisender/commit/1594ddf3795f4ff66f0ea1c53ff8295831b65fa0))
-- 主题和字体以后端 config.json 为准，后端删除字段时同步清除前端 ([25dabdb](https://github.com/dxx/apisender/commit/25dabdb0a26cf4401d4206c5c4964b6007071ee5))
+- 主题和字体以后端 apisender.json 为准，后端删除字段时同步清除前端 ([25dabdb](https://github.com/dxx/apisender/commit/25dabdb0a26cf4401d4206c5c4964b6007071ee5))
 
 ## 0.1.9 - 2026-08-08
 
