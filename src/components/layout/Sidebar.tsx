@@ -159,17 +159,17 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
 
       <div className="flex-1 overflow-hidden">
         <Tabs value={tab} onValueChange={setTab} className="flex h-full flex-col">
-          <div className="flex items-center justify-between border-b px-2 py-1">
-            <TabsList className="h-7">
-              <TabsTrigger value="files" className="text-xs">
+          <div className="flex items-center justify-center border-b px-2 py-1">
+            <TabsList className="h-7 w-full">
+              <TabsTrigger value="files" className="flex-1 text-xs">
                 <FileText className="mr-1 h-3 w-3" />
                 文件
               </TabsTrigger>
-              <TabsTrigger value="history" className="text-xs">
+              <TabsTrigger value="history" className="flex-1 text-xs">
                 <History className="mr-1 h-3 w-3" />
                 历史
               </TabsTrigger>
-              <TabsTrigger value="git" className="text-xs">
+              <TabsTrigger value="git" className="flex-1 text-xs">
                 <GitBranch className="mr-1 h-3 w-3" />
                 Git
               </TabsTrigger>

@@ -46,6 +46,8 @@
   --scrollbar-thumb: oklch(0.88 0 0);
   --scrollbar-thumb-hover: oklch(0.85 0 0);
 
+  --list-item-fg: oklch(0.3 0 0);
+
   --syntax-heading: #94a3b8;
   --syntax-comment: #94a3b8;
   --syntax-keyword: #a855f7;
@@ -100,6 +102,8 @@
 
   --scrollbar-thumb: oklch(0.33 0.022 245);
   --scrollbar-thumb-hover: oklch(0.35 0.022 245);
+
+  --list-item-fg: oklch(0.85 0 0);
 
   --syntax-heading: #4a6ea0;
   --syntax-comment: #4b5563;

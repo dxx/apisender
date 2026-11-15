@@ -103,8 +103,8 @@ function ChangeGroup({
   if (files.length === 0) return null;
   const ActionIcon = mode === "stage" ? Plus : Minus;
   return (
-    <section className="border-b">
-      <div className="flex h-7 items-center justify-between bg-muted/30 px-2 text-[11px] font-medium">
+    <section className="border-t">
+      <div className="flex h-7 items-center justify-between bg-muted/30 px-2 text-xs font-medium">
         <span>{title} ({files.length})</span>
         <Button
           variant="ghost"
@@ -120,7 +120,7 @@ function ChangeGroup({
       {files.map((file) => (
         <div key={`${mode}-${file.path}`} className="group flex h-7 items-center gap-1 px-2 hover:bg-accent/60">
           <button
-            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-xs"
+            className="flex min-w-0 flex-1 items-center gap-1.5 text-left text-sm"
             onClick={() => onFile(file)}
           >
             {file.conflict ? (
@@ -128,7 +128,7 @@ function ChangeGroup({
             ) : (
               <FileCode2 className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
             )}
-            <span className="truncate" title={file.path}>{file.path}</span>
+            <span className="truncate text-[var(--list-item-fg)]" title={file.path}>{file.path}</span>
             <span className="ml-auto shrink-0 font-mono text-[10px] text-muted-foreground">
               {statusLabel(file)}
             </span>
@@ -633,19 +633,22 @@ export function GitPanel() {
           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => void refresh()} disabled={loading || writing}>
             <RefreshCw className={`h-3 w-3 ${loading ? "animate-spin" : ""}`} />
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => void handlePull()} disabled={writing || !repository.upstream} title="拉取">
+          <Button variant="ghost" size="icon" className="relative h-6 w-6" onClick={() => void handlePull()} disabled={writing || !repository.upstream} title="拉取">
             <ArrowDown className="h-3 w-3" />
+            {repository.behind > 0 && (
+              <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-[9px] font-medium leading-3 text-primary-foreground">
+                {repository.behind}
+              </span>
+            )}
           </Button>
-          <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => void handlePush()} disabled={writing || !repository.branch} title="推送">
+          <Button variant="ghost" size="icon" className="relative h-6 w-6" onClick={() => void handlePush()} disabled={writing || !repository.branch} title="推送">
             <ArrowUp className="h-3 w-3" />
+            {repository.ahead > 0 && (
+              <span className="absolute -right-1 -top-1 rounded-full bg-primary px-1 text-[9px] font-medium leading-3 text-primary-foreground">
+                {repository.ahead}
+              </span>
+            )}
           </Button>
-        </div>
-        <div className="mt-1 truncate text-[10px] text-muted-foreground" title={repository.repositoryRoot}>
-          {repository.repositoryRoot}
-        </div>
-        <div className="mt-1 flex gap-3 text-[10px] text-muted-foreground">
-          <span>upstream: {repository.upstream ?? "未设置"}</span>
-          <span>↑{repository.ahead} ↓{repository.behind}</span>
         </div>
         {!repository.remotes.includes("origin") && (
           <Button variant="outline" size="xs" className="mt-2 w-full" onClick={() => setRemoteOpen(true)}>
@@ -661,12 +664,16 @@ export function GitPanel() {
       </div>
 
       <Tabs value={view} onValueChange={setView} className="flex min-h-0 flex-1 flex-col">
-        <TabsList className="m-2 mb-0 grid grid-cols-2">
-          <TabsTrigger value="changes">更改 ({repository.files.length})</TabsTrigger>
-          <TabsTrigger value="history">提交记录</TabsTrigger>
+        <TabsList className="m-2 mb-0 grid h-auto grid-cols-2">
+          <TabsTrigger value="changes" className="py-2 leading-none">
+            更改 ({repository.files.length})
+          </TabsTrigger>
+          <TabsTrigger value="history" className="py-2 leading-none">
+            提交记录
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="changes" className="mt-2 flex min-h-0 flex-1 flex-col">
-          <ScrollArea className="min-h-0 flex-1 border-t">
+          <ScrollArea className="min-h-0 flex-1">
             {repository.files.length === 0 ? (
               <div className="p-4 text-center text-xs text-muted-foreground">工作区没有 Git 改动</div>
             ) : (

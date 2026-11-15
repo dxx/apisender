@@ -126,7 +126,7 @@ export function HistoryList() {
                         </span>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <span className="truncate text-xs cursor-default">
+                            <span className="truncate text-xs cursor-default text-[var(--list-item-fg)]">
                               {entry.url}
                             </span>
                           </TooltipTrigger>
