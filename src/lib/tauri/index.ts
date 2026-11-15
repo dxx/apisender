@@ -11,3 +11,4 @@ export * from "./sse";
 export * from "./websocket";
 export * from "./grpc";
 export * from "./update";
+export * from "./git";

@@ -9,6 +9,7 @@ import { useHistoryStore } from "@/stores/history";
 import { useTabsStore } from "@/stores/tabs";
 import { useThemeStore } from "@/stores/theme";
 import { useFontStore } from "@/stores/font";
+import { useGitStore } from "@/stores/git";
 import { useSystemThemeListener } from "@/hooks/useSystemTheme";
 import type { WorkspaceChangedEvent } from "@/lib/types";
 import { checkUpdate } from "@/lib/tauri";
@@ -22,6 +23,12 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TITLE_BAR_HEIGHT } from "@/lib/platform";
 
+/**
+ * 渲染并协调 apisender 根应用。
+ * 入参：无。
+ * 出参：欢迎页或已打开工作区的完整应用界面。
+ * 作用与流程：初始化各 store，监听普通工作区与 Git 管理目录变化，并协调文件树、环境、标签页和 Git 状态刷新。
+ */
 function App() {
   const root = useWorkspaceStore((s) => s.root);
   const isInitialized = useWorkspaceStore((s) => s.isInitialized);
@@ -34,6 +41,8 @@ function App() {
   const reloadTab = useTabsStore((s) => s.reloadFromDisk);
   const initTheme = useThemeStore((s) => s.init);
   const initFont = useFontStore((s) => s.init);
+  const refreshGit = useGitStore((s) => s.refresh);
+  const clearGit = useGitStore((s) => s.clear);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   useSystemThemeListener();
@@ -70,8 +79,11 @@ function App() {
     if (root) {
       refreshHistory();
       refreshEnv();
+      refreshGit();
+    } else {
+      clearGit();
     }
-  }, [root, refreshHistory, refreshEnv]);
+  }, [root, refreshHistory, refreshEnv, refreshGit, clearGit]);
 
   useEffect(() => {
     const unlisten = listen<WorkspaceChangedEvent>(
@@ -99,6 +111,20 @@ function App() {
   }, [refreshTree, refreshEnv, tabs, reloadTab]);
 
   useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const unlisten = listen<WorkspaceChangedEvent>("git-changed", () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        void refreshGit();
+      }, 250);
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      unlisten.then((fn) => fn());
+    };
+  }, [refreshGit]);
+
+  useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && (e.key === "o" || e.key === "O")) {
         e.preventDefault();
@@ -116,6 +142,7 @@ function App() {
   if (!isInitialized) {
     return (
       <>
+        <Toaster />
         <TitleBar />
         <div
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"
@@ -128,6 +155,7 @@ function App() {
   if (!root) {
     return (
       <>
+        <Toaster />
         <TitleBar />
         <div
           className="flex h-screen w-screen overflow-hidden bg-background text-foreground"

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FileText, History, Settings, ChevronDown, FolderOpen, X } from "lucide-react";
+import { FileText, History, Settings, ChevronDown, FolderOpen, GitBranch, GitFork, X } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,8 @@ import {
 import { FileTree } from "@/components/filetree/FileTree";
 import { HistoryList } from "@/components/sidebar/HistoryList";
 import { EnvSelector } from "@/components/sidebar/EnvSelector";
+import { GitPanel } from "@/components/git/GitPanel";
+import { CloneRepositoryDialog } from "@/components/git/CloneRepositoryDialog";
 import { Tooltip, TooltipArrow, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useWorkspaceStore } from "@/stores/workspace";
 
@@ -36,8 +38,15 @@ function formatTime(iso: string): string {
   return d.toLocaleDateString();
 }
 
+/**
+ * 渲染工作区左侧栏。
+ * 入参：打开设置窗口的回调。
+ * 出参：工作区切换、文件、历史、Git 和环境选择界面。
+ * 作用与流程：协调三个功能页签，并提供打开文件夹、克隆仓库和最近工作区入口。
+ */
 export function Sidebar({ onSettingsClick }: SidebarProps) {
   const [tab, setTab] = useState("files");
+  const [cloneOpen, setCloneOpen] = useState(false);
   const root = useWorkspaceStore((s) => s.root);
   const tree = useWorkspaceStore((s) => s.tree);
   const recent = useWorkspaceStore((s) => s.recentWorkspaces);
@@ -124,6 +133,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
               <FolderOpen className="mr-2 h-3 w-3" />
               打开文件夹...
             </DropdownMenuItem>
+            <DropdownMenuItem className="text-xs" onClick={() => setCloneOpen(true)}>
+              <GitFork className="mr-2 h-3 w-3" />
+              从 Git 克隆...
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <Tooltip>
@@ -156,6 +169,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
                 <History className="mr-1 h-3 w-3" />
                 历史
               </TabsTrigger>
+              <TabsTrigger value="git" className="text-xs">
+                <GitBranch className="mr-1 h-3 w-3" />
+                Git
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -166,6 +183,10 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
           <TabsContent value="history" className="mt-0 flex-1 overflow-hidden">
             <HistoryList />
           </TabsContent>
+
+          <TabsContent value="git" className="mt-0 flex-1 overflow-hidden">
+            <GitPanel />
+          </TabsContent>
         </Tabs>
       </div>
 
@@ -173,6 +194,7 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
       <div className="shrink-0 p-2">
         <EnvSelector />
       </div>
+      <CloneRepositoryDialog open={cloneOpen} onOpenChange={setCloneOpen} />
     </aside>
   );
 }

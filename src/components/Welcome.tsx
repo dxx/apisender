@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { FolderOpen, Clock, X } from "lucide-react";
+import { FolderOpen, Clock, GitFork, X } from "lucide-react";
 
 import logo from "@/assets/logo.svg";
 import { useWorkspaceStore } from "@/stores/workspace";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CloneRepositoryDialog } from "@/components/git/CloneRepositoryDialog";
 
 function formatTime(iso: string): string {
   const d = new Date(iso.replace(" ", "T") + "Z");
@@ -20,12 +21,19 @@ function formatTime(iso: string): string {
   return d.toLocaleDateString();
 }
 
+/**
+ * 渲染未打开工作区时的欢迎页。
+ * 入参：无。
+ * 出参：打开文件夹、克隆仓库和最近工作区入口。
+ * 作用与流程：读取 workspace store 最近记录，并在用户选择后打开对应工作区。
+ */
 export function Welcome() {
   const openDialog = useWorkspaceStore((s) => s.openDialog);
   const openFolder = useWorkspaceStore((s) => s.openFolder);
   const recent = useWorkspaceStore((s) => s.recentWorkspaces);
   const removeRecent = useWorkspaceStore((s) => s.removeRecent);
   const [showRecent, setShowRecent] = useState(false);
+  const [cloneOpen, setCloneOpen] = useState(false);
 
   useEffect(() => {
     setShowRecent(recent.length > 0);
@@ -45,14 +53,16 @@ export function Welcome() {
           <p className="text-sm text-muted-foreground">API 请求管理工具</p>
         </div>
 
-        <Button
-          size="lg"
-          className="w-full"
-          onClick={() => openDialog()}
-        >
-          <FolderOpen className="mr-2 h-4 w-4" />
-          打开文件夹
-        </Button>
+        <div className="grid w-full grid-cols-2 gap-2">
+          <Button size="lg" onClick={() => openDialog()}>
+            <FolderOpen className="mr-2 h-4 w-4" />
+            打开文件夹
+          </Button>
+          <Button size="lg" variant="outline" onClick={() => setCloneOpen(true)}>
+            <GitFork className="mr-2 h-4 w-4" />
+            从 Git 克隆
+          </Button>
+        </div>
 
         {showRecent && (
           <div className="w-full">
@@ -100,6 +110,7 @@ export function Welcome() {
           快捷键: Ctrl+O 打开 · Ctrl+S 保存
         </div>
       </div>
+      <CloneRepositoryDialog open={cloneOpen} onOpenChange={setCloneOpen} />
     </div>
   );
 }
