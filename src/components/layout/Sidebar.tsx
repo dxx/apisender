@@ -190,10 +190,14 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
         </Tabs>
       </div>
 
-      <Separator />
-      <div className="shrink-0 p-2">
-        <EnvSelector />
-      </div>
+      {tab === "files" && (
+        <>
+          <Separator />
+          <div className="shrink-0 p-2">
+            <EnvSelector />
+          </div>
+        </>
+      )}
       <CloneRepositoryDialog open={cloneOpen} onOpenChange={setCloneOpen} />
     </aside>
   );
