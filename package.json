@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:git": "node scripts/run-git-test.mjs",
     "tauri": "tauri"
   },
   "dependencies": {
