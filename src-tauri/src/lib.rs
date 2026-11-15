@@ -18,7 +18,6 @@ use commands::grpc::GrpcState;
 use commands::http::HttpState;
 use commands::sse::SseState;
 use commands::websocket::WsState;
-use commands::grpc::GrpcState;
 use commands::update::UpdateState;
 use git::GitOperationState;
 use tauri::Manager;
