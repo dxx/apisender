@@ -170,6 +170,15 @@ export function FileTree({ nodes }: FileTreeProps) {
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
       if (!(e.ctrlKey || e.metaKey)) return;
       if (e.key === "c" || e.key === "C") {
         e.preventDefault();
