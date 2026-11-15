@@ -1,5 +1,22 @@
 # 更新日志
 
+## 0.1.20 - 2026-11-16
+
+### 新增
+
+- Git 同步面板：分支切换、暂存/取消暂存、提交、推送、拉取、克隆仓库与连接 origin ([PR #2](https://github.com/dxx/apisender/pull/4) contributed by [@aaaaaaaaat](https://github.com/aaaaaaaaat))
+- Git 面板在拉取/推送按钮右上角显示待拉取与待推送的提交数 ([0c841aa](https://github.com/dxx/apisender/commit/0c841aa))
+
+### 修复
+
+- 修复新建文件/文件夹对话框中无法粘贴或复制文本的问题 ([821475d](https://github.com/dxx/apisender/commit/821475d))
+- SSE 请求收到非 SSE 响应（如 JSON 错误体）时展示原始响应体 ([84f821a](https://github.com/dxx/apisender/commit/84f821a))
+
+### 变更
+
+- 统一文件树、历史与 Git 面板的列表项颜色与字号 ([0c841aa](https://github.com/dxx/apisender/commit/0c841aa))
+- 侧边栏标签栏改为等宽铺满 ([0c841aa](https://github.com/dxx/apisender/commit/0c841aa))
+
 ## 0.1.19 - 2026-08-21
 
 ### 修复
