@@ -94,6 +94,30 @@ GET https://api.example.com/long-stream
 
 > 用户点停止时，前端先置 `stop` 状态再调后端中断，即便后端 `sse-end` 晚到也不会覆盖状态。
 
+## 事件通道互斥
+
+后端在一次 SSE 请求中**只会走一条内容通道**，由响应头 `Content-Type` 决定：
+
+| 响应头 Content-Type | 通道 | 发出的事件 |
+| --- | --- | --- |
+| `text/event-stream` | SSE 事件流 | 逐条 `sse-event` |
+| 其他 | HTTP 原始响应 | 流结束后一次 `sse-http` |
+
+两条通道互斥，同一次请求不会同时出现 `sse-event` 与 `sse-http`：
+
+- `sse-http` 是事件通道，不参与 SSE 帧解析
+
+> 判断依据只有响应头 `Content-Type`，与 HTTP 状态码无关。
+
+## 非 SSE 响应
+
+服务端响应的 `Content-Type` **不是** `text/event-stream` 时，响应体不按 SSE 帧解析，而是原样保留并回传：
+
+- 后端累积响应体字节（上限 4MB），流结束后通过 `sse-http` 事件回传
+- `Raw` 标签页直接展示原始响应体（而非拼装的事件文本）
+- `Events` 标签页保持原样（无事件时显示「无事件」）
+- 状态徽标显示为琥珀色的「非 SSE 响应」
+
 ## 示例
 
 ```http
