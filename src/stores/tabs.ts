@@ -54,6 +54,7 @@ interface TabsState {
   setSseStart: (path: string, reqId: string, startPayload: SseStartPayload) => void;
   setSseDone: (path: string, reqId: string, totalMs: number) => void;
   setSseError: (path: string, reqId: string, error: string) => void;
+  setSseHttp: (path: string, reqId: string, content: string) => void;
   setSseStop: (path: string) => void;
   startWs: (path: string, ws: WsState) => void;
   setWsOpen: (path: string, reqId: string, startPayload: WsState["startPayload"]) => void;
@@ -291,6 +292,15 @@ export const useTabsStore = create<TabsState>((set, get) => ({
       tabs: s.tabs.map((t) =>
         t.path === path && t.sse
           ? { ...t, sse: { ...t.sse, status: "error", error }, loading: false }
+          : t
+      ),
+    })),
+
+  setSseHttp: (path, reqId, content) =>
+    set((s) => ({
+      tabs: s.tabs.map((t) =>
+        t.path === path && t.sse?.reqId === reqId
+          ? { ...t, sse: { ...t.sse, httpBody: content } }
           : t
       ),
     })),

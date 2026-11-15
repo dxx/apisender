@@ -69,10 +69,23 @@ export type SseStatus = "connecting" | "streaming" | "done" | "stop" | "error";
 export interface SseState {
   reqId: string;
   status: SseStatus;
+  /** SSE 事件流内容（Content-Type: text/event-stream 时由 sse-event 填充） */
   events: SseEvent[];
   startPayload: SseStartPayload | null;
   totalMs: number | null;
   error: string | null;
+  /**
+   * 原始响应体（Content-Type 非 text/event-stream 时由 sse-http 填充）。
+   * 与 events 互斥：同一次请求只会有其中之一。
+   */
+  httpBody: string | null;
+}
+
+export interface SseHttpPayload {
+  reqId: string;
+  status: number;
+  content: string;
+  truncated: boolean;
 }
 
 export interface SseEndPayload {

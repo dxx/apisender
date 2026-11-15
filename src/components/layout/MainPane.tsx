@@ -15,6 +15,7 @@ import type {
   SseEvent,
   SseEndPayload,
   SseErrorPayload,
+  SseHttpPayload,
   WsStartPayload,
   WsMessagePayload,
   WsClosePayload,
@@ -114,6 +115,20 @@ export function MainPane() {
         const tab = state.tabs.find((t) => t.sse?.reqId === reqId);
         if (tab) {
           state.setSseDone(tab.path, reqId, totalMs);
+        }
+      })
+    );
+
+    // 内容通道互斥：由后端响应头 Content-Type 决定，只会有其中之一
+    //   - text/event-stream -> 逐条 sse-event（见上方监听）
+    //   - 其他 Content-Type  -> 流结束后一次 sse-http（原始响应体）
+    unlistens.push(
+      listen<SseHttpPayload>("sse-http", (e) => {
+        const { reqId, content } = e.payload;
+        const state = useTabsStore.getState();
+        const tab = state.tabs.find((t) => t.sse?.reqId === reqId);
+        if (tab) {
+          state.setSseHttp(tab.path, reqId, content);
         }
       })
     );

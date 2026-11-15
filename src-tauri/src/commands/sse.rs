@@ -70,6 +70,27 @@ pub struct SseErrorPayload {
     pub error: String,
 }
 
+/// 响应不是 SSE 流时（Content-Type 非 text/event-stream），把原始响应体原样带出
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SseHttpPayload {
+    pub req_id: String,
+    pub status: u16,
+    pub content: String,
+    pub truncated: bool,
+}
+
+/// 非 SSE 响应体最大保留字节数
+const RAW_BODY_LIMIT: usize = 4 * 1024 * 1024;
+
+/// 依据响应头判断是否为 SSE 流（Content-Type: text/event-stream）
+fn is_event_stream(headers: &[(String, String)]) -> bool {
+    headers.iter().any(|(k, v)| {
+        k.eq_ignore_ascii_case("content-type")
+            && v.to_ascii_lowercase().contains("text/event-stream")
+    })
+}
+
 #[tauri::command]
 pub async fn execute_sse(
     app: AppHandle,
@@ -168,6 +189,8 @@ pub async fn execute_sse(
     let file_path = args.file_path.clone();
     let request_for_history = request.clone();
     let partial_for_history = partial.clone();
+    // 响应头不是 text/event-stream 时，响应体不按 SSE 帧解析，直接原样回传
+    let is_event_stream = is_event_stream(&partial.headers);
     let no_log = request.tags.no_log;
     // 默认 30s idle 超时；用户可用 @idle-timeout 覆盖（设为 0 表示永不超时）
     let idle_timeout = match request.tags.idle_timeout_ms {
@@ -181,6 +204,8 @@ pub async fn execute_sse(
         let mut total = 0usize;
         let mut all_events: Vec<crate::sse::SseEvent> = Vec::new();
         let mut last_chunk_at = Instant::now();
+        let mut raw_buffer: Vec<u8> = Vec::new();
+        let mut raw_truncated = false;
 
         loop {
             // idle timer：超过指定间隔未收到任何 chunk 则断开。每次收到数据后顺延。
@@ -206,14 +231,25 @@ pub async fn execute_sse(
                     match chunk {
                         Some(StreamChunk::Data(bytes)) => {
                             last_chunk_at = Instant::now();
-                            let events = parser.feed(&bytes);
-                            for evt in events {
-                                total += 1;
-                                all_events.push(evt.clone());
-                                let _ = app2.emit("sse-event", SseEventPayload {
-                                    req_id: req_id2.clone(),
-                                    event: evt,
-                                });
+                            if !is_event_stream {
+                                // 非 SSE 响应体不解析为事件，直接保留原始字节
+                                let remain = RAW_BODY_LIMIT.saturating_sub(raw_buffer.len());
+                                if bytes.len() > remain {
+                                    raw_buffer.extend_from_slice(&bytes[..remain]);
+                                    raw_truncated = true;
+                                } else {
+                                    raw_buffer.extend_from_slice(&bytes);
+                                }
+                            } else {
+                                let events = parser.feed(&bytes);
+                                for evt in events {
+                                    total += 1;
+                                    all_events.push(evt.clone());
+                                    let _ = app2.emit("sse-event", SseEventPayload {
+                                        req_id: req_id2.clone(),
+                                        event: evt,
+                                    });
+                                }
                             }
                         }
                         Some(StreamChunk::Error(err)) => {
@@ -242,6 +278,22 @@ pub async fn execute_sse(
         }
 
         let total_ms = connect_ms + stream_start.elapsed().as_millis() as u64;
+
+        if !is_event_stream {
+            let content = String::from_utf8_lossy(&raw_buffer).to_string();
+            log::info!(
+                "[sse] non-event-stream response {} body length: {}",
+                partial_for_history.status,
+                content.len()
+            );
+            let _ = app2.emit("sse-http", SseHttpPayload {
+                req_id: req_id2.clone(),
+                status: partial_for_history.status,
+                content,
+                truncated: raw_truncated,
+            });
+        }
+
         let _ = app2.emit("sse-end", SseEndPayload {
             req_id: req_id2.clone(),
             total_events: total,

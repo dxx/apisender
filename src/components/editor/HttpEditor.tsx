@@ -338,7 +338,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   const runSse = useCallback(
     async (currentTab: Tab, lineNumber: number) => {
       const reqId = crypto.randomUUID();
-      startSse(currentTab.path, { reqId, status: "connecting", events: [], startPayload: null, totalMs: null, error: null });
+      startSse(currentTab.path, { reqId, status: "connecting", events: [], startPayload: null, totalMs: null, error: null, httpBody: null });
       try {
         await executeSse({
           reqId,
