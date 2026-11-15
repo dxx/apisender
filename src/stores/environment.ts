@@ -13,8 +13,8 @@ interface EnvironmentState {
   activeEnv: string | null;
   vars: Record<string, string>;
   error: string | null;
+  isInitialized: boolean;
 
-  init: () => Promise<void>;
   refresh: () => Promise<void>;
   setActive: (name: string | null) => Promise<void>;
 }
@@ -34,10 +34,7 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
   activeEnv: null,
   vars: {},
   error: null,
-
-  init: async () => {
-    await get().refresh();
-  },
+  isInitialized: false,
 
   /**
    * 刷新当前工作区的环境配置。
@@ -51,6 +48,9 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       return;
     }
     try {
+      const root = useWorkspaceStore.getState().root;
+      if (!root) return;
+
       const [names, activeEnv] = await Promise.all([
         api.listEnvironments(),
         api.getActiveEnvironment(root),
@@ -59,7 +59,7 @@ export const useEnvironmentStore = create<EnvironmentState>((set, get) => ({
       if (activeEnv) {
         vars = await api.getEnvironmentVars(activeEnv);
       }
-      set({ names, activeEnv, vars });
+      set({ names, activeEnv, vars, isInitialized: true });
     } catch (e) {
       const msg = String(e);
       set({ error: msg });

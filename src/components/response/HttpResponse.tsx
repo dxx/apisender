@@ -243,7 +243,7 @@ export function HttpResponse({ http, loading }: HttpResponseProps) {
 
         <TabsContent value="headers" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <table className="w-full text-sm font-mono">
+            <table className="w-full font-response text-response-size">
               <tbody>
                 {r.headers.length > 0 ? (
                   r.headers.map(([key, value], i) => (
@@ -258,7 +258,7 @@ export function HttpResponse({ http, loading }: HttpResponseProps) {
                   ))
                 ) : (
                   <tr>
-                    <td className="px-3 py-4 text-center text-sm text-muted-foreground">
+                    <td className="px-3 py-4 text-center text-muted-foreground">
                       No Headers
                     </td>
                   </tr>
@@ -270,18 +270,18 @@ export function HttpResponse({ http, loading }: HttpResponseProps) {
 
         <TabsContent value="cookies" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="flex flex-col font-mono">
+            <div className="flex flex-col font-response text-response-size">
               {r.cookies.length > 0 ? (
                 r.cookies.map((c, i) => (
                   <div
                     key={i}
-                    className="border-b border-border/30 px-3 py-1.5 text-sm break-all text-(--syntax-string)"
+                    className="border-b border-border/30 px-3 py-1.5 break-all text-(--syntax-string)"
                   >
                     {c}
                   </div>
                 ))
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-4 text-center text-muted-foreground">
                   No Cookie
                 </div>
               )}

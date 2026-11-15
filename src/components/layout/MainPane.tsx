@@ -15,6 +15,7 @@ import type {
   SseEvent,
   SseEndPayload,
   SseErrorPayload,
+  SseHttpPayload,
   WsStartPayload,
   WsMessagePayload,
   WsClosePayload,
@@ -114,6 +115,20 @@ export function MainPane() {
         const tab = state.tabs.find((t) => t.sse?.reqId === reqId);
         if (tab) {
           state.setSseDone(tab.path, reqId, totalMs);
+        }
+      })
+    );
+
+    // 内容通道互斥：由后端响应头 Content-Type 决定，只会有其中之一
+    //   - text/event-stream -> 逐条 sse-event（见上方监听）
+    //   - 其他 Content-Type  -> 流结束后一次 sse-http（原始响应体）
+    unlistens.push(
+      listen<SseHttpPayload>("sse-http", (e) => {
+        const { reqId, content } = e.payload;
+        const state = useTabsStore.getState();
+        const tab = state.tabs.find((t) => t.sse?.reqId === reqId);
+        if (tab) {
+          state.setSseHttp(tab.path, reqId, content);
         }
       })
     );
@@ -356,7 +371,7 @@ export function MainPane() {
   return (
     <main className="flex h-full flex-col overflow-hidden bg-background">
       <div className="group/tabs relative">
-        <div ref={tabsScrollRef} className="tabs-scroll flex h-9 shrink-0 items-center overflow-x-auto overflow-y-hidden border-b bg-card">
+        <div ref={tabsScrollRef} className="tabs-scroll flex h-9 shrink-0 items-center overflow-x-auto overflow-y-hidden border-b bg-background">
           <div className="flex h-full items-stretch">
             {tabs.map((tab) => (
               <ContextMenu key={tab.path}>
@@ -365,7 +380,7 @@ export function MainPane() {
                     className={`group relative flex h-full cursor-pointer items-center gap-1.5 px-3 text-sm ${
                       tab.path === activePath
                         ? "bg-[var(--editor-active-bg)] text-[var(--editor-active-fg)]"
-                        : "hover:bg-[var(--editor-active-bg)]/50 text-[var(--editor-inactive-fg)]"
+                        : "hover:bg-[var(--editor-active-bg)]/80 text-[var(--editor-inactive-fg)]"
                     }`}
                     onClick={() => setActive(tab.path)}
                   >

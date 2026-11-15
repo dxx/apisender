@@ -91,6 +91,7 @@ pnpm exec tsc --noEmit
 ## 测试
 
 - **Rust**: `cd src-tauri && cargo test`（12 个测试：parser 5 + sse 7）
+- **Rust 测试位置**：单元测试必须单独写到 `src-tauri/tests/` 目录（每个测试主题一个 `.rs` 文件），不要在 `src-tauri/src/**/*.rs` 里写 `#[cfg(test)] mod tests`。需要被测的项须以 `pub` / `pub(crate)` 暴露，由集成测试通过 `apisender_lib::...` 路径导入。
 - **前端**: 无测试框架，暂无
 - **类型检查**: `pnpm exec tsc --noEmit`（strict + noUnusedLocals + noUnusedParameters）
 - **构建验证**: `pnpm build`（含 tsc + vite）

@@ -74,7 +74,7 @@
 
 激活的环境名**不存放在工作区目录**，而是存在应用配置文件中：
 
-- 路径：`<app_data_dir>/config.json`。
+- 路径：`<app_data_dir>/apisender.json`。
 - 按**工作区路径**分别记录每个工作区的激活环境：
 
 ```json

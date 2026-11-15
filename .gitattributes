@@ -1,1 +1,2 @@
+*.tsx linguist-language=JavaScript
 src/components/ui/** linguist-vendored

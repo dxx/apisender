@@ -200,7 +200,7 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
               borderRadius: "4px",
             },
             ".cm-content": {
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-response)",
               fontVariantLigatures: "none",
               fontFeatureSettings: '"liga" 0, "calt" 0',
               padding: "6px 0",
@@ -307,45 +307,47 @@ export function WebSocketResponse({ ws, path }: WebSocketResponseProps) {
         )}
       </div>
 
-      {headersOpen && ws.startPayload?.headers && ws.startPayload.headers.length > 0 && (
-        <div className="shrink-0 border-b bg-card max-h-48 overflow-auto">
-          <table className="w-full text-xs font-mono">
-            <tbody>
-              {ws.startPayload.headers.map(([key, value], i) => (
-                <tr key={i} className="border-b border-border/30 last:border-b-0">
-                  <td className="px-3 py-1 align-top font-medium text-(--syntax-property) whitespace-nowrap">
-                    {key}
-                  </td>
-                  <td className="px-3 py-1 break-all text-(--syntax-string)">
-                    {value}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="relative flex-1 min-h-0">
+        {headersOpen && ws.startPayload?.headers && ws.startPayload.headers.length > 0 && (
+          <div className="absolute inset-x-0 top-0 z-20 max-h-32 overflow-auto border-b bg-background shadow-md">
+            <table className="w-full font-response text-response-size">
+              <tbody>
+                {ws.startPayload.headers.map(([key, value], i) => (
+                  <tr key={i} className="border-b border-border/30 last:border-b-0">
+                    <td className="px-3 py-1 align-top font-medium text-(--syntax-property) whitespace-nowrap">
+                      {key}
+                    </td>
+                    <td className="px-3 py-1 break-all text-(--syntax-string)">
+                      {value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
-      <ScrollArea
-        ref={scrollRef}
-        className="flex-1 bg-(--editor-bg)"
-        style={{
-          fontVariantLigatures: "none",
-          fontFeatureSettings: '"liga" 0, "calt" 0',
-        }}
-      >
-        <div className="flex flex-col font-mono">
-          {ws.messages.length === 0 ? (
-            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-              {live ? "等待消息..." : "暂无消息"}
-            </div>
-          ) : (
-            ws.messages.map((m) => (
-              <MessageRow key={m.id} msg={m} />
-            ))
-          )}
-        </div>
-      </ScrollArea>
+        <ScrollArea
+          ref={scrollRef}
+          className="h-full bg-(--editor-bg)"
+          style={{
+            fontVariantLigatures: "none",
+            fontFeatureSettings: '"liga" 0, "calt" 0',
+          }}
+        >
+          <div className="flex flex-col font-response text-response-size">
+            {ws.messages.length === 0 ? (
+              <div className="px-3 py-4 text-center text-muted-foreground">
+                {live ? "等待消息..." : "暂无消息"}
+              </div>
+            ) : (
+              ws.messages.map((m) => (
+                <MessageRow key={m.id} msg={m} />
+              ))
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
       <div className="flex shrink-0 items-center gap-2 border-t p-2">
         <Select value={format} onValueChange={(v) => setFormat(v as Format)}>
@@ -398,7 +400,7 @@ function MessageRow({ msg }: { msg: WsMessageRecord }) {
 
   return (
     <div className={`border-b border-border/30 px-3 py-1.5 ${colorClass}`}>
-      <div className="mb-0.5 flex items-center gap-2 text-sm">
+      <div className="mb-0.5 flex items-center gap-2">
         <Icon className={`h-3 w-3 ${iconColor}`} />
         <span className="text-xs text-muted-foreground">{formatTime(msg.ts)}</span>
         <span className="text-xs text-muted-foreground">#{dirPrefix}-{msg.index}</span>
@@ -426,7 +428,7 @@ function MessageRow({ msg }: { msg: WsMessageRecord }) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all font-response text-(--syntax-string)">
         {msg.data}
       </pre>
     </div>

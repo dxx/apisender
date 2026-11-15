@@ -49,26 +49,38 @@ function statusBadge(sse: SseState) {
         </TooltipProvider>
       );
     }
-    case "stop":
+    case "stop": {
+      const notSse = sse.httpBody != null;
       return (
-        <span className="flex items-center gap-1 text-muted-foreground">
-          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground" />
-          已停止
+        <span
+          className={`flex items-center gap-1 ${notSse ? "text-amber-500" : "text-muted-foreground"}`}
+        >
+          <span
+            className={`inline-block h-1.5 w-1.5 rounded-full ${notSse ? "bg-amber-500" : "bg-muted-foreground"}`}
+          />
+          {notSse ? "非 SSE 响应" : "已停止"}
           {sse.totalMs != null && (
             <span className="text-muted-foreground">({sse.totalMs}ms)</span>
           )}
         </span>
       );
-    case "done":
+    }
+    case "done": {
+      const notSse = sse.httpBody != null;
       return (
-        <span className="flex items-center gap-1 text-muted-foreground">
-          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-muted-foreground" />
-          已结束
+        <span
+          className={`flex items-center gap-1 ${notSse ? "text-amber-500" : "text-muted-foreground"}`}
+        >
+          <span
+            className={`inline-block h-1.5 w-1.5 rounded-full ${notSse ? "bg-amber-500" : "bg-muted-foreground"}`}
+          />
+          {notSse ? "非 SSE 响应" : "已结束"}
           {sse.totalMs != null && (
             <span className="text-muted-foreground">({sse.totalMs}ms)</span>
           )}
         </span>
       );
+    }
     default:
       return null;
   }
@@ -77,6 +89,7 @@ function statusBadge(sse: SseState) {
 export function SseResponse({ sse, path }: SseResponseProps) {
   const start = sse.startPayload;
   const events = sse.events;
+  const httpBody = sse.httpBody;
   const [view, setView] = useState<"events" | "raw" | "headers" | "cookies">("events");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -100,9 +113,14 @@ export function SseResponse({ sse, path }: SseResponseProps) {
       .join("\n\n");
   }, [events]);
 
+  // Raw 标签页内容：Content-Type 非 text/event-stream 时用 sse-http 带回的原始响应体，
+  // 否则用 sse-event 解析出的事件拼装。两者互斥，只会有其中之一。
+  const bodyText = httpBody != null ? httpBody : rawText;
+  const bodyPlaceholder = httpBody != null ? "(空响应体)" : "[No events]";
+
   const copyAll = async () => {
     try {
-      await copyText(rawText);
+      await copyText(bodyText);
       toast.success("已复制 Raw 内容");
     } catch (e) {
       toast.error("复制失败: " + String(e));
@@ -184,9 +202,9 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="events" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea ref={scrollRef} className="h-full bg-(--editor-bg)">
-            <div className="flex flex-col font-mono">
+            <div className="flex flex-col font-response text-response-size">
               {events.length === 0 ? (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-4 text-center text-muted-foreground">
                   {live ? "等待事件..." : "无事件"}
                 </div>
               ) : (
@@ -199,12 +217,12 @@ export function SseResponse({ sse, path }: SseResponseProps) {
         </TabsContent>
 
         <TabsContent value="raw" className="mt-0 flex-1 overflow-hidden">
-          <ResponseView text={rawText || "[No events]"} />
+          <ResponseView text={bodyText || bodyPlaceholder} />
         </TabsContent>
 
         <TabsContent value="headers" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <table className="w-full text-sm font-mono">
+            <table className="w-full font-response text-response-size">
               <tbody>
                 {start && start.headers.length > 0 ? (
                   start.headers.map(([key, value], i) => (
@@ -219,7 +237,7 @@ export function SseResponse({ sse, path }: SseResponseProps) {
                   ))
                 ) : (
                   <tr>
-                    <td className="px-3 py-4 text-center text-sm text-muted-foreground">
+                    <td className="px-3 py-4 text-center text-muted-foreground">
                       No Headers
                     </td>
                   </tr>
@@ -231,18 +249,18 @@ export function SseResponse({ sse, path }: SseResponseProps) {
 
         <TabsContent value="cookies" className="mt-0 flex-1 overflow-hidden">
           <ScrollArea className="h-full">
-            <div className="flex flex-col font-mono">
+            <div className="flex flex-col font-response text-response-size">
               {start && start.cookies.length > 0 ? (
                 start.cookies.map((c, i) => (
                   <div
                     key={i}
-                    className="border-b border-border/30 px-3 py-1.5 text-sm break-all text-(--syntax-string)"
+                    className="border-b border-border/30 px-3 py-1.5 break-all text-(--syntax-string)"
                   >
                     {c}
                   </div>
                 ))
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                <div className="px-3 py-4 text-center text-muted-foreground">
                   No Cookie
                 </div>
               )}
@@ -269,7 +287,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
 
   return (
     <div className="border-b border-border/30 px-3 py-1.5">
-      <div className="mb-0.5 flex items-center gap-2 text-sm">
+      <div className="mb-0.5 flex items-center gap-2">
         <span className="text-muted-foreground text-xs">#{index}</span>
         {evt.event !== "message" && (
           <span className="rounded bg-primary/10 px-1 font-medium text-primary">
@@ -303,7 +321,7 @@ function MessageRow({ evt, index }: { evt: SseEvent; index: number }) {
           </Tooltip>
         </TooltipProvider>
       </div>
-      <pre className="whitespace-pre-wrap break-all text-sm text-(--syntax-string)">
+      <pre className="whitespace-pre-wrap break-all font-response text-(--syntax-string)">
         {evt.data}
       </pre>
     </div>

@@ -13,6 +13,7 @@ use crate::version::USER_AGENT;
 
 use super::{RawResponse, ResponseBody, StreamChunk, Transport};
 
+/// HTTP/HTTPS 传输层：负责构造 reqwest 客户端、组装请求并把响应回包成 `RawResponse`。
 pub struct RestTransport;
 
 impl RestTransport {
@@ -20,6 +21,9 @@ impl RestTransport {
         RestTransport
     }
 
+    /// 按请求标签和 HTTP 版本构造 reqwest `Client`。
+    /// 行为：忽略证书校验（调试用）、开启 gzip/brotli/deflate 解压；
+    /// SSE / 流式场景不设默认总超时（避免长连接被 30s 强制断开），但仍尊重显式 `@timeout`。
     fn build_client(&self, req: &ParsedRequest, is_stream: bool) -> AppResult<Client> {
         let mut builder = ClientBuilder::new()
             .danger_accept_invalid_certs(true)
@@ -42,6 +46,7 @@ impl RestTransport {
         builder = builder.redirect(redirect_policy);
 
         // SSE / 流式场景不设默认总超时（避免长连接被 30s 强制断开），但仍尊重显式 @timeout
+        // SSE / 流式场景不设默认总超时（避免长连接被 30s 强制断开），但仍尊重显式 @timeout。
         if let Some(ms) = req.tags.timeout_ms {
             builder = builder.timeout(Duration::from_millis(ms));
         } else if !is_stream {
@@ -57,6 +62,8 @@ impl RestTransport {
         Ok(builder.build()?)
     }
 
+    /// 把 `ParsedRequest` 转换成 `reqwest::RequestBuilder`，含 method/headers/cookies/body。
+    /// body 三种形态：None / Text / File（读文件）/ Multipart（按段读取）。
     fn build_request(
         &self,
         client: &Client,
@@ -131,6 +138,8 @@ impl RestTransport {
 
 #[async_trait]
 impl Transport for RestTransport {
+    /// 同步执行一次 HTTP 请求：构造客户端 → 发请求 → 收集 header + set-cookie + body。
+    /// body 超 10MB 时用占位文本代替，二进制响应统一 base64 编码。
     async fn execute(
         &self,
         request: &ParsedRequest,
@@ -200,6 +209,8 @@ impl Transport for RestTransport {
         })
     }
 
+    /// 流式执行：先发请求拿到首包 + headers（partial RawResponse），再把后续字节流交给上层消费。
+    /// 主要服务于 SSE / 大文件下载；超时错误会被归类为 `请求超时`，连接错误归为 `连接失败`。
     async fn execute_stream(
         &self,
         request: &ParsedRequest,
@@ -265,6 +276,7 @@ impl Transport for RestTransport {
     }
 }
 
+/// 把 reqwest 内部版本枚举映射成 UI 友好的字符串。
 fn version_to_string(v: reqwest::Version) -> String {
     match v {
         reqwest::Version::HTTP_11 => "HTTP/1.1".to_string(),
@@ -273,6 +285,7 @@ fn version_to_string(v: reqwest::Version) -> String {
     }
 }
 
+/// 粗粒度判断响应是否应按文本解码：常见 text / JSON / XML / HTML / YAML / form-urlencoded 都算文本；空 content-type 也按文本展示。
 fn is_text_content_type(ct: &str) -> bool {
     let ct = ct.to_ascii_lowercase();
     ct.contains("text")
@@ -285,6 +298,7 @@ fn is_text_content_type(ct: &str) -> bool {
         || ct.is_empty()
 }
 
+/// 解析后的 `Set-Cookie` 单条字段，结构化给前端展示与持久化使用。
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ParsedSetCookie {
     pub name: String,
@@ -297,6 +311,7 @@ pub struct ParsedSetCookie {
     pub same_site: Option<String>,
 }
 
+/// 解析单条 `Set-Cookie` 头：拆 `name=value` + 属性段；空 `domain` / `path` 时按请求主机补 `"."` 域和 `/` 路径。
 pub fn parse_set_cookie(header_value: &str, request_host: &str) -> ParsedSetCookie {
     let mut parts = header_value.split(';');
     let nv = parts.next().unwrap_or("").trim();

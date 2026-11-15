@@ -38,7 +38,7 @@ export const searchPanelTheme = EditorView.theme({
     position: "relative",
     backgroundColor: "var(--search-panel-bg)",
     color: "var(--foreground)",
-    fontFamily: "var(--font-sans)",
+    fontFamily: "var(--font-ui)",
     fontSize: "12px",
   },
   ".cm-panels-top": {
@@ -55,11 +55,15 @@ export const searchPanelTheme = EditorView.theme({
     borderRadius: "var(--radius-sm)",
     padding: "3px 8px",
     fontSize: "12px",
-    fontFamily: "var(--font-mono)",
+    fontFamily: "var(--font-editor)",
     outline: "none",
     minWidth: "160px",
     WebkitTextFillColor: "var(--foreground)",
     caretColor: "var(--foreground)",
+  },
+  ".cm-panel.cm-search .cm-textfield::selection": {
+    backgroundColor: "var(--editor-selection)",
+    color: "inherit",
   },
   ".cm-panel.cm-search .cm-textfield:focus": {
     borderColor: "var(--primary)",
@@ -100,6 +104,20 @@ export const searchPanelTheme = EditorView.theme({
     cursor: "pointer",
   },
 
+  ".cm-panel.cm-search .cm-search-counter": {
+    position: "absolute",
+    right: "34px",
+    top: "50%",
+    transform: "translateY(-50%)",
+    fontSize: "12px",
+    fontFamily: "var(--font-ui)",
+    color: "var(--muted-foreground)",
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+    userSelect: "none",
+    pointerEvents: "none",
+  },
+
   ".cm-panel.cm-search [name=close]": {
     color: "var(--muted-foreground)",
     fontSize: "18px",
@@ -109,6 +127,7 @@ export const searchPanelTheme = EditorView.theme({
     backgroundColor: "transparent",
     borderRadius: "var(--radius-sm)",
     cursor: "pointer",
+    flexShrink: "0",
   },
   ".cm-panel.cm-search [name=close]:hover": {
     color: "var(--foreground)",

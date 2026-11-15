@@ -1,17 +1,25 @@
 import { useEffect, useRef } from "react";
 import { EditorState, type Extension } from "@codemirror/state";
-import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection } from "@codemirror/view";
+import { EditorView, keymap, lineNumbers, highlightActiveLine, highlightActiveLineGutter, drawSelection, tooltips } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
-import { json } from "@codemirror/lang-json";
+import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
+import { linter } from "@codemirror/lint";
+import { json, jsonParseLinter } from "@codemirror/lang-json";
 
 import type { Tab } from "@/stores/tabs";
 import { useTabsStore } from "@/stores/tabs";
 import { syntaxHighlightingExt } from "./syntax-theme";
+import { lintTheme } from "./lint-theme";
+import { editorTooltipSpace } from "./editor-tooltip";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
 import { protoLanguage } from "./proto-lang";
+import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 
 const MAX_HISTORY_DEPTH = 100;
+const PREPARSE_BUDGET_MS = 100;
+const PREPARSE_INTERVAL_MS = 50;
 const STATE_FIELDS = { history: historyField };
 
 function truncateEditorHistory(state: any, maxDepth: number) {
@@ -26,7 +34,9 @@ function truncateEditorHistory(state: any, maxDepth: number) {
 
 function languageFor(name: string): Extension[] {
   const lower = name.toLowerCase();
-  if (lower.endsWith(".json")) return [json()];
+  if (lower.endsWith(".json")) {
+    return [json(), linter(jsonParseLinter(), { delay: 350 })];
+  }
   if (lower.endsWith(".proto") || lower.endsWith(".proto.text") || lower.endsWith(".prototxt")) {
     return [protoLanguage];
   }
@@ -45,22 +55,42 @@ export function PlainEditor({ tab }: PlainEditorProps) {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    let preparseTimer: number | undefined;
+    let editorDestroyed = false;
+    const preparseSyntaxTree = () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+        preparseTimer = undefined;
+      }
+      const currentView = viewRef.current;
+      if (!currentView || editorDestroyed) return;
+      if (ensureSyntaxTree(currentView.state, currentView.state.doc.length, PREPARSE_BUDGET_MS) === syntaxTree(currentView.state)) {
+        return;
+      }
+      preparseTimer = window.setTimeout(preparseSyntaxTree, PREPARSE_INTERVAL_MS);
+    };
+
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         updateContent(tab.path, update.state.doc.toString());
+        preparseSyntaxTree();
       }
     });
 
     let view: EditorView;
+    let scrollController: ReturnType<typeof createEditorScrollController> | null = null;
     try {
       const extensions = [
         lineNumbers(),
         history(),
         syntaxHighlightingExt,
+        lintTheme,
+        tooltips({ tooltipSpace: editorTooltipSpace }),
         highlightSelectionMatches(),
         search(),
         searchPanelTheme,
         searchAutocompleteDisabler,
+        searchMatchCounter,
         highlightActiveLine(),
         highlightActiveLineGutter(),
         drawSelection(),
@@ -80,10 +110,9 @@ export function PlainEditor({ tab }: PlainEditorProps) {
           },
         ]),
         updateListener,
-        EditorView.lineWrapping,
         EditorView.theme({
           "&": {
-            fontSize: "16px",
+            fontSize: "var(--text-editor-size)",
             height: "100%",
             backgroundColor: "var(--editor-bg)",
             caretColor: "var(--editor-cursor)",
@@ -102,7 +131,7 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             backgroundColor: "var(--editor-selection-match)",
           },
           ".cm-content": {
-            fontFamily: "var(--font-mono)",
+            fontFamily: "var(--font-editor)",
             fontVariantLigatures: "none",
             fontFeatureSettings: '"liga" 0, "calt" 0',
             padding: "0 0 100px 0",
@@ -116,8 +145,8 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             marginLeft: "-1px",
           },
           ".cm-gutters": {
-            fontFamily: "var(--font-mono)",
-            backgroundColor: "var(--card)",
+            fontFamily: "var(--font-editor)",
+            backgroundColor: "var(--editor-gutter-bg)",
             borderRight: "1px solid var(--border)",
             color: "var(--editor-gutter-fg)",
           },
@@ -132,10 +161,10 @@ export function PlainEditor({ tab }: PlainEditorProps) {
             padding: "0 3px",
           },
           ".cm-activeLine": {
-            backgroundColor: "var(--accent)",
+            backgroundColor: "var(--editor-gutter-active-bg)",
           },
           ".cm-activeLineGutter": {
-            backgroundColor: "var(--accent)",
+            backgroundColor: "var(--editor-gutter-active-bg)",
             color: "var(--editor-gutter-active-fg)",
           },
           "&.cm-focused": {
@@ -164,6 +193,18 @@ export function PlainEditor({ tab }: PlainEditorProps) {
         parent: editorRef.current,
       });
       viewRef.current = view;
+      preparseSyntaxTree();
+
+      // 这里 dispatch 一次空 transaction，触发与 HttpEditor 相同的测量+重绘周期。
+      view.dispatch({});
+
+      const savedScroll =
+        tab.editorState && typeof tab.editorState === "object"
+          ? (tab.editorState as SavedScroll | null)
+          : null;
+      
+      scrollController = createEditorScrollController(view);
+      scrollController.applySaved(savedScroll);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
@@ -180,14 +221,23 @@ export function PlainEditor({ tab }: PlainEditorProps) {
     }
 
     return () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+      }
+      editorDestroyed = true;
       if (view) {
         try {
           const json = view.state.toJSON(STATE_FIELDS);
           truncateEditorHistory(json, MAX_HISTORY_DEPTH);
+
+          json.scrollTop = scrollController?.cache.scrollTop ?? 0;
+          json.scrollLeft = scrollController?.cache.scrollLeft ?? 0;
+          
           useTabsStore.getState().saveEditorState(tab.path, json);
         } catch (_) {
           // 序列化失败不致命，丢弃 state
         }
+        scrollController?.dispose();
         view.destroy();
         viewRef.current = null;
       }

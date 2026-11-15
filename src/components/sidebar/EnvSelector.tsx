@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/tooltip";
 
 export function EnvSelector() {
+  const isInitialized = useEnvironmentStore((s) => s.isInitialized);
   const names = useEnvironmentStore((s) => s.names);
   const activeEnv = useEnvironmentStore((s) => s.activeEnv);
   const vars = useEnvironmentStore((s) => s.vars);
@@ -33,9 +34,13 @@ export function EnvSelector() {
     const ro = new ResizeObserver(update);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [isInitialized]);
 
   const hasVars = activeEnv && Object.keys(vars).length > 0;
+
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <div className="flex flex-col gap-1.5">

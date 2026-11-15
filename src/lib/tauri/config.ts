@@ -1,16 +1,22 @@
 import { invoke } from "@tauri-apps/api/core";
 
+export interface FontSettings {
+  editorFontFamily: string | null;
+  uiFontFamily: string | null;
+  responseFontFamily: string | null;
+}
+
+export interface FontSizeSettings {
+  editorFontSize: number | null;
+  responseFontSize: number | null;
+}
+
 export async function getTheme(): Promise<string | null> {
   return invoke<string | null>("get_theme");
 }
 
 export async function setTheme(theme: string): Promise<void> {
   await invoke("set_theme", { theme });
-}
-
-export interface FontSettings {
-  editorFontFamily: string | null;
-  uiFontFamily: string | null;
 }
 
 export async function getFonts(): Promise<FontSettings> {
@@ -23,6 +29,22 @@ export async function setEditorFontFamily(font: string | null): Promise<void> {
 
 export async function setUiFontFamily(font: string | null): Promise<void> {
   await invoke("set_ui_font_family", { font });
+}
+
+export async function setResponseFontFamily(font: string | null): Promise<void> {
+  await invoke("set_response_font_family", { font });
+}
+
+export async function getFontSizes(): Promise<FontSizeSettings> {
+  return invoke<FontSizeSettings>("get_font_sizes");
+}
+
+export async function setEditorFontSize(size: number | null): Promise<void> {
+  await invoke("set_editor_font_size", { size });
+}
+
+export async function setResponseFontSize(size: number | null): Promise<void> {
+  await invoke("set_response_font_size", { size });
 }
 
 export async function getLastWorkspace(): Promise<string | null> {

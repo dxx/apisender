@@ -195,6 +195,12 @@ export function parseCurl(curl: string): ParsedCurl | null {
       case "--url":
         url = tokens[++i] ?? "";
         break;
+      case "-b":
+      case "--cookie": {
+        const cookie = tokens[++i] ?? "";
+        if (cookie) headers.push(["Cookie", cookie]);
+        break;
+      }
       case "-L":
       case "--location":
       case "--compressed":

@@ -6,13 +6,14 @@ import {
   lineNumbers,
   drawSelection,
 } from "@codemirror/view";
-import { defaultKeymap, history } from "@codemirror/commands";
+import { defaultKeymap } from "@codemirror/commands";
 import type { Language } from "@codemirror/language";
 import { search, searchKeymap } from "@codemirror/search";
 
 import { responseLanguage } from "./http-lang";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
 
 interface ResponseViewProps {
   text: string;
@@ -33,19 +34,20 @@ export function ResponseView({ text, language }: ResponseViewProps) {
         doc: text,
         extensions: [
           lineNumbers(),
-          history(),
           drawSelection(),
           search(),
           searchPanelTheme,
           searchAutocompleteDisabler,
+          searchMatchCounter,
           keymap.of([...defaultKeymap, ...searchKeymap]),
           syntaxHighlightingExt,
           languageCompartment.current.of(language ?? responseLanguage),
           EditorView.lineWrapping,
           EditorState.readOnly.of(true),
+          EditorState.allowMultipleSelections.of(false),
           EditorView.theme({
             "&": {
-              fontSize: "16px",
+              fontSize: "var(--text-response-size)",
               height: "100%",
               backgroundColor: "var(--editor-bg)",
             },
@@ -60,7 +62,7 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               backgroundColor: "var(--editor-selection) !important",
             },
             ".cm-content": {
-              fontFamily: "var(--font-mono)",
+              fontFamily: "var(--font-response)",
               fontVariantLigatures: "none",
               fontFeatureSettings: '"liga" 0, "calt" 0',
               padding: "4px 0",
@@ -69,8 +71,8 @@ export function ResponseView({ text, language }: ResponseViewProps) {
               lineHeight: "1.4",
             },
             ".cm-gutters": {
-              fontFamily: "var(--font-mono)",
-              backgroundColor: "var(--card)",
+              fontFamily: "var(--font-response)",
+              backgroundColor: "var(--editor-gutter-bg)",
               borderRight: "1px solid var(--border)",
               color: "var(--editor-gutter-fg)",
             },

@@ -1,0 +1,82 @@
+import { EditorView } from "@codemirror/view";
+
+export const httpFoldingTheme = EditorView.theme({
+  ".cm-http-fold-placeholder": {
+    border: "1px solid var(--border)",
+    borderRadius: "3px",
+    backgroundColor: "var(--muted)",
+    color: "var(--muted-foreground)",
+    padding: "0 6px",
+    margin: "0 2px",
+    cursor: "pointer",
+  },
+  ".cm-tooltip.cm-tooltip-hover": {
+    zIndex: "50",
+  },
+  ".cm-http-fold-tooltip.cm-tooltip": {
+    zIndex: "50",
+  },
+  ".cm-http-fold-tooltip": {
+    maxWidth: "min(720px, calc(100vw - 48px))",
+    maxHeight: "220px",
+    overflow: "auto",
+    border: "1px solid var(--border)",
+    borderRadius: "6px",
+    backgroundColor: "var(--popover)",
+    color: "var(--popover-foreground)",
+    boxShadow: "0 12px 32px rgba(0, 0, 0, 0.18)",
+    position: "relative",
+  },
+  ".cm-http-fold-tooltip ::selection": {
+    backgroundColor: "var(--editor-selection)",
+    color: "inherit",
+  },
+  ".cm-http-fold-tooltip-copy": {
+    position: "absolute",
+    top: "6px",
+    right: "6px",
+    width: "20px",
+    height: "20px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "4px",
+    border: "1px solid transparent",
+    backgroundColor: "transparent",
+    color: "var(--muted-foreground)",
+    cursor: "pointer",
+    zIndex: "1",
+    opacity: "0",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
+    transition: "opacity 120ms, background-color 120ms, color 120ms",
+  },
+  ".cm-http-fold-tooltip:hover .cm-http-fold-tooltip-copy": {
+    opacity: "1",
+  },
+  ".cm-http-fold-tooltip-copy:hover": {
+    backgroundColor: "var(--accent)",
+    color: "var(--accent-foreground)",
+  },
+  ".cm-http-fold-tooltip-copy-checked": {
+    color: "hsl(140 60% 45%)",
+  },
+  ".cm-http-fold-tooltip-title": {
+    position: "sticky",
+    top: "0",
+    borderBottom: "1px solid var(--border)",
+    backgroundColor: "var(--popover)",
+    color: "var(--muted-foreground)",
+    padding: "6px 8px",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
+    fontFamily: "var(--font-editor)",
+  },
+  ".cm-http-fold-tooltip pre": {
+    margin: "0",
+    padding: "8px",
+    whiteSpace: "pre-wrap",
+    wordBreak: "break-word",
+    fontFamily: "var(--font-editor)",
+    fontSize: "calc(var(--text-editor-size) - 2px)",
+    lineHeight: "1.45",
+  },
+});

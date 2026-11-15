@@ -1,6 +1,7 @@
 import type { RefObject } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
+import { SendIcon } from "@/components/editor/EditorIcon";
 
 import type { Tab } from "@/stores/tabs";
 import { Button } from "@/components/ui/button";
@@ -26,7 +27,7 @@ export function ResponsePanel({ tab, panelRef, collapsed }: ResponsePanelProps) 
 
   if (collapsed) {
     return (
-      <div className="flex h-full w-full items-center justify-between border-t bg-card px-1.5">
+      <div className="flex h-full w-full items-center justify-between border-t bg-background px-1.5">
         <div className="flex items-center gap-2 text-xs">
           <span className="font-medium pl-2">响应</span>
           {grpc ? (
@@ -63,7 +64,7 @@ export function ResponsePanel({ tab, panelRef, collapsed }: ResponsePanelProps) 
   }
 
   return (
-    <div className="flex h-full w-full flex-col border-t-2 bg-card">
+    <div className="flex h-full w-full flex-col border-t-2 bg-background">
       <div className="flex h-8 shrink-0 items-center justify-between border-b px-1.5">
         <span className="text-xs font-medium pl-2">响应</span>
         <Button
@@ -85,7 +86,9 @@ export function ResponsePanel({ tab, panelRef, collapsed }: ResponsePanelProps) 
         <SseResponse sse={sse} path={tab.path} />
       ) : !response && !loading && !http.error ? (
         <div className="flex flex-1 items-center justify-center text-muted-foreground">
-          <span className="text-sm">点击 ▶ 发送请求</span>
+          <span className="text-sm inline-flex items-center gap-1 select-none">
+            点击 <SendIcon className="inline" /> 发送请求
+          </span>
         </div>
       ) : (
         <HttpResponse http={http} loading={loading} />

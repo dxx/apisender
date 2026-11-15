@@ -16,6 +16,8 @@ const textParser: StreamParser<unknown> = {
   },
 };
 
+const textLanguage = StreamLanguage.define(textParser);
+
 export function getBodyLanguage(format: BodyFormat): Language {
   switch (format) {
     case "json":
@@ -25,6 +27,6 @@ export function getBodyLanguage(format: BodyFormat): Language {
     case "html":
       return htmlLanguage;
     case "text":
-      return StreamLanguage.define(textParser);
+      return textLanguage;
   }
 }

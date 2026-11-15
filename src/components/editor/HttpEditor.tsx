@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from "react";
-import { EditorState, RangeSet, Range, StateField } from "@codemirror/state";
+import { EditorState, RangeSet, StateField, type Transaction } from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -9,10 +9,17 @@ import {
   highlightActiveLine,
   highlightActiveLineGutter,
   drawSelection,
+  tooltips,
 } from "@codemirror/view";
 import { defaultKeymap, history, historyKeymap, indentWithTab, historyField } from "@codemirror/commands";
 import {
   bracketMatching,
+  ensureSyntaxTree,
+  foldEffect,
+  foldedRanges,
+  foldState,
+  syntaxTree,
+  unfoldEffect,
 } from "@codemirror/language";
 import { searchKeymap, highlightSelectionMatches, search } from "@codemirror/search";
 import { Terminal, Scissors, Copy, ClipboardPaste } from "lucide-react";
@@ -31,14 +38,41 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { httpLanguage } from "./http-lang";
+import {
+  collectHttpFoldRanges,
+  httpFoldingExtensions,
+  refreshHttpFoldPlaceholders,
+  selectHttpFoldControls,
+} from "./http-folding";
+import { httpAutocomplete } from "./http-autocomplete";
+import { httpLinter } from "./http-linter";
+import { CHEVRON_DOWN_SVG_HTML, CHEVRON_RIGHT_SVG_HTML, SEND_ICON_SVG_HTML } from "./EditorIcon";
 import { syntaxHighlightingExt } from "./syntax-theme";
 import { searchPanelTheme, searchAutocompleteDisabler } from "./search-panel-theme";
+import { searchMatchCounter } from "./search-match-counter";
+import { createEditorScrollController, type SavedScroll } from "./editor-scroll";
 import { detectSse, detectWs, detectGrpc } from "@/lib/utils/editor";
+import { lintTheme } from "./lint-theme";
+import { editorTooltipSpace } from "./editor-tooltip";
+import { autocompleteTheme } from "./autocomplete-theme";
 
 const METHOD_RE = /^(GET|POST|PUT|DELETE|PATCH|HEAD|OPTIONS|CONNECT|TRACE|WEBSOCKET|GRPC)\b/i;
 const URL_RE = /^https?:\/\/\S+/i;
 const MAX_HISTORY_DEPTH = 100;
-const STATE_FIELDS = { history: historyField };
+const PREPARSE_BUDGET_MS = 100;
+const PREPARSE_INTERVAL_MS = 50;
+const STATE_FIELDS = { history: historyField, fold: foldState };
+
+interface FoldControlRange {
+  from: number;
+  to: number;
+  folded: boolean;
+}
+
+interface EditorControlMarkerInfo {
+  canRun: boolean;
+  foldRange: FoldControlRange | null;
+}
 
 function truncateEditorHistory(state: any, maxDepth: number) {
   const history = state?.history;
@@ -50,19 +84,69 @@ function truncateEditorHistory(state: any, maxDepth: number) {
   }
 }
 
-class RunGutterMarker extends GutterMarker {
+class EditorControlGutterMarker extends GutterMarker {
+
+  constructor(private readonly info: EditorControlMarkerInfo) {
+    super();
+  }
+
+  eq(other: GutterMarker): boolean {
+    if (!(other instanceof EditorControlGutterMarker)) return false;
+    return (
+      this.info.canRun === other.info.canRun &&
+      this.info.foldRange?.from === other.info.foldRange?.from &&
+      this.info.foldRange?.to === other.info.foldRange?.to &&
+      this.info.foldRange?.folded === other.info.foldRange?.folded
+    );
+  }
+
   toDOM() {
-    const btn = document.createElement("span");
-    btn.className = "cm-run-gutter-btn";
-    btn.textContent = "▶";
-    btn.title = "发送请求";
-    btn.setAttribute("aria-hidden", "true");
-    return btn;
+    const wrapper = document.createElement("div");
+    wrapper.className = "cm-editor-control-gutter";
+    if (this.info.canRun) {
+      wrapper.append(createRunGutterButton());
+    } else if (this.info.foldRange) {
+      wrapper.append(createFoldGutterButton(this.info.foldRange));
+    }
+    return wrapper;
   }
 }
 
-function computeRunMarkers(state: EditorState): RangeSet<GutterMarker> {
-  const ranges: Range<GutterMarker>[] = [];
+function createRunGutterButton(): HTMLElement {
+  const btn = document.createElement("span");
+  btn.className = "cm-run-gutter-btn";
+  btn.title = "发送请求";
+  btn.setAttribute("aria-hidden", "true");
+  btn.innerHTML = SEND_ICON_SVG_HTML;
+  return btn;
+}
+
+function createFoldGutterButton(foldRange: FoldControlRange): HTMLElement {
+  const btn = document.createElement("span");
+  btn.className = "cm-http-fold-gutter-btn";
+  btn.title = foldRange.folded ? "展开" : "折叠";
+  btn.dataset.foldFrom = String(foldRange.from);
+  btn.dataset.foldTo = String(foldRange.to);
+  btn.dataset.folded = foldRange.folded ? "true" : "false";
+  btn.setAttribute("aria-hidden", "true");
+  btn.innerHTML = foldRange.folded
+    ? CHEVRON_RIGHT_SVG_HTML
+    : CHEVRON_DOWN_SVG_HTML;
+  return btn;
+}
+
+function computeEditorControlMarkers(state: EditorState): RangeSet<GutterMarker> {
+  const markers = new Map<number, EditorControlMarkerInfo>();
+  addRunControls(state, markers);
+  addFoldControls(state, markers);
+
+  const ranges = Array.from(markers.entries())
+    .map(([lineNumber, info]) => new EditorControlGutterMarker(info).range(state.doc.line(lineNumber).from))
+    .sort((a, b) => a.from - b.from);
+  return RangeSet.of(ranges);
+}
+
+function addRunControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
   const lines = state.doc.lines;
   let inBlock = false;
   let blockHasMethod = false;
@@ -84,19 +168,72 @@ function computeRunMarkers(state: EditorState): RangeSet<GutterMarker> {
       !blockHasMethod &&
       (METHOD_RE.test(text) || URL_RE.test(text))
     ) {
-      ranges.push(new RunGutterMarker().range(line.from));
+      getOrCreateControlMarkerInfo(markers, line.number).canRun = true;
       blockHasMethod = true;
     }
   }
+}
 
-  return RangeSet.of(ranges);
+function addFoldControls(state: EditorState, markers: Map<number, EditorControlMarkerInfo>): void {
+  const foldControls = selectHttpFoldControls(collectHttpFoldRanges(state.doc.toString()));
+  for (const range of foldControls) {
+    const info = getOrCreateControlMarkerInfo(markers, range.lineFrom);
+    if (info.canRun) continue;
+    info.foldRange = {
+      from: range.from,
+      to: range.to,
+      folded: isFoldRangeFolded(state, range.from, range.to),
+    };
+  }
+}
+
+function getOrCreateControlMarkerInfo(
+  markers: Map<number, EditorControlMarkerInfo>,
+  lineNumber: number,
+): EditorControlMarkerInfo {
+  const existing = markers.get(lineNumber);
+  if (existing) return existing;
+  const created: EditorControlMarkerInfo = { canRun: false, foldRange: null };
+  markers.set(lineNumber, created);
+  return created;
+}
+
+function isFoldRangeFolded(state: EditorState, from: number, to: number): boolean {
+  let folded = false;
+  foldedRanges(state).between(from, to, (rangeFrom, rangeTo) => {
+    if (rangeFrom === from && rangeTo === to) {
+      folded = true;
+      return false;
+    }
+    return undefined;
+  });
+  return folded;
+}
+
+function readFoldButtonRange(button: HTMLElement): { from: number; to: number } | null {
+  const from = Number(button.dataset.foldFrom);
+  const to = Number(button.dataset.foldTo);
+  if (!Number.isFinite(from) || !Number.isFinite(to) || from >= to) return null;
+  return { from, to };
+}
+
+function toggleFoldRange(view: EditorView, range: { from: number; to: number }): void {
+  const effect = isFoldRangeFolded(view.state, range.from, range.to)
+    ? unfoldEffect.of(range)
+    : foldEffect.of(range);
+  view.dispatch({ effects: effect });
+  view.focus();
+}
+
+function shouldRefreshControlMarkers(tr: Transaction): boolean {
+  return tr.docChanged || tr.effects.some((effect) => effect.is(foldEffect) || effect.is(unfoldEffect));
 }
 
 const runMarkerField = StateField.define<RangeSet<GutterMarker>>({
-  create: (state) => computeRunMarkers(state),
+  create: (state) => computeEditorControlMarkers(state),
   update: (markers, tr) => {
-    if (tr.docChanged) {
-      return computeRunMarkers(tr.state);
+    if (shouldRefreshControlMarkers(tr)) {
+      return computeEditorControlMarkers(tr.state);
     }
     return markers;
   },
@@ -105,7 +242,7 @@ const runMarkerField = StateField.define<RangeSet<GutterMarker>>({
 const runGutter = gutter({
   class: "cm-run-gutter",
   markers: (view) => view.state.field(runMarkerField),
-  initialSpacer: () => new RunGutterMarker(),
+  initialSpacer: () => new EditorControlGutterMarker({ canRun: true, foldRange: null }),
 });
 
 interface HttpEditorProps {
@@ -125,6 +262,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   const startGrpc = useTabsStore((s) => s.startGrpc);
   const setGrpcError = useTabsStore((s) => s.setGrpcError);
   const activeEnv = useEnvironmentStore((s) => s.activeEnv);
+  const envVars = useEnvironmentStore.getState().vars;
   const tabRef = useRef(tab);
   tabRef.current = tab;
   const envRef = useRef(activeEnv);
@@ -200,7 +338,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   const runSse = useCallback(
     async (currentTab: Tab, lineNumber: number) => {
       const reqId = crypto.randomUUID();
-      startSse(currentTab.path, { reqId, status: "connecting", events: [], startPayload: null, totalMs: null, error: null });
+      startSse(currentTab.path, { reqId, status: "connecting", events: [], startPayload: null, totalMs: null, error: null, httpBody: null });
       try {
         await executeSse({
           reqId,
@@ -336,18 +474,19 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       const sel = view.state.selection.main;
 
       const httpText = curlToHttpText(text);
-      if (httpText) {
-        const commented = text
-          .split("\n")
-          .map((l) => `# ${l}`)
-          .join("\n");
-        const insert = `###\n${commented}\n${httpText}\n\n###`;
-        view.dispatch({ changes: { from: sel.from, to: sel.to, insert } });
-        toast.success("已将 cURL 转换为 HTTP 请求报文");
-      } else {
-        view.dispatch({ changes: { from: sel.from, to: sel.to, insert: text } });
-      }
+      const insert = httpText
+        ? `###\n${text.split("\n").map((l) => `# ${l}`).join("\n")}\n${httpText}\n\n###`
+        : text;
+      // CodeMirror 会把 insert 里的 \r\n 规范化为 \n，
+      // 用 toText 计算规范化后的长度，避免 cursor 超出文档范围
+      const insertLen = view.state.toText(insert).length;
+      const cursor = sel.from + insertLen;
+      view.dispatch({
+        changes: { from: sel.from, to: sel.to, insert },
+        selection: { anchor: cursor },
+      });
       view.focus();
+      if (httpText) toast.success("已将 cURL 转换为 HTTP 请求报文");
     } catch (e) {
       toast.error(`粘贴失败: ${e}`);
     }
@@ -356,14 +495,31 @@ export function HttpEditor({ tab }: HttpEditorProps) {
   useEffect(() => {
     if (!editorRef.current) return;
 
+    let preparseTimer: number | undefined;
+    let editorDestroyed = false;
+    const preparseSyntaxTree = () => {
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+        preparseTimer = undefined;
+      }
+      const view = viewRef.current;
+      if (!view || editorDestroyed) return;
+      if (ensureSyntaxTree(view.state, view.state.doc.length, PREPARSE_BUDGET_MS) === syntaxTree(view.state)) {
+        return;
+      }
+      preparseTimer = window.setTimeout(preparseSyntaxTree, PREPARSE_INTERVAL_MS);
+    };
+
     const updateListener = EditorView.updateListener.of((update) => {
       if (update.docChanged) {
         updateContent(tab.path, update.state.doc.toString());
+        preparseSyntaxTree();
       }
     });
 
     const extensions = [
       lineNumbers(),
+      ...httpFoldingExtensions(),
       runGutter,
       runMarkerField,
       history(),
@@ -373,10 +529,16 @@ export function HttpEditor({ tab }: HttpEditorProps) {
       search(),
       searchPanelTheme,
       searchAutocompleteDisabler,
+      searchMatchCounter,
       highlightActiveLine(),
       highlightActiveLineGutter(),
       drawSelection(),
       httpLanguage,
+      httpAutocomplete(),
+      httpLinter({ envVars }),
+      autocompleteTheme,
+      lintTheme,
+      tooltips({ tooltipSpace: editorTooltipSpace }),
       keymap.of([
         indentWithTab,
         ...defaultKeymap,
@@ -403,10 +565,9 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         },
       ]),
       updateListener,
-      EditorView.lineWrapping,
       EditorView.theme({
         "&": {
-          fontSize: "16px",
+          fontSize: "var(--text-editor-size)",
           height: "100%",
           backgroundColor: "var(--editor-bg)",
           caretColor: "var(--editor-cursor)",
@@ -425,7 +586,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           backgroundColor: "var(--editor-selection-match)",
         },
         ".cm-content": {
-          fontFamily: "var(--font-mono)",
+          fontFamily: "var(--font-editor)",
           fontVariantLigatures: "none",
           fontFeatureSettings: '"liga" 0, "calt" 0',
           padding: "0 0 100px 0",
@@ -439,8 +600,8 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           marginLeft: "-1px",
         },
         ".cm-gutters": {
-          fontFamily: "var(--font-mono)",
-          backgroundColor: "var(--card)",
+          fontFamily: "var(--font-editor)",
+          backgroundColor: "var(--editor-gutter-bg)",
           borderRight: "1px solid var(--border)",
           color: "var(--editor-gutter-fg)",
         },
@@ -455,35 +616,58 @@ export function HttpEditor({ tab }: HttpEditorProps) {
           padding: "0 3px",
         },
         ".cm-activeLine": {
-          backgroundColor: "var(--accent)",
+          backgroundColor: "var(--editor-gutter-active-bg)",
         },
         ".cm-activeLineGutter": {
-          backgroundColor: "var(--accent)",
+          backgroundColor: "var(--editor-gutter-active-bg)",
           color: "var(--editor-gutter-active-fg)",
         },
         ".cm-run-gutter": {
-          width: "22px",
           backgroundColor: "transparent",
         },
         ".cm-run-gutter .cm-gutterElement": {
           display: "flex",
           justifyContent: "center",
+          paddingRight: "3px",
         },
-        ".cm-run-gutter .cm-run-gutter-btn": {
-          cursor: "pointer",
-          color: "var(--primary)",
-          fontSize: "14px",
-          fontWeight: "700",
-          display: "inline-block",
+        ".cm-editor-control-gutter": {
+          position: "relative",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
           boxSizing: "border-box",
-          width: "20px",
-          height: "20px",
-          marginTop: "2px",
+          flexShrink: "0",
+        },
+        ".cm-run-gutter-btn, .cm-http-fold-gutter-btn": {
+          cursor: "pointer",
+          display: "inline-flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
           textAlign: "center",
           borderRadius: "3px",
+          padding: "1px",
           userSelect: "none",
-          flexShrink: "0",
+        },
+        ".cm-run-gutter-btn": {
+          color: "var(--primary)",
+          transition: "background-color 80ms ease",
+        },
+        ".cm-http-fold-gutter-btn": {
+          color: "var(--editor-gutter-fg)",
+          opacity: "0",
+          pointerEvents: "none",
           transition: "background-color 80ms ease, color 80ms ease",
+        },
+        ".cm-run-gutter .cm-gutterElement:hover .cm-http-fold-gutter-btn": {
+          opacity: "1",
+          pointerEvents: "auto",
+        },
+        ".cm-run-gutter-btn:hover, .cm-http-fold-gutter-btn:hover": {
+          backgroundColor: "var(--editor-gutter-active-bg)",
+        },
+        ".cm-http-fold-gutter-btn:hover": {
+          color: "var(--foreground)",
         },
         "&.cm-focused": {
           outline: "none",
@@ -492,6 +676,7 @@ export function HttpEditor({ tab }: HttpEditorProps) {
     ];
 
     let view: EditorView;
+    let scrollController: ReturnType<typeof createEditorScrollController> | null = null;
     try {
       let state: EditorState;
       if (tab.editorState) {
@@ -513,6 +698,20 @@ export function HttpEditor({ tab }: HttpEditorProps) {
         parent: editorRef.current,
       });
       viewRef.current = view;
+      preparseSyntaxTree();
+      const hadFoldedRanges = refreshHttpFoldPlaceholders(view);
+
+      // 无折叠时 refreshHttpFoldPlaceholders 不会 dispatch，这里补一次空
+      // transaction，保证有/无折叠走相同的测量+重绘周期，时序对齐避免闪白。
+      if (!hadFoldedRanges) view.dispatch({});
+      
+      const savedScroll =
+        tab.editorState && typeof tab.editorState === "object"
+          ? (tab.editorState as SavedScroll | null)
+          : null;
+
+      scrollController = createEditorScrollController(view);
+      scrollController.applySaved(savedScroll);
 
       // CodeMirror 6 内部以 \n 作为行结尾，会把磁盘读取的 \r\n 规范化为 \n。
       // 此时 view 的实际 doc 与 store 里的 tab.content 字面不一致（CRLF vs LF），
@@ -530,8 +729,18 @@ export function HttpEditor({ tab }: HttpEditorProps) {
 
     const container = editorRef.current;
     const onClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target || !target.classList.contains("cm-run-gutter-btn")) return;
+      if (!(event.target instanceof Element)) return;
+      const foldButton = event.target.closest(".cm-http-fold-gutter-btn");
+      if (foldButton instanceof HTMLElement) {
+        event.preventDefault();
+        event.stopPropagation();
+        const range = readFoldButtonRange(foldButton);
+        if (range) toggleFoldRange(view, range);
+        return;
+      }
+
+      const runButton = event.target.closest(".cm-run-gutter-btn");
+      if (!(runButton instanceof HTMLElement)) return;
       event.preventDefault();
       event.stopPropagation();
       const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
@@ -554,14 +763,23 @@ export function HttpEditor({ tab }: HttpEditorProps) {
     return () => {
       container.removeEventListener("click", onClick, true);
       container.removeEventListener("contextmenu", onContextMenu, true);
+      if (preparseTimer !== undefined) {
+        window.clearTimeout(preparseTimer);
+      }
+      editorDestroyed = true;
       if (view) {
         try {
           const json = view.state.toJSON(STATE_FIELDS);
           truncateEditorHistory(json, MAX_HISTORY_DEPTH);
+          
+          json.scrollTop = scrollController?.cache.scrollTop ?? 0;
+          json.scrollLeft = scrollController?.cache.scrollLeft ?? 0;
+
           useTabsStore.getState().saveEditorState(tab.path, json);
         } catch (_) {
           // 序列化失败不致命，丢弃 state
         }
+        scrollController?.dispose();
         view.destroy();
         viewRef.current = null;
       }

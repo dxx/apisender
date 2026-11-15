@@ -62,13 +62,13 @@ function MacTitleBar() {
         {...DRAG_REGION_ATTR}
         style={{ ...DRAG_REGION_STYLE, height: TITLE_BAR_HEIGHT }}
         ref={dragRef}
-        className="fixed top-0 left-0 right-0 z-[60] select-none border-b bg-card"
+        className="fixed top-0 left-0 right-0 z-[60] select-none border-b bg-background"
       />
 
       <div
         aria-hidden
         style={{ height: TITLE_BAR_HEIGHT }}
-        className="pointer-events-none fixed top-0 left-20 right-20 z-[61] flex items-center justify-center text-xs font-medium text-card-foreground select-none"
+        className="pointer-events-none fixed top-0 left-20 right-20 z-[61] flex items-center justify-center text-xs font-medium text-foreground select-none"
       >
         apisender
       </div>
@@ -102,7 +102,7 @@ function WinLinuxTitleBar() {
       {...DRAG_REGION_ATTR}
       style={{ ...DRAG_REGION_STYLE, height: TITLE_BAR_HEIGHT }}
       onDoubleClick={onDoubleClickDrag}
-      className="fixed top-0 left-0 right-0 z-[60] flex select-none items-center justify-between border-b bg-card pl-2"
+      className="fixed top-0 left-0 right-0 z-[60] flex select-none items-center justify-between border-b bg-background pl-2"
     >
       <div className="flex items-center gap-2">
         <img src={logo} alt="apisender" className="h-6 w-6" />
@@ -110,7 +110,7 @@ function WinLinuxTitleBar() {
 
       <div
         aria-hidden
-        className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium text-card-foreground"
+        className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-xs font-medium text-foreground"
       >
         apisender
       </div>

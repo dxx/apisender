@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { listen } from "@tauri-apps/api/event";
+import { toast } from "sonner";
 import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { useWorkspaceStore } from "@/stores/workspace";
@@ -11,6 +12,7 @@ import { useFontStore } from "@/stores/font";
 import { useGitStore } from "@/stores/git";
 import { useSystemThemeListener } from "@/hooks/useSystemTheme";
 import type { WorkspaceChangedEvent } from "@/lib/types";
+import { checkUpdate } from "@/lib/tauri";
 
 import { Welcome } from "@/components/Welcome";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -33,7 +35,6 @@ function App() {
   const initWorkspace = useWorkspaceStore((s) => s.init);
   const refreshTree = useWorkspaceStore((s) => s.refreshTree);
   const openWorkspaceDialog = useWorkspaceStore((s) => s.openDialog);
-  const initEnv = useEnvironmentStore((s) => s.init);
   const refreshEnv = useEnvironmentStore((s) => s.refresh);
   const refreshHistory = useHistoryStore((s) => s.refresh);
   const tabs = useTabsStore((s) => s.tabs);
@@ -48,10 +49,31 @@ function App() {
 
   useEffect(() => {
     initTheme();
-    initWorkspace();
-    initEnv();
     initFont();
-  }, [initTheme, initWorkspace, initEnv, initFont]);
+    initWorkspace();
+  }, [initTheme, initWorkspace, initFont]);
+
+  useEffect(() => {
+    if (!import.meta.env.PROD) return;
+    let disposed = false;
+    checkUpdate()
+      .then((status) => {
+        if (!disposed && status.phase === "available") {
+          toast.info(`发现新版本 ${status.metadata?.version}`, {
+            action: {
+              label: "查看",
+              onClick: () => setSettingsOpen(true),
+            },
+          });
+        }
+      })
+      .catch((error) => {
+        console.debug("[update] background check failed", error);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (root) {
@@ -147,7 +169,6 @@ function App() {
 
   return (
     <>
-      <Toaster />
       <TooltipProvider delayDuration={700}>
         <TitleBar />
         <div
@@ -164,8 +185,9 @@ function App() {
             </Panel>
           </Group>
         </div>
-      <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
-    </TooltipProvider>
+        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      </TooltipProvider>
+      <Toaster />
     </>
   );
 }

@@ -10,6 +10,7 @@ use tonic::Status;
 
 use crate::error::{AppError, AppResult};
 
+/// proto 来源：标记 `@proto` 路径 → 编译 → 解析；或者扫整个工作区根找 `.proto`；或者从服务端 reflection 拉取。
 #[derive(Debug, Clone)]
 pub enum ProtoSource {
     ExplicitTag(PathBuf, Vec<PathBuf>),
@@ -17,6 +18,7 @@ pub enum ProtoSource {
     Reflection,
 }
 
+/// 解析完成后的产物：动态描述池 + 目标方法描述 + 来源（用于日志或错误回执）。
 #[derive(Debug)]
 pub struct LoadedMethod {
     pub pool: DescriptorPool,
@@ -24,6 +26,9 @@ pub struct LoadedMethod {
     pub source: ProtoSource,
 }
 
+/// 按 `package.service/method` 解析出目标方法及动态描述池。
+/// 作用与流程：先枚举候选 proto 来源（`@proto` 路径 / reflection / 工作区扫描），按顺序尝试加载；
+/// 任何一个来源成功就返回；全部失败则返回最后一个错误。
 pub async fn resolve_method(
     package: &str,
     service: &str,
@@ -64,6 +69,7 @@ pub async fn resolve_method(
     }))
 }
 
+/// 按优先级枚举 proto 来源：`@proto` 优先，再 reflection，最后工作区扫描。
 fn candidate_sources(
     proto_path: Option<&str>,
     proto_includes: &[String],
@@ -95,6 +101,7 @@ fn candidate_sources(
     sources
 }
 
+/// 解析 include 目录路径：绝对路径直用；相对路径先看 .http 文件所在目录是否存在，再退回工作区根。
 fn resolve_include_path(
     raw: &str,
     file_path: Option<&Path>,
@@ -115,6 +122,7 @@ fn resolve_include_path(
     workspace_root.join(p)
 }
 
+/// 解析 proto 主路径：绝对路径直用；相对路径先看 .http 文件所在目录是否存在，再退回工作区根；都没有也返回工作区根下的拼接（让 `protox` 自己报错）。
 fn resolve_proto_path(
     raw: &str,
     file_path: Option<&Path>,
@@ -139,6 +147,7 @@ fn resolve_proto_path(
     Some(workspace_root.join(p))
 }
 
+/// 抓工作区根目录的直接子文件中的所有 `.proto`（不递归），用作兜底来源。
 pub fn scan_workspace_protos(workspace_root: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
     let entries = match std::fs::read_dir(workspace_root) {
@@ -164,15 +173,13 @@ fn derive_include_dirs(p: &Path, user_includes: &[PathBuf]) -> Vec<String> {
     if let Some(parent) = p.parent() {
         dirs.push(parent.to_path_buf());
     }
-    // Walk up the tree: every ancestor up to (and including) the workspace
-    // root, so `import "sub/dir/x.proto"` from anywhere resolves.
+    // 向上遍历每一个祖先目录直到工作区根，让任意嵌套深度的 `import "sub/x.proto"` 都能解析。
     for ancestor in p.ancestors().skip(1) {
         if !dirs.iter().any(|d| d == ancestor) {
             dirs.push(ancestor.to_path_buf());
         }
     }
-    // Workspace root (parent of the proto's nearest common ancestor) — heuristic:
-    // if the file lives under a `protos/` folder, also add that folder.
+    // 启发式：proto 文件就位于 `protos/` 目录时，再补一份。
     if let Some(parent) = p.parent() {
         if parent.file_name().and_then(|s| s.to_str()) == Some("protos") {
             if !dirs.iter().any(|d| d == parent) {
@@ -204,6 +211,8 @@ fn collect_include_dirs(paths: &[PathBuf]) -> Vec<String> {
         .collect()
 }
 
+/// 从单个 proto 来源（`@proto` / 工作区扫描 / reflection）编译出 `DescriptorPool`，
+/// 再从中查出目标 service 和 method。
 async fn load_from_source(
     source: &ProtoSource,
     package: &str,
@@ -302,11 +311,13 @@ async fn load_from_source(
     })
 }
 
+/// 反射通道句柄：保存 endpoint，每次调用都新开连接。
 pub struct ReflectionChannel {
     pub endpoint: tonic::transport::Endpoint,
 }
 
 impl ReflectionChannel {
+    /// 拉取 `full_service` 的 `FileDescriptorSet` 字节（薄封装，避免引入 `as_ref` 之类的样板）。
     pub async fn fetch_file_descriptor_set(&self, full_service: &str) -> Result<Vec<u8>, Status> {
         grpc::reflection::fetch_file_descriptor_set(
             self.endpoint.clone(),

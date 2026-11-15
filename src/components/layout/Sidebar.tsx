@@ -60,11 +60,11 @@ export function Sidebar({ onSettingsClick }: SidebarProps) {
     : "workspace";
 
   return (
-    <aside className="flex h-full w-full shrink-0 flex-col border-r-2 bg-card">
+    <aside className="flex h-full w-full shrink-0 flex-col border-r-2 bg-background">
       <div className="flex h-9 items-center justify-between border-b px-3 pr-2">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex min-w-0 flex-1 items-center gap-1 text-xs font-medium hover:text-primary">
+            <button className="flex min-w-0 flex-1 items-center gap-1 text-xs font-medium outline-none focus:outline-none focus-visible:outline-none hover:text-primary">
               <span className="truncate uppercase">{rootName}</span>
               <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
             </button>

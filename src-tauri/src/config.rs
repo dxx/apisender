@@ -21,6 +21,9 @@ pub struct AppConfig {
     pub theme: Option<String>,
     pub editor_font_family: Option<String>,
     pub ui_font_family: Option<String>,
+    pub response_font_family: Option<String>,
+    pub editor_font_size: Option<u16>,
+    pub response_font_size: Option<u16>,
     pub last_workspace: Option<String>,
     pub workspaces: HashMap<String, WorkspaceConfig>,
 }
