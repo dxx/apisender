@@ -4,7 +4,7 @@
 
 ### 新增
 
-- Git 同步面板：分支切换、暂存/取消暂存、提交、推送、拉取、克隆仓库与连接 origin ([PR #2](https://github.com/dxx/apisender/pull/4) contributed by [@aaaaaaaaat](https://github.com/aaaaaaaaat))
+- Git 同步面板：分支切换、暂存/取消暂存、提交、推送、拉取、克隆仓库与连接 origin ([PR #4](https://github.com/dxx/apisender/pull/4) contributed by [@aaaaaaaaat](https://github.com/aaaaaaaaat))
 - Git 面板在拉取/推送按钮右上角显示待拉取与待推送的提交数 ([0c841aa](https://github.com/dxx/apisender/commit/0c841aa))
 
 ### 修复
