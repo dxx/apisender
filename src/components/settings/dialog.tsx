@@ -25,9 +25,12 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { UpdatePanel } from "@/components/settings/UpdatePanel";
 
+export type SettingsTab = "appearance" | "editor" | "updates";
+
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: SettingsTab;
 }
 
 const themeOptions: { value: Theme; label: string }[] = [
@@ -36,7 +39,7 @@ const themeOptions: { value: Theme; label: string }[] = [
   { value: "dark", label: "深色" },
 ];
 
-const sections = [
+const sections: { value: SettingsTab; label: string }[] = [
   { value: "appearance", label: "外观" },
   { value: "editor", label: "编辑器" },
   { value: "updates", label: "更新" },
@@ -257,9 +260,16 @@ function FontSizeSelector({
  * 出参：设置弹窗 React 节点。
  * 作用与流程：按垂直标签页组织外观、编辑器和更新设置，并把延迟安装动作映射为关闭弹窗。
  */
-export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, initialTab = "appearance" }: SettingsDialogProps) {
   const theme = useThemeStore((s) => s.theme);
   const setTheme = useThemeStore((s) => s.setTheme);
+  const [tab, setTab] = useState<SettingsTab>(initialTab);
+
+  useEffect(() => {
+    if (open) {
+      setTab(initialTab);
+    }
+  }, [open, initialTab]);
 
   const editorFontFamily = useFontStore((s) => s.editorFontFamily);
   const setEditorFontFamily = useFontStore((s) => s.setEditorFontFamily);
@@ -281,7 +291,8 @@ export function SettingsDialog({ open, onOpenChange }: SettingsDialogProps) {
         </DialogHeader>
 
         <Tabs
-          defaultValue="appearance"
+          value={tab}
+          onValueChange={(v) => setTab(v as SettingsTab)}
           orientation="vertical"
           className="flex flex-1 min-h-0"
         >

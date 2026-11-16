@@ -18,7 +18,7 @@ import { Welcome } from "@/components/Welcome";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { MainPane } from "@/components/layout/MainPane";
 import { TitleBar } from "@/components/layout/TitleBar";
-import { SettingsDialog } from "@/components/settings/dialog";
+import { SettingsDialog, type SettingsTab } from "@/components/settings/dialog";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { TITLE_BAR_HEIGHT } from "@/lib/platform";
@@ -44,6 +44,12 @@ function App() {
   const refreshGit = useGitStore((s) => s.refresh);
   const clearGit = useGitStore((s) => s.clear);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>("appearance");
+
+  const openSettings = (tab: SettingsTab = "appearance") => {
+    setSettingsTab(tab);
+    setSettingsOpen(true);
+  };
 
   useSystemThemeListener();
 
@@ -62,7 +68,7 @@ function App() {
           toast.info(`发现新版本 ${status.metadata?.version}`, {
             action: {
               label: "查看",
-              onClick: () => setSettingsOpen(true),
+              onClick: () => openSettings("updates"),
             },
           });
         }
@@ -132,7 +138,7 @@ function App() {
       }
       if ((e.ctrlKey || e.metaKey) && e.key === ",") {
         e.preventDefault();
-        setSettingsOpen(true);
+        openSettings("appearance");
       }
     };
     window.addEventListener("keydown", handler);
@@ -177,7 +183,7 @@ function App() {
         >
           <Group id="sidebar-main" orientation="horizontal" className="flex-1 overflow-hidden">
             <Panel id="sidebar" defaultSize="18%" minSize="15%" maxSize="60%">
-              <Sidebar onSettingsClick={() => setSettingsOpen(true)} />
+              <Sidebar onSettingsClick={() => openSettings("appearance")} />
             </Panel>
             <Separator className="relative z-[2] -ml-1 w-1 cursor-col-resize bg-transparent transition-colors hover:bg-primary/50 data-[resize-handle-state=drag]:bg-primary" />
             <Panel id="main" minSize="40%">
@@ -185,7 +191,11 @@ function App() {
             </Panel>
           </Group>
         </div>
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+        <SettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          initialTab={settingsTab}
+        />
       </TooltipProvider>
       <Toaster />
     </>
