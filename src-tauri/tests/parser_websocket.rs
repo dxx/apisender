@@ -17,7 +17,7 @@ fn test_websocket_basic() {
 }
 
 #[test]
-fn test_websocket_multi_message_with_separator() {
+fn test_websocket_multi_message() {
     let text = "WEBSOCKET ws://localhost:8080/echo\n{\"a\": 1}\n===\n{\"b\": 2}\n===\n{\"c\": 3}\n";
     let file = parse(text).unwrap();
     let req = &file.websocket_requests[0];
@@ -71,7 +71,7 @@ fn test_websocket_and_http_mixed() {
 }
 
 #[test]
-fn test_websocket_inline_tags_after_method_line() {
+fn test_websocket_inline_tags() {
     let text = "WEBSOCKET ws://localhost:8080/echo\n@idle-timeout 30s\n@connection-timeout 5s\n{\"hello\": \"world\"}\n===\n{\"second\": \"msg\"}\n";
     let file = parse(text).unwrap();
     let req = &file.websocket_requests[0];
@@ -106,7 +106,7 @@ fn test_websocket_global_variables_collected() {
 }
 
 #[test]
-fn test_websocket_global_var_priority_over_env() {
+fn test_websocket_var_priority_over_env() {
     let text = "@host = from-global\n\nWEBSOCKET ws://{{host}}/path\n";
     let file = parse(text).unwrap();
     let req = &file.websocket_requests[0];

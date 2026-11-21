@@ -161,7 +161,7 @@ GRPC grpc://localhost:50051/hello.Greeter/SayHello
 }
 
 #[test]
-fn test_grpc_global_variables_and_interpolation() {
+fn test_grpc_global_variables() {
     let text = "\
 @host = api.example.com
 @port = 50051
@@ -209,7 +209,7 @@ fn test_grpc_invalid_url_errors() {
 }
 
 #[test]
-fn grpc_block_proto_include_accumulates() {
+fn grpc_proto_includes_accumulate() {
     let text = "\
 ### t
 # @proto ./protos/a.proto

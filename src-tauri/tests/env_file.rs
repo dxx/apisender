@@ -1,8 +1,11 @@
 use std::fs;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use apisender_lib::workspace::env_file::{
     get_environment_vars, list_environment_names, read_env_file, SHARED_ENV_NAME,
 };
+
+static TEMP_COUNTER: AtomicUsize = AtomicUsize::new(0);
 
 fn write_env(dir: &std::path::Path, name: &str, json: &str) {
     fs::write(dir.join(name), json).unwrap();
@@ -118,7 +121,7 @@ fn test_read_env_file_still_includes_shared() {
 }
 
 #[test]
-fn test_env_var_reference_resolved() {
+fn test_env_var_resolved() {
     unsafe {
         std::env::set_var("APISEND_TEST_ENV_FILE_KEY", "env-value");
     }
@@ -133,7 +136,7 @@ fn test_env_var_reference_resolved() {
 }
 
 #[test]
-fn test_env_var_reference_with_default_resolved() {
+fn test_env_var_with_default() {
     unsafe {
         std::env::remove_var("APISEND_TEST_ENV_FILE_UNSET_XYZ");
     }
@@ -148,7 +151,7 @@ fn test_env_var_reference_with_default_resolved() {
 }
 
 #[test]
-fn test_env_var_reference_unset_no_default_strips() {
+fn test_env_var_unset_no_default() {
     unsafe {
         std::env::remove_var("APISEND_TEST_ENV_FILE_DEFINITELY_UNSET");
     }
@@ -163,7 +166,7 @@ fn test_env_var_reference_unset_no_default_strips() {
 }
 
 #[test]
-fn test_plain_var_reference_stays_raw_in_env() {
+fn test_plain_var_stays_raw() {
     let dir = tempdir();
     write_env(
         &dir,
@@ -176,8 +179,10 @@ fn test_plain_var_reference_stays_raw_in_env() {
 }
 
 fn tempdir() -> std::path::PathBuf {
+    let sequence = TEMP_COUNTER.fetch_add(1, Ordering::Relaxed);
     let dir = std::env::temp_dir().join(format!(
-        "apisender_test_{}",
+        "apisender_test_{}-{sequence}-{}",
+        std::process::id(),
         std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
             .unwrap()

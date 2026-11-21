@@ -76,7 +76,7 @@ fn test_url_with_spaces() {
 }
 
 #[test]
-fn test_url_with_spaces_and_http_version() {
+fn test_url_with_spaces_and_version() {
     let text = "GET https://example.com/api?msg=hello world HTTP/1.1\n";
     let file = parse(text).unwrap();
     assert_eq!(file.requests[0].url, "https://example.com/api?msg=hello world");
@@ -258,7 +258,7 @@ fn test_multipart_with_file_reference() {
 
 // 测 workspace::tree 模块的 FileTreeNode 序列化（不属于 HTTP 解析，放这里方便维护）
 #[test]
-fn test_file_tree_node_serde_lowercase() {
+fn test_file_tree_node_serde() {
     let dir = apisender_lib::workspace::tree::FileTreeNode::Dir {
         name: "docs".to_string(),
         path: "/tmp/docs".to_string(),

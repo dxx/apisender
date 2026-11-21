@@ -5,7 +5,7 @@ fn parse_ok(text: &str) -> apisender_lib::parser::ParsedFile {
 }
 
 #[test]
-fn ws_url_after_at_line_becomes_first_message() {
+fn ws_url_at_line_becomes_first_message() {
     let text = "\
 ### ws
 @no-log
@@ -50,7 +50,7 @@ hi
 }
 
 #[test]
-fn http_after_method_at_line_still_dropped() {
+fn http_after_method_line_dropped() {
     let text = "\
 ### t
 GET https://x
@@ -62,7 +62,7 @@ Content-Type: application/json
 }
 
 #[test]
-fn ws_http_tags_mixed_are_silently_dropped() {
+fn ws_http_tags_mixed_dropped() {
     let text = "\
 ### ws
 @no-redirect
