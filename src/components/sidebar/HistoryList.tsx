@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Copy, Trash2 } from "lucide-react";
+import { Copy, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { useHistoryStore } from "@/stores/history";
@@ -28,7 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getMethodColor } from "@/lib/method-colors";
-import { copyText } from "@/lib/tauri";
+import { copyText, getHistoryDetail } from "@/lib/tauri";
 
 function formatTime(iso: string): string {
   const d = new Date(iso.replace(" ", "T") + "Z");
@@ -73,6 +73,20 @@ export function HistoryList() {
     try {
       await copyText(url);
       toast.success("URL 已复制");
+    } catch {
+      toast.error("复制失败");
+    }
+  };
+
+  const handleCopyRequest = async (id: number) => {
+    try {
+      const detail = await getHistoryDetail(id);
+      if (!detail.requestRaw) {
+        toast.error("该记录没有可复制的请求报文");
+        return;
+      }
+      await copyText(detail.requestRaw);
+      toast.success("请求报文已复制");
     } catch {
       toast.error("复制失败");
     }
@@ -148,6 +162,10 @@ export function HistoryList() {
                     <ContextMenuItem onSelect={() => handleCopyUrl(entry.url)}>
                       <Copy className="mr-2 h-3.5 w-3.5" />
                       复制 URL
+                    </ContextMenuItem>
+                    <ContextMenuItem onSelect={() => handleCopyRequest(entry.id)}>
+                      <FileText className="mr-2 h-3.5 w-3.5" />
+                      复制请求
                     </ContextMenuItem>
                     <ContextMenuSeparator />
                     <ContextMenuItem

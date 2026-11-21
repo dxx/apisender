@@ -19,6 +19,7 @@ impl Db {
     pub fn new(path: &std::path::Path) -> AppResult<Self> {
         let conn = Connection::open(path)?;
         conn.execute_batch(SCHEMA_SQL)?;
+        schema::migrate(&conn)?;
         Ok(Db(Mutex::new(conn)))
     }
 

@@ -10,6 +10,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::error::{AppError, AppResult};
 use crate::parser::{self};
+use crate::raw_request;
 use grpc::{
     invoke_grpc, resolve_method, GrpcCallRequest, GrpcEvent, ReflectionChannel,
 };
@@ -118,6 +119,7 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
         &grpc_req.variables,
     );
     let resolved = interpolate_grpc_request(&grpc_req, &merged)?;
+    let request_snapshot = serde_json::to_string_pretty(&grpc_req).ok();
 
     let cancel = CancellationToken::new();
     {
@@ -134,6 +136,7 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
 
     let req_id_for_task = req_id.clone();
     let url = resolved.url.clone();
+    let resolved_for_event = resolved.clone();
     let package = resolved.package.clone();
     let service = resolved.service.clone();
     let method = resolved.method.clone();
@@ -165,6 +168,7 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
         let url_closed = url.clone();
         let status_code_for_closed = status_code_shared.clone();
         let no_log_closed = no_log;
+        let request_snapshot_closed = request_snapshot.clone();
         let url_owned = url.clone();
         let package_owned = package.clone();
         let service_owned = service.clone();
@@ -270,6 +274,7 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
 
                         if !no_log_closed {
                             let status_opt = status_code_for_closed.lock().ok().and_then(|c| *c);
+                            let request_raw = raw_request::grpc(&resolved_for_event);
                             if let Ok(db) = storage::get_db(&app_for_closed) {
                                 let _ = db.with_handle(|conn| {
                                     storage::history::insert(
@@ -281,8 +286,9 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
                                             url: url_closed.clone(),
                                             status: status_opt.map(|c| c as i64),
                                             duration_ms: Some(total_ms as i64),
-                                            request_snapshot: None,
+                                            request_snapshot: request_snapshot_closed.clone(),
                                             response_snapshot: None,
+                                            request_raw: Some(request_raw),
                                         },
                                     )
                                 });
@@ -337,6 +343,7 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
                 );
 
                 if !no_log {
+                    let request_raw = raw_request::grpc(&resolved);
                     if let Ok(db) = storage::get_db(&app_handle) {
                         let _ = db.with_handle(|conn| {
                             storage::history::insert(
@@ -348,8 +355,9 @@ pub async fn execute_grpc(app: AppHandle, args: ExecuteGrpcArgs) -> AppResult<St
                                     url: url.clone(),
                                     status: None,
                                     duration_ms: Some(total_ms as i64),
-                                    request_snapshot: None,
+                                    request_snapshot: request_snapshot.clone(),
                                     response_snapshot: None,
+                                    request_raw: Some(request_raw),
                                 },
                             )
                         });

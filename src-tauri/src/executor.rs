@@ -5,7 +5,6 @@ use crate::error::AppResult;
 use crate::parser::ParsedRequest;
 use crate::storage::{self};
 use crate::transport::{rest::parse_set_cookie, rest::RestTransport, ByteStream, RawResponse, Transport};
-use crate::variables::interpolate_request;
 
 pub mod cookies;
 
@@ -18,10 +17,12 @@ impl<T: Transport> Executor<T> {
         Executor { transport }
     }
 
+    /// 入参：已完成变量插值的请求与数据库连接。
+    /// 出参：原始响应。
+    /// 作用与流程：处理 cookie（清理过期、按 host 取出、响应后回写）后交给 transport 发送。
     pub async fn execute(
         &self,
         request: &ParsedRequest,
-        variables: &HashMap<String, String>,
         db: &storage::Db,
     ) -> AppResult<RawResponse> {
         cookies::cleanup_expired(db)?;
@@ -33,8 +34,7 @@ impl<T: Transport> Executor<T> {
             HashMap::new()
         };
 
-        let resolved = interpolate_request(request, variables)?;
-        let response = self.transport.execute(&resolved, &stored_cookies).await?;
+        let response = self.transport.execute(request, &stored_cookies).await?;
 
         if !request.tags.no_cookie {
             for (key, value) in &response.headers {
@@ -66,10 +66,12 @@ impl<T: Transport> Executor<T> {
         Ok(response)
     }
 
+    /// 入参：已完成变量插值的请求与数据库连接。
+    /// 出参：响应头与响应体流。
+    /// 作用与流程：处理 cookie 后以流式方式交给 transport 发送。
     pub async fn execute_stream(
         &self,
         request: &ParsedRequest,
-        variables: &HashMap<String, String>,
         db: &storage::Db,
     ) -> AppResult<(RawResponse, ByteStream)> {
         cookies::cleanup_expired(db)?;
@@ -81,8 +83,7 @@ impl<T: Transport> Executor<T> {
             HashMap::new()
         };
 
-        let resolved = interpolate_request(request, variables)?;
-        let (partial, stream) = self.transport.execute_stream(&resolved, &stored_cookies).await?;
+        let (partial, stream) = self.transport.execute_stream(request, &stored_cookies).await?;
 
         if !request.tags.no_cookie {
             for (key, value) in &partial.headers {

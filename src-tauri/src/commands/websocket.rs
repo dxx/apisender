@@ -10,6 +10,7 @@ use tokio_util::sync::CancellationToken;
 
 use crate::error::{AppError, AppResult};
 use crate::parser::{self};
+use crate::raw_request;
 use crate::storage;
 use crate::transport::websocket::{WsEvent, WsHandle, WebSocketTransport};
 use crate::variables::{interpolate_ws_request, merge_variables};
@@ -117,6 +118,7 @@ pub async fn execute_websocket(app: AppHandle, args: ExecuteWsArgs) -> AppResult
         &ws_req.variables,
     );
     let resolved = interpolate_ws_request(&ws_req, &merged)?;
+    let request_snapshot = serde_json::to_string_pretty(&ws_req).ok();
 
     let (tx, rx) = mpsc::channel::<String>(32);
     let cancel = CancellationToken::new();
@@ -265,6 +267,7 @@ pub async fn execute_websocket(app: AppHandle, args: ExecuteWsArgs) -> AppResult
 
         if !no_log {
             let total_ms = start_for_error.elapsed().as_millis() as u64;
+            let request_raw = raw_request::websocket(&resolved);
             if let Ok(db) = storage::get_db(&app_for_error) {
                 let _ = db.with_handle(|conn| {
                     storage::history::insert(
@@ -276,8 +279,9 @@ pub async fn execute_websocket(app: AppHandle, args: ExecuteWsArgs) -> AppResult
                             url: url.clone(),
                             status: Some(101),
                             duration_ms: Some(total_ms as i64),
-                            request_snapshot: None,
+                            request_snapshot: request_snapshot.clone(),
                             response_snapshot: None,
+                            request_raw: Some(request_raw),
                         },
                     )
                 });

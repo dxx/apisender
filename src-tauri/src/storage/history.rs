@@ -23,6 +23,7 @@ pub struct HistoryDetail {
     pub entry: HistoryEntry,
     pub request_snapshot: Option<String>,
     pub response_snapshot: Option<String>,
+    pub request_raw: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -35,12 +36,13 @@ pub struct NewHistoryEntry {
     pub duration_ms: Option<i64>,
     pub request_snapshot: Option<String>,
     pub response_snapshot: Option<String>,
+    pub request_raw: Option<String>,
 }
 
 pub fn insert(conn: &Connection, entry: &NewHistoryEntry) -> AppResult<i64> {
     conn.execute(
-        "INSERT INTO history (workspace_path, file_path, method, url, status, duration_ms, request_snapshot, response_snapshot)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
+        "INSERT INTO history (workspace_path, file_path, method, url, status, duration_ms, request_snapshot, response_snapshot, request_raw)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
         params![
             entry.workspace_path,
             entry.file_path,
@@ -50,6 +52,7 @@ pub fn insert(conn: &Connection, entry: &NewHistoryEntry) -> AppResult<i64> {
             entry.duration_ms,
             entry.request_snapshot,
             entry.response_snapshot,
+            entry.request_raw,
         ],
     )?;
     Ok(conn.last_insert_rowid())
@@ -85,41 +88,31 @@ pub fn list_by_workspace(
 }
 
 pub fn get_detail(conn: &Connection, id: i64) -> AppResult<HistoryDetail> {
-    let entry = conn.query_row(
-        "SELECT id, workspace_path, file_path, method, url, status, duration_ms, created_at
+    let detail = conn.query_row(
+        "SELECT id, workspace_path, file_path, method, url, status, duration_ms, created_at,
+                request_snapshot, response_snapshot, request_raw
          FROM history WHERE id = ?1",
         params![id],
         |row| {
-            Ok(HistoryEntry {
-                id: row.get(0)?,
-                workspace_path: row.get(1)?,
-                file_path: row.get(2)?,
-                method: row.get(3)?,
-                url: row.get(4)?,
-                status: row.get(5)?,
-                duration_ms: row.get(6)?,
-                created_at: row.get(7)?,
+            Ok(HistoryDetail {
+                entry: HistoryEntry {
+                    id: row.get(0)?,
+                    workspace_path: row.get(1)?,
+                    file_path: row.get(2)?,
+                    method: row.get(3)?,
+                    url: row.get(4)?,
+                    status: row.get(5)?,
+                    duration_ms: row.get(6)?,
+                    created_at: row.get(7)?,
+                },
+                request_snapshot: row.get(8)?,
+                response_snapshot: row.get(9)?,
+                request_raw: row.get(10)?,
             })
         },
     )?;
 
-    let request_snapshot: Option<String> = conn.query_row(
-        "SELECT request_snapshot FROM history WHERE id = ?1",
-        params![id],
-        |row| row.get(0),
-    )?;
-
-    let response_snapshot: Option<String> = conn.query_row(
-        "SELECT response_snapshot FROM history WHERE id = ?1",
-        params![id],
-        |row| row.get(0),
-    )?;
-
-    Ok(HistoryDetail {
-        entry,
-        request_snapshot,
-        response_snapshot,
-    })
+    Ok(detail)
 }
 
 pub fn clear_by_workspace(conn: &Connection, workspace_path: &str) -> AppResult<()> {

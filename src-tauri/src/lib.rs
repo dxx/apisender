@@ -5,6 +5,7 @@ pub mod error;
 pub mod executor;
 pub mod git;
 pub mod parser;
+pub mod raw_request;
 pub mod sse;
 pub mod storage;
 pub mod transport;

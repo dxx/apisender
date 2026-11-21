@@ -9,9 +9,10 @@ use tokio_util::sync::CancellationToken;
 use crate::error::{AppError, AppResult};
 use crate::executor;
 use crate::parser::{self, RequestPreview};
+use crate::raw_request;
 use crate::storage;
 use crate::transport::RawResponse;
-use crate::variables::merge_variables;
+use crate::variables::{interpolate_request, merge_variables};
 use crate::workspace;
 
 #[derive(Default)]
@@ -78,6 +79,7 @@ pub async fn execute_http(
         &parsed_file.global_variables,
         &request.variables,
     );
+    let resolved = interpolate_request(&request, &variables)?;
 
     let workspace_root = workspace::get_workspace_root(&app).unwrap_or_default();
 
@@ -91,7 +93,7 @@ pub async fn execute_http(
     }
 
     let exec = executor::create_default_executor();
-    let execute_fut = exec.execute(&request, &variables, db);
+    let execute_fut = exec.execute(&resolved, db);
     let response = tokio::select! {
         r = execute_fut => {
             r.map_err(|e| {
@@ -115,6 +117,7 @@ pub async fn execute_http(
         let db = storage::get_db(&app)?;
         let req_snap = serde_json::to_string_pretty(&request)?;
         let resp_snap = serde_json::to_string_pretty(&response)?;
+        let req_raw = raw_request::http(&resolved);
         Some(db.with_handle(|conn| {
             storage::history::insert(
                 conn,
@@ -127,6 +130,7 @@ pub async fn execute_http(
                     duration_ms: Some(response.duration_ms as i64),
                     request_snapshot: Some(req_snap),
                     response_snapshot: Some(resp_snap),
+                    request_raw: Some(req_raw),
                 },
             )
         })?)

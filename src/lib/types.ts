@@ -33,6 +33,7 @@ export interface HistoryDetail {
   entry: HistoryEntry;
   requestSnapshot: string | null;
   responseSnapshot: string | null;
+  requestRaw: string | null;
 }
 
 export type ResponseBody =

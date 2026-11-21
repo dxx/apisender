@@ -10,10 +10,11 @@ use tokio_util::sync::CancellationToken;
 use crate::error::{AppError, AppResult};
 use crate::executor;
 use crate::parser::{self};
+use crate::raw_request;
 use crate::sse;
 use crate::storage;
 use crate::transport::{RawResponse, ResponseBody, StreamChunk};
-use crate::variables::merge_variables;
+use crate::variables::{interpolate_request, merge_variables};
 use crate::workspace;
 
 #[derive(Default)]
@@ -134,6 +135,7 @@ pub async fn execute_sse(
         &parsed_file.global_variables,
         &request.variables,
     );
+    let resolved = interpolate_request(&request, &variables)?;
 
     let db = storage::get_db(&app)?;
     let exec = executor::create_default_executor();
@@ -149,7 +151,7 @@ pub async fn execute_sse(
     }
 
     let (partial, mut stream) = tokio::select! {
-        r = exec.execute_stream(&request, &variables, db) => r.map_err(|e| {
+        r = exec.execute_stream(&resolved, db) => r.map_err(|e| {
             log::error!("[execute_sse] stream error: {}", e);
             e
         })?,
@@ -315,6 +317,7 @@ pub async fn execute_sse(
             if let Ok(db) = storage::get_db(&app2) {
                 let req_snap = serde_json::to_string_pretty(&request_for_history).unwrap_or_default();
                 let resp_snap = serde_json::to_string_pretty(&response).unwrap_or_default();
+                let request_raw = raw_request::http(&resolved);
                 let _ = db.with_handle(|conn| {
                     storage::history::insert(
                         conn,
@@ -327,6 +330,7 @@ pub async fn execute_sse(
                             duration_ms: Some(response.duration_ms as i64),
                             request_snapshot: Some(req_snap),
                             response_snapshot: Some(resp_snap),
+                            request_raw: Some(request_raw),
                         },
                     )
                 });
