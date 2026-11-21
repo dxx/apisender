@@ -10,7 +10,7 @@ use serde::{Deserialize, Serialize};
 const MINIMUM_GIT_VERSION: (u32, u32) = (2, 28);
 const DIFF_OUTPUT_LIMIT: usize = 1024 * 1024;
 const DEFAULT_OUTPUT_LIMIT: usize = 10 * 1024 * 1024;
-const DEFAULT_IGNORE_RULES: [&str; 3] = ["env.private.json", ".apisender/", ".DS_Store"];
+const DEFAULT_IGNORE_RULES: [&str; 1] = ["env.private.json"];
 
 pub type GitResult<T> = Result<T, GitErrorPayload>;
 

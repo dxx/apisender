@@ -189,7 +189,7 @@ function RepositorySetup() {
           当前工作区尚未加入 Git。远端必须已创建且不包含任何 Git 引用。
         </p>
       </div>
-      <div className="min-w-0 max-w-full space-y-1">
+      <div className="flex min-w-0 max-w-full flex-col gap-2">
         <Label htmlFor="git-init-remote">空远端地址</Label>
         <Input
           id="git-init-remote"
@@ -199,7 +199,7 @@ function RepositorySetup() {
           placeholder={GIT_REMOTE_PLACEHOLDER}
         />
       </div>
-      <div className="min-w-0 max-w-full space-y-1">
+      <div className="flex min-w-0 max-w-full flex-col gap-2">
         <Label htmlFor="git-init-branch">默认分支</Label>
         <Input
           id="git-init-branch"
@@ -745,7 +745,7 @@ export function GitPanel() {
       <Dialog open={identityOpen} onOpenChange={setIdentityOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>设置当前仓库 Git 身份</DialogTitle><DialogDescription>仅写入当前仓库，不修改全局 Git 配置。</DialogDescription></DialogHeader>
-          <div className="space-y-3"><div className="space-y-1"><Label htmlFor="git-user-name">姓名</Label><Input id="git-user-name" value={identityName} onChange={(event) => setIdentityName(event.target.value)} /></div><div className="space-y-1"><Label htmlFor="git-user-email">邮箱</Label><Input id="git-user-email" value={identityEmail} onChange={(event) => setIdentityEmail(event.target.value)} /></div></div>
+          <div className="space-y-3"><div className="flex flex-col gap-2"><Label htmlFor="git-user-name">姓名</Label><Input id="git-user-name" value={identityName} onChange={(event) => setIdentityName(event.target.value)} /></div><div className="flex flex-col gap-2"><Label htmlFor="git-user-email">邮箱</Label><Input id="git-user-email" value={identityEmail} onChange={(event) => setIdentityEmail(event.target.value)} /></div></div>
           <DialogFooter><Button variant="outline" onClick={() => setIdentityOpen(false)}>取消</Button><Button onClick={() => void handleIdentity()} disabled={writing}>保存</Button></DialogFooter>
         </DialogContent>
       </Dialog>
@@ -762,7 +762,7 @@ export function GitPanel() {
         <DialogContent>
           <DialogHeader><DialogTitle>首次推送</DialogTitle><DialogDescription>选择远端和要推送的本地分支，成功后会设置 upstream。</DialogDescription></DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-1">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="git-push-remote">远端</Label>
               <Select value={pushRemote} onValueChange={setPushRemote}>
                 <SelectTrigger id="git-push-remote"><SelectValue placeholder="选择远端" /></SelectTrigger>
@@ -771,7 +771,7 @@ export function GitPanel() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-1">
+            <div className="flex flex-col gap-2">
               <Label htmlFor="git-push-branch">分支</Label>
               <Input id="git-push-branch" value={pushBranch} onChange={(event) => setPushBranch(event.target.value)} />
             </div>

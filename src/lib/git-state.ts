@@ -25,7 +25,7 @@ const GIT_ERROR_CODES = new Set<GitErrorCode>([
 export const GIT_REMOTE_PLACEHOLDER = "请输入远端仓库地址";
 
 /** Git 初始化向导逐项展示的默认忽略规则，与后端 DEFAULT_IGNORE_RULES 保持一致。 */
-export const GIT_DEFAULT_IGNORE_RULES = ["env.private.json", ".apisender/", ".DS_Store"] as const;
+export const GIT_DEFAULT_IGNORE_RULES = ["env.private.json"] as const;
 
 export interface GitFileGroups {
   conflicts: GitFileStatus[];

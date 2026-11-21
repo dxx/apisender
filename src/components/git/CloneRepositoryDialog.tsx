@@ -102,7 +102,7 @@ export function CloneRepositoryDialog({ open, onOpenChange }: CloneRepositoryDia
           <DialogDescription>使用系统 Git 和现有 SSH/凭据配置克隆仓库。</DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="clone-remote">远端地址</Label>
             <Input
               id="clone-remote"
@@ -111,7 +111,7 @@ export function CloneRepositoryDialog({ open, onOpenChange }: CloneRepositoryDia
               placeholder="git@github.com:org/repo.git"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="clone-parent">父目录</Label>
             <div className="flex gap-2">
               <Input id="clone-parent" value={parent} readOnly placeholder="选择保存位置" />
@@ -120,7 +120,7 @@ export function CloneRepositoryDialog({ open, onOpenChange }: CloneRepositoryDia
               </Button>
             </div>
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col gap-2">
             <Label htmlFor="clone-folder">文件夹名称</Label>
             <Input
               id="clone-folder"
