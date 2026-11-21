@@ -1,6 +1,6 @@
 # 更新日志
 
-## 0.1.21 - 2026-11-17
+## 0.1.22 - 2026-11-21
 
 ### 新增
 
@@ -8,12 +8,17 @@
 
 ### 修复
 
-- 修复点击更新通知的操作按钮后，设置弹窗未默认选中"更新"标签页的问题 ([f1ac814](https://github.com/dxx/apisender/commit/f1ac814))
-- 修复 Git 表单中 label 与输入框间距过小的问题，原先的布局类对行内 label 不生效 ([d9132fa](https://github.com/dxx/apisender/commit/d9132fa))
+- 修复 Git 表单中 label 与输入框间距过小的问题 ([d9132fa](https://github.com/dxx/apisender/commit/d9132fa))
 
 ### 变更
 
 - 初始化 Git 仓库时，.gitignore 只追加 env.private.json ([d9132fa](https://github.com/dxx/apisender/commit/d9132fa))
+
+## 0.1.21 - 2026-11-17
+
+### 修复
+
+- 修复检测到新版本后点击通知中的"查看"未默认选中设置弹窗的"更新"标签页 ([f1ac814](https://github.com/dxx/apisender/commit/f1ac814))
 
 ## 0.1.20 - 2026-11-16
 
