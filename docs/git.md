@@ -20,7 +20,7 @@ apisender 通过电脑上已安装的 Git 管理当前工作区，复用现有 S
 
 1. 创建本地仓库。
 2. 添加 `origin`。
-3. 向 `.gitignore` 追加缺失的 `env.private.json`、`.apisender/` 和 `.DS_Store`。
+3. 向 `.gitignore` 追加缺失的 `env.private.json`。
 
 初始化不会自动暂存、提交或推送，仍需在“更改”页核对文件。
 
