@@ -1,5 +1,15 @@
 # 更新日志
 
+## 0.1.23 - 2026-11-21
+
+### 新增
+
+- 复制请求报文时一并输出请求名与标签（@no-log、@timeout 等），文件请求体按 `< path` 语法还原 ([3b4caa3](https://github.com/dxx/apisender/commit/3b4caa3))
+
+### 修复
+
+- 请求块内首行既不是 WebSocket/gRPC 行也不是合法请求行时，报错而不是生成一个方法与 URL 乱码的请求 ([7d50ef8](https://github.com/dxx/apisender/commit/7d50ef8))
+
 ## 0.1.22 - 2026-11-21
 
 ### 新增
