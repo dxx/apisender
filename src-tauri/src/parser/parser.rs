@@ -19,6 +19,7 @@ impl<'a> Parser<'a> {
     /// 入参：无（借用 `self.lines`）。
     /// 出参：完整的 `ParsedFile`，包含 HTTP、WS、gRPC 三类请求和全局变量。
     /// 作用与流程：线性扫描文本；先识别 `###` 块再分派到对应解析器；块之外的 method/URL 行也独立成请求；顶层 `@key=value` 视为全局变量。
+    /// 块内首个非注释行既不是 WS/gRPC 行也不是合法请求行时返回解析错误，不会伪造请求。
     pub fn parse(&self) -> AppResult<ParsedFile> {
         let mut requests = Vec::new();
         let mut websocket_requests = Vec::new();
@@ -99,7 +100,7 @@ impl<'a> Parser<'a> {
                             self.parse_grpc_block(pending_name, start, grpc_tags, block_variables)?;
                         grpc_requests.push(grpc_req);
                         i = next;
-                    } else {
+                    } else if is_method_line(first_line) {
                         let start = i;
                         let (req, next) = self.parse_request(
                             pending_name,
@@ -110,6 +111,11 @@ impl<'a> Parser<'a> {
                         )?;
                         requests.push(req);
                         i = next;
+                    } else {
+                        // 既不是注释/标签、也不是 WS/gRPC 行或合法请求行：直接报错，避免伪造出方法为乱码的请求。
+                        return Err(AppError::Parse(format!(
+                            "Invalid request line: {first_line}"
+                        )));
                     }
                 }
                 continue;

@@ -256,6 +256,31 @@ fn test_multipart_with_file_reference() {
     }
 }
 
+#[test]
+fn test_invalid_request_line_in_block() {
+    let text = "###\n-- @idle-timeout 3s\n\nWEBSOCKET wss://echo.websocket.org\n\n{\"a\":1}\n";
+    let err = parse(text).unwrap_err();
+    assert!(
+        err.to_string().contains("Invalid request line"),
+        "unexpected error: {err}"
+    );
+}
+
+#[test]
+fn test_custom_method_line_in_block() {
+    let text = "###\nPURGE https://example.com/cache\n";
+    let file = parse(text).unwrap();
+    assert_eq!(file.requests.len(), 1);
+    assert_eq!(file.requests[0].method.as_str(), "PURGE");
+}
+
+#[test]
+fn test_slash_comment_tag() {
+    let text = "### Test\n// @no-log\nGET https://example.com\n";
+    let file = parse(text).unwrap();
+    assert!(file.requests[0].tags.no_log);
+}
+
 // 测 workspace::tree 模块的 FileTreeNode 序列化（不属于 HTTP 解析，放这里方便维护）
 #[test]
 fn test_file_tree_node_serde() {
